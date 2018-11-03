@@ -1,6 +1,6 @@
 # Basic Python Plugin Example
 #
-# Author: GizMoCuz
+# Author: Smanar
 #
 """
 <plugin key="BasePlug" name="deCONZ plugin" author="xxx" version="1.0.0" wikilink="http://www.domoticz.com/wiki/plugins/plugin.html" externallink="https://www.google.com/">
@@ -29,7 +29,7 @@
 """
 import Domoticz
 import json,urllib
-from fonctions import test
+from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 
 LIGHT = 10
 SENSOR = 20
@@ -114,13 +114,16 @@ class BasePlugin:
     def onMessage(self, Connection, Data):
         Domoticz.Log("onMessage called")
         
-        Domoticz.Log("Data : " + str(Data))
+        #Domoticz.Log("Data : " + str(Data))
         
         _Data = Data.decode("utf-8", "ignore")
-        _Data = _Data[_Data.find('{'):]
         if _Data[-1] == ']':
-            _Data = _Data[:-1]
-        _Data = _Data.replace('true','True').replace('false','False') 
+            p = _Data.find('[')
+        else:
+            p = _Data.find('{')
+        _Data = _Data[p:]
+        _Data = _Data.replace('true','True').replace('false','False')
+        
         Domoticz.Log("Data Cleaned : " + str(_Data))
             
         try:
@@ -140,32 +143,21 @@ class BasePlugin:
             self.UpdateBuffer()
             
             Domoticz.Log("Data : " + str(_Data) )
-            
-            for _Data2 in _Data:
-            
-                if isinstance(_Data2, str):
-                    #merde rattage
-                    _Data2 =_Data
-            
-                First_item = next(iter(_Data2))
-                #Error
-                if First_item == 'error':
-                    Domoticz.Error("deCONZ error :" + str(_Data2))
-                    
-                #Command sucess
-                elif First_item == 'success':
-                    UpdateDomoticz(_Data2['success'])
-                
-                #Read all devices
-                elif First_item.isnumeric():
+        
+            First_item = next(iter(_Data))
 
-                    for i in _Data2:
+            if isinstance(First_item, str):
+            
+                #Read all devices
+                if First_item.isnumeric():
+
+                    for i in _Data:
                     
-                        IEEE = str(_Data2[i]['uniqueid'])
-                        Name = str(_Data2[i]['name'])
-                        Type = str(_Data2[i]['type'])
+                        IEEE = str(_Data[i]['uniqueid'])
+                        Name = str(_Data[i]['name'])
+                        Type = str(_Data[i]['type'])
                         
-                        Domoticz.Log("Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data2[i]['state']))
+                        Domoticz.Log("Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
                         
                         if self.Init == LIGHT:
                             self.ListLights[i] = IEEE
@@ -185,8 +177,57 @@ class BasePlugin:
                         self.SendCommand("/api/" + Parameters["Mode2"] + "/sensors/")
 
                 else:
-                    Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                    Domoticz.Error("Not managed JSON : " + str(_Data) )
             
+            else:
+                kwarg = {}
+                Unit = False
+                    
+                for _Data2 in _Data:
+                
+                    First_item = next(iter(_Data2))
+                    
+                    #Error
+                    if First_item == 'error':
+                        Domoticz.Error("deCONZ error :" + str(_Data2))
+                        
+                    #Command sucess
+                    elif First_item == 'success':
+                        #TODO : need to be sure of order color > level > on-off
+                        data = _Data2['success']
+                        dev = (list(data.keys())[0] ).split('/')
+                        val = data[list(data.keys())[0]]
+                        
+                        if not Unit:
+                            IEEE = GetDeviceIEEE(dev[2],dev[1])
+                            dummy,Unit = GetDomoDeviceInfo(IEEE)
+                            
+                        if dev[4] == 'on':
+                            if val == 'True':
+                                kwarg['nValue'] = 1
+                                kwarg['sValue'] = 'on'
+                            else:
+                                kwarg['nValue'] = 0
+                                kwarg['sValue'] = 'off'
+                                
+                        if dev[4] == 'bri':
+                            kwarg['nValue'] = 1
+                            kwarg['sValue'] = str(val)
+                            
+                        if dev[4] == 'xy':
+                            x,y = eval(str(val))
+                            rgb = xy_to_rgb(x,y,1)
+                            kwarg['nValue'] = 1
+                            kwarg['sValue'] = str(255)
+                            kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['b']) + ',"t":0,"ww":0}'
+                        
+                    else:
+                        Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                        
+                if kwarg and Unit:
+                    Devices[Unit].Update(**kwarg)
+                    Domoticz.Log("Update  ("+Devices[Unit].Name+") : " + str(kwarg))
+
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
             Domoticz.Log("Data : " + str(Data))
@@ -195,13 +236,65 @@ class BasePlugin:
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + "', Hue: " + str(Hue))
         
-        if Command == 'On':
-            on_off = 'true'
-        if Command == 'Off':
-            on_off = 'false'
-
         #Homemade json
-        _json = '{"on":' + on_off + ',"bri":' + str(Level) + '}'
+        _json = '{'
+        
+        #To prevent bug
+        if Command == 'Set Level':
+            _json =_json + '"on":true,'
+        
+        #on/off
+        if Command == 'On':
+            _json =_json + '"on":true,'
+        if Command == 'Off':
+            _json =_json + '"on":false,'
+
+        #level
+        _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+        
+        #color
+        if Command == 'Set Color':
+            Hue_List = json.loads(Hue)
+            
+            #ColorModeNone = 0   // Illegal
+            #ColorModeNone = 1   // White. Valid fields: none
+            if Hue_List['m'] == 1:
+                ww = int(Hue_List['ww']) # Can be used as level for monochrome white
+                #TODO : Jamais vu un device avec ca encore
+                Domoticz.Debug("Not implemented device color 1")	
+            #ColorModeTemp = 2   // White with color temperature. Valid fields: t
+            if Hue_List['m'] == 2:
+                #Value is in mireds (not kelvin)
+                #Correct values are from 153 (6500K) up to 588 (1700K)
+                # t is 0 > 255
+                TempKelvin = int(((255 - int(Hue_List['t']))*(6500-1700)/255)+1700);
+                TempMired = 1000000 // TempKelvin
+                _json = _json + '"ct":' + str(TempMired) + ','
+            #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
+            elif Hue_List['m'] == 3:
+                x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                _json = _json + '"xy":[' + str(x) + ','+ str(y) + '],'
+            #ColorModeCustom = 4, // Custom (color + white). Valid fields: r, g, b, cw, ww, depending on device capabilities
+            elif Hue_List['m'] == 4:
+                ww = int(Hue_List['ww'])
+                cw = int(Hue_List['cw'])
+                x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))	
+                #TODO, Pas trouve de device avec ca encore ...
+                Domoticz.Debug("Not implemented device color 2")
+            #With saturation and hue, not seen in domoticz but present on deCONZ, and some device need it
+            elif Hue_List['m'] == 9998:
+                h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                saturation = s * 100   #0 > 100
+                hue = h *360	       #0 > 360
+                hue = int(hue*254//360)
+                saturation = int(saturation*254//100)
+                value = int(l * 254//100)
+                _json = _json + '"hue":' + str(hue) + ',"sat":' + str(saturation) + ',"bri":' + str(value) + ','
+
+        if _json[-1] == ',':
+            _json = _json[:-1]
+            
+        _json = _json + '}'
                 
         deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
         
@@ -331,35 +424,10 @@ def GetDeviceIEEE(id,type):
 
 #*****************************************************************************************************
 
-def UpdateDomoticz(data):
-    dev = list(data.keys())[0].split['/']
-    val = data[list(data.keys())[0]]
-    
-    IEEE = GetDeviceIEEE(dev[2],dev[3])
-    dummy,Unit = GetDomoDeviceInfo(IEEE)
-    
-    kwarg = []
-    
-    if dev[4] == 'on':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'on'
-        else:
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'off'
-            
-    if dev[4] == 'bri':
-        kwarg['nValue'] = 1
-        kwarg['sValue'] = str(val)
-        
-    Devices[Unit].Update(**kwarg)
-    Domoticz.Log("Update  ("+Devices[Unit].Name+") : " + str(kwarg))
-
 def GetDomoDeviceInfo(IEEE):
     for x in Devices:
         if Devices[x].DeviceID == str(IEEE) :
             return Devices[x],x
-
     return False
 
 def FreeUnit() :
