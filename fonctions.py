@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # coding: utf-8 -*-
 
+import Domoticz
+
+#****************************************************************************************************
+# Global fonctions
+
 def rgb_to_xy(rgb):
 	''' convert rgb tuple to xy tuple '''
 	red, green, blue = rgb
@@ -61,3 +66,76 @@ def xy_to_rgb(x, y, brightness = 1):
     b = 12.92 * b if b <= 0.0031308 else (1.0 + 0.055) * pow(b, (1.0 / 2.4)) - 0.055
 
     return {'r': round(r * 255, 0), 'g': round(g * 255, 0), 'b': round(b * 255, 0)}
+    
+    
+#**************************************************************************************************
+# Domoticz fonctions
+
+def ReturnUpdateValue(command,val):
+
+    val = str(val)
+    command = str(command)
+    
+    kwarg = {}
+    
+    #operator
+    
+    if command == 'on':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'on'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'off'
+            
+    if command == 'bri':
+        kwarg['nValue'] = 1
+        val = int(int(val) * 100 / 255 )
+        kwarg['sValue'] = str(val)
+        
+    if command == 'xy':
+        x,y = eval(str(val))
+        rgb = xy_to_rgb(x,y,1)
+        kwarg['nValue'] = 1
+        kwarg['sValue'] = str(255)
+        kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['b']) + ',"t":0,"ww":0}'
+        
+    #sensor
+    
+    if command == 'open':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'Open'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Closed'
+    
+    if command == 'temperature':
+        kwarg['nValue'] = 0
+        val = round( int(val) / 100 , 2  )
+        kwarg['sValue'] = str(val)
+        
+    if command == 'pressure':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+        
+    if command == 'humidity':
+        val = int( int(val) / 100)
+        kwarg['nValue'] = val
+        kwarg['sValue'] = '0'
+        
+    if command == 'lux':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'presence':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+    #if command == 'lastupdated':
+    #    kwarg['LastUpdate'] = val.replace('T',' ')
+
+    return kwarg
