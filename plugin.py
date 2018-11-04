@@ -30,9 +30,12 @@
 import Domoticz
 import json,urllib
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
+from fonctions import ReturnUpdateValue
+
 
 LIGHT = 10
-SENSOR = 20
+SENSOR = 11
+GROUP = 12
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -47,6 +50,7 @@ class BasePlugin:
     def __init__(self):
         self.ListLights = {}
         self.ListSensors = {}
+        self.ListGroups = {}
         self.Init = False
         self.Buffer_Command = []
         self.Request = None
@@ -58,13 +62,8 @@ class BasePlugin:
         #Domoticz.Debugging(62+64)
         
         #Web socket connexion
-        #self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=Parameters["Mode1"])
-        #self.WebSocket.Connect()
-        
-        # Scan devices
-        # light
-        url = "http://127.0.0.1:8010/api/3E62E09612/lights/"
-        #test()
+        self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=Parameters["Mode1"])
+        self.WebSocket.Connect()
 
     def onStop(self):
         Domoticz.Log("onStop called")
@@ -122,20 +121,66 @@ class BasePlugin:
         else:
             p = _Data.find('{')
         _Data = _Data[p:]
-        _Data = _Data.replace('true','True').replace('false','False')
+        _Data = _Data.replace('true','True').replace('false','False').replace('null','None')
         
         Domoticz.Log("Data Cleaned : " + str(_Data))
             
         try:
             _Data = eval(_Data)
         except:
-            _Data = {}
+            Domoticz.Log("Data : " + str(Data))
             Domoticz.Error("Response not JSON format")
             return
         
         ccc = str(Connection)
         if 'deCONZ_WebSocket' in ccc:
-            Domoticz.Log("Data : " + str(_Data) )
+            Domoticz.Log("###### WebSocket Data : " + str(_Data) )
+            First_item = next(iter(_Data))
+            
+            Unit = False
+            kwarg = {}
+        
+            try:
+                IEEE = GetDeviceIEEE(_Data['id'],_Data['r'])
+                dummy,Unit = GetDomoDeviceInfo(IEEE)
+            except:
+                Domoticz.Error("Can't find Unit > " + _Data['id'] + ' ' +_Data['r'] )
+                return
+                
+            #MAJ State
+            if 'state' in _Data:
+            
+                info = _Data['state']
+                if 'on' in info:
+                    kwarg.update(ReturnUpdateValue( 'on' , info['on'] ) )
+                if 'temperature' in info:
+                    kwarg.update(ReturnUpdateValue( 'temperature' , info['temperature'] ) )
+                if 'pressure' in info:
+                    kwarg.update(ReturnUpdateValue( 'pressure' , info['pressure'] ) )
+                if 'humidity' in info:
+                    kwarg.update(ReturnUpdateValue( 'humidity' , info['humidity'] ) )
+                if 'open' in info:
+                    kwarg.update(ReturnUpdateValue( 'open' , info['open'] ) )
+                if 'presence' in info:
+                    kwarg.update(ReturnUpdateValue( 'presence' , info['presence'] ) )
+                if 'lux' in info:
+                    kwarg.update(ReturnUpdateValue( 'lux' , info['lux'] ) )
+                #if 'lastupdated' in info:
+                #    kwarg.update(ReturnUpdateValue( 'lastupdated' , info['lastupdated'] ) )
+                
+                #Domoticz.Log("###### "+ str(Unit) + str(kwarg) )
+
+                if kwarg and Unit:
+                    Devices[Unit].Update(**kwarg)
+                    Domoticz.Log("Update  ("+Devices[Unit].Name+") : " + str(kwarg))
+
+            #MAJ config
+            elif 'config' in _Data:
+                info = _Data['config']
+                
+            else:
+                Domoticz.Error("Unknow MAJ" + str(_Data) )
+            
         elif 'deCONZ_Com' in ccc:
         
             #Next command ?
@@ -151,25 +196,40 @@ class BasePlugin:
                 #Read all devices
                 if First_item.isnumeric():
 
-                    for i in _Data:
-                    
-                        IEEE = str(_Data[i]['uniqueid'])
-                        Name = str(_Data[i]['name'])
-                        Type = str(_Data[i]['type'])
+                    #Lights or sensors ?
+                    if 'uniqueid' in _Data[First_item]:
+                        for i in _Data:
                         
-                        Domoticz.Log("Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
-                        
-                        if self.Init == LIGHT:
-                            self.ListLights[i] = IEEE
-                        if self.Init == SENSOR:
-                            self.ListSensors[i] = IEEE
+                            IEEE = str(_Data[i]['uniqueid'])
+                            Name = str(_Data[i]['name'])
+                            Type = str(_Data[i]['type'])
                             
-                        #Create it in domoticz if not exist
-                        if GetDomoDeviceInfo(IEEE) == False:
-                            CreateDevice(IEEE,Name,Type)
+                            Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
+                            
+                            if self.Init == LIGHT:
+                                self.ListLights[i] = IEEE
+                            if self.Init == SENSOR:
+                                self.ListSensors[i] = IEEE
+                                
+                            #Create it in domoticz if not exist
+                            if GetDomoDeviceInfo(IEEE) == False:
+                                CreateDevice(IEEE,Name,Type)
+
+                    #groups
+                    else:
+                        for i in _Data:
+                            Name = str(_Data[i]['name'])
+                            
+                            Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
+                            
+                    #Update initialisation
+                    if self.Init == GROUP:
+                        self.Init = True
                             
                     if self.Init == SENSOR:
-                        self.Init = True
+                        self.Init = GROUP
+                        Domoticz.Log("### Request Groups")
+                        self.SendCommand("/api/" + Parameters["Mode2"] + "/groups/")
                             
                     if self.Init == LIGHT:
                         self.Init = SENSOR
@@ -202,24 +262,7 @@ class BasePlugin:
                             IEEE = GetDeviceIEEE(dev[2],dev[1])
                             dummy,Unit = GetDomoDeviceInfo(IEEE)
                             
-                        if dev[4] == 'on':
-                            if val == 'True':
-                                kwarg['nValue'] = 1
-                                kwarg['sValue'] = 'on'
-                            else:
-                                kwarg['nValue'] = 0
-                                kwarg['sValue'] = 'off'
-                                
-                        if dev[4] == 'bri':
-                            kwarg['nValue'] = 1
-                            kwarg['sValue'] = str(val)
-                            
-                        if dev[4] == 'xy':
-                            x,y = eval(str(val))
-                            rgb = xy_to_rgb(x,y,1)
-                            kwarg['nValue'] = 1
-                            kwarg['sValue'] = str(255)
-                            kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['b']) + ',"t":0,"ww":0}'
+                        kwarg.update(ReturnUpdateValue(dev[4],val))
                         
                     else:
                         Domoticz.Error("Not managed JSON : " + str(_Data2) )
@@ -246,11 +289,13 @@ class BasePlugin:
         #on/off
         if Command == 'On':
             _json =_json + '"on":true,'
+            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
         if Command == 'Off':
             _json =_json + '"on":false,'
 
         #level
-        _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+        if Command == 'Set Level':
+            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
         
         #color
         if Command == 'Set Color':
@@ -363,9 +408,11 @@ class BasePlugin:
             
     def GetDeviceIEEE(self,id,type):
         if type == 'lights':
-            return self.ListLights[id]
+            return self.ListLights.get(id,False)
         elif type == 'sensors':
-            self.ListSensors[id]
+            return self.ListSensors.get(id,False)
+        elif type == 'groups':
+            return self.ListGroups.get(id,False)
         return False
 
 global _plugin
@@ -457,6 +504,33 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'Daylight':
         TypeName = 'Illumination'
         
+    elif _Type == 'ZHATemperature':
+        TypeName = 'Temperature'
+        
+    elif _Type == 'ZHAHumidity':
+        TypeName = 'Humidity'
+        
+    elif _Type == 'ZHAPressure':
+        TypeName = 'Pressure'
+        
+    elif _Type == 'ZHAOpenClose':
+        Type = 244
+        Subtype = 73
+        Switchtype = 11
+        
+    elif _Type == 'ZHAPresence':
+        Type = 244
+        Subtype = 73
+        Switchtype = 8
+        
+    elif _Type == 'ZHALightLevel':
+        TypeName = 'Illumination'
+        
+    elif _Type == 'ZHAAlarm':
+        Type = 244
+        Subtype = 73
+        Switchtype = 2
+
     else:
         Domoticz.Error("Unknow device type " + _Type )
         return
