@@ -100,6 +100,14 @@ def ReturnUpdateValue(command,val):
         kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['b']) + ',"t":0,"ww":0}'
         
+    if command == 'all_on' or command == 'any_on':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'on'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'off'
+        
     #sensor
     
     if command == 'open':
@@ -135,6 +143,14 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
+
+    # other
+    if command == 'battery':
+        kwarg['BatteryLevel'] = int( int(val) * 255 / 100 ) - 5
+
+    if command == 'xxxx':
+        kwarg['SignalLevel'] = 100
+
     #if command == 'lastupdated':
     #    kwarg['LastUpdate'] = val.replace('T',' ')
 
