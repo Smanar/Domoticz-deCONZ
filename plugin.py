@@ -167,7 +167,7 @@ class BasePlugin:
                 #    kwarg.update(ReturnUpdateValue( 'lastupdated' , state['lastupdated'] ) )
                 
                 if 'reachable' in state and state['reachable'] == True:
-                    Domoticz.Log("###### Device just connected : " + str(_Data) )
+                    Domoticz.Status("###### Device just connected : " + str(_Data) )
                     
                 #For groups
                 if 'all_on' in state:
@@ -316,14 +316,10 @@ class BasePlugin:
 
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + "', Hue: " + str(Hue))
+        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
         
         #Homemade json
         _json = '{'
-        
-        #To prevent bug
-        if Command == 'Set Level':
-            _json =_json + '"on":true,'
         
         #on/off
         if Command == 'On':
@@ -331,6 +327,10 @@ class BasePlugin:
             _json = _json + '"bri":' + str(round(Level*255/100)) + ','
         if Command == 'Off':
             _json =_json + '"on":false,'
+            
+        #To prevent bug
+        if Command == 'Set Level' or Command == 'Set Color':
+            _json =_json + '"on":true,'
 
         #level
         if Command == 'Set Level':
@@ -338,6 +338,9 @@ class BasePlugin:
         
         #color
         if Command == 'Set Color':
+        
+            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+        
             Hue_List = json.loads(Hue)
             
             #ColorModeNone = 0   // Illegal
