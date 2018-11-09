@@ -73,6 +73,7 @@ class BasePlugin:
 
     def onStop(self):
         Domoticz.Log("onStop called")
+        self.WebSocket.Disconnect()
 
     def onConnect(self, Connection, Status, Description):
         Domoticz.Log("onConnect called")
@@ -144,6 +145,9 @@ class BasePlugin:
             
             if not _Data:
                 return
+                
+            if not self.Init:
+                Domoticz.Log("deCONZ not ready")
             
             First_item = next(iter(_Data))
             
@@ -167,12 +171,18 @@ class BasePlugin:
                     kwarg.update(ReturnUpdateValue( 'presence' , state['presence'] ) )
                 if 'lux' in state:
                     kwarg.update(ReturnUpdateValue( 'lux' , state['lux'] ) )
+                if 'bri' in state:
+                    kwarg.update(ReturnUpdateValue( 'bri' , state['bri'] ) )
                 #if 'lastupdated' in state:
                 #    kwarg.update(ReturnUpdateValue( 'lastupdated' , state['lastupdated'] ) )
                 
-                if 'reachable' in state and state['reachable'] == True:
-                    Domoticz.Status("###### Device just connected : " + str(_Data) )
-                    self.SetDeviceDefautState(_Data['id'],_Data['r'])
+                if 'reachable' in state:
+                    if state['reachable'] == True:
+                        Domoticz.Status("###### Device just connected : " + str(_Data) )
+                        self.SetDeviceDefautState(_Data['id'],_Data['r'])
+                    else:
+                        #Set red header
+                        kwarg.update({'TimedOut':'1'})
                     
                 #For groups
                 if 'all_on' in state:
@@ -362,6 +372,8 @@ class BasePlugin:
                 # t is 0 > 255
                 TempKelvin = int(((255 - int(Hue_List['t']))*(6500-1700)/255)+1700);
                 TempMired = 1000000 // TempKelvin
+                #if previous not working
+                #TempMired = round(float(Hue_List['t'])*(500.0f - 153.0f) / 255.0f + 153.0f)
                 _json = _json + '"ct":' + str(TempMired) + ','
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
@@ -586,7 +598,6 @@ def UpdateDevice(id,type,kwarg):
 
     Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
     Devices[Unit].Update(**kwarg)
-
 
 def CreateDevice(IEEE,_Name,_Type):
     Unit = FreeUnit()
