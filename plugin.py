@@ -1,23 +1,23 @@
-# Basic Python Plugin Example
+# deCONZ Bridge
 #
 # Author: Smanar
 #
 """
 <plugin key="BasePlug" name="deCONZ plugin" author="xxx" version="1.0.0" wikilink="http://www.domoticz.com/wiki/plugins/plugin.html" externallink="https://www.google.com/">
     <description>
-        <h2>Plugin Title</h2><br/>
+        <h2>deCONZ Bridge</h2><br/>
         Overview...
         <h3>Features</h3>
         <ul style="list-style-type:square">
             <li>Feature one...</li>
             <li>Feature two...</li>
         </ul>
-        <h3>Devices</h3>
+        <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
-            <li>Device Type - What it does...</li>
+            <li>https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices</li>
         </ul>
         <h3>Configuration</h3>
-        Configuration options...
+        Gateway configuration
     </description>
     <params>
         <param field="Address" label="deCONZ IP" width="150px" required="true" default="127.0.0.1"/>
@@ -141,6 +141,10 @@ class BasePlugin:
         ccc = str(Connection)
         if 'deCONZ_WebSocket' in ccc:
             Domoticz.Log("###### WebSocket Data : " + str(_Data) )
+            
+            if not _Data:
+                return
+            
             First_item = next(iter(_Data))
             
             kwarg = {}
@@ -168,6 +172,7 @@ class BasePlugin:
                 
                 if 'reachable' in state and state['reachable'] == True:
                     Domoticz.Status("###### Device just connected : " + str(_Data) )
+                    self.SetDeviceDefautState(_Data['id'],_Data['r'])
                     
                 #For groups
                 if 'all_on' in state:
@@ -264,6 +269,7 @@ class BasePlugin:
                     #Update initialisation
                     if self.Init == GROUP:
                         self.Init = True
+                        Domoticz.Status("### deCONZ ready")
                             
                     if self.Init == SENSOR:
                         self.Init = GROUP
@@ -467,6 +473,23 @@ class BasePlugin:
         elif type == 'groups':
             return self.ListGroups.get(id,False)
         return False
+
+    def SetDeviceDefautState(self,_id,_type):
+        try:
+            IEEE = self.GetDeviceIEEE(_id,_type)
+            dummy,Unit = GetDomoDeviceInfo(IEEE)
+        except:
+            Domoticz.Error("Can't find Unit > " + _id + ' ' + _type )
+            return
+        
+        # Set it off if bulb
+        if _type == 'lights':
+            _json = '{"on":false}'
+            dummy,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
+            url = '/api/' + Parameters["Mode2"] + '/lights/' + str(deCONZ_ID) + '/state'
+            self.SendCommand(url,_json)
+
+
 
 global _plugin
 _plugin = BasePlugin()
