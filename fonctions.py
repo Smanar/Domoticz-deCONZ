@@ -147,8 +147,9 @@ def ReturnUpdateValue(command,val):
     # other
     if command == 'battery':
         if not val.isdigit():
-            val = 255
-        kwarg['BatteryLevel'] = int( int(val) * 255 / 100 ) - 5
+            kwarg['BatteryLevel'] = 255
+        else:
+            kwarg['BatteryLevel'] = int( int(val) * 255 / 100 ) - 5
 
     if command == 'xxxx':
         kwarg['SignalLevel'] = 100
