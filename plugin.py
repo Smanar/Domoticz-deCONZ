@@ -42,14 +42,11 @@
 import Domoticz
 import json,urllib
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
-from fonctions import ReturnUpdateValue, ButtonconvertionXCUBE, ButtonconvertionXCUBE_R
+from fonctions import ReturnUpdateValue, Count_Type
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
-
-LIGHT = 10
-SENSOR = 11
-GROUP = 12
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -57,14 +54,13 @@ GROUP = 12
 class BasePlugin:
     enabled = False
     def __init__(self):
-        self.ListLights = {}
-        self.ListSensors = {}
-        self.ListGroups = {}
+        self.Devices = {}
         self.SelectorSwitch = {} #IEEE,update,model
-        self.Init = False
+        self.Ready = False
         self.Buffer_Command = []
         self.Request = None
         self.Banned_Devices = []
+
         return
 
     def onStart(self):
@@ -132,7 +128,7 @@ class BasePlugin:
             return
 
     def onMessage(self, Connection, Data):
-        Domoticz.Log("onMessage called")
+        Domoticz.Debug("onMessage called")
         
         #Domoticz.Log("Data : " + str(Data))
         
@@ -144,7 +140,7 @@ class BasePlugin:
         _Data = _Data[p:]
         _Data = _Data.replace('true','True').replace('false','False').replace('null','None')
         
-        Domoticz.Log("Data Cleaned : " + str(_Data))
+        Domoticz.Debug("Data Cleaned : " + str(_Data))
             
         try:
             _Data = eval(_Data)
@@ -160,7 +156,7 @@ class BasePlugin:
             if not _Data:
                 return
                 
-            if not self.Init:
+            if not self.Ready:
                 Domoticz.Log("deCONZ not ready")
                 return
             
@@ -211,8 +207,19 @@ class BasePlugin:
                 
                 if 'reachable' in state:
                     if state['reachable'] == True:
+                        IEEE = _Data['uniqueid']
+                        Unit = GetDomoDeviceInfo(IEEE)
                         Domoticz.Status("###### Device just connected : " + str(_Data) )
-                        self.SetDeviceDefautState(_Data['id'],_Data['r'])
+                        LUpdate = Devices[Unit].LastUpdate
+                        LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+                        current = time.time()
+                        
+                        #Check if the device has been see, at least 1 mn ago
+                        if (current-LUpdate) > 60:
+                            Domoticz.Status("###### Device just connected : " + str(_Data) )
+                            self.SetDeviceDefautState(IEEE,_Data['r'])
+                        else:
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
                     else:
                         #Set red header
                         kwarg.update({'TimedOut':1})
@@ -264,10 +271,10 @@ class BasePlugin:
                             
                             Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
                             
-                            if self.Init == LIGHT:
-                                self.ListLights[i] = IEEE
-                            if self.Init == SENSOR:
-                                self.ListSensors[i] = IEEE
+                            self.Devices[IEEE] = {}
+                            self.Devices[IEEE]['id'] = i
+                            self.Devices[IEEE]['type'] = self.Ready
+                            
                             
                             kwarg = {}
                             #Get some infos
@@ -279,9 +286,10 @@ class BasePlugin:
                             #Create it in domoticz if not exist
                             if IEEE in self.Banned_Devices:
                                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
+                                self.Devices[IEEE]['Banned'] = True
                                 
                             else:
-                                #It's a switch ?
+                                #It's a switch ? Need special process
                                 if 'lumi.sensor_cube' in _Data[i]['modelid']:
                                     if IEEE.endswith('-03-000c'):
                                         self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
@@ -290,7 +298,9 @@ class BasePlugin:
                                     else:
                                         #Useless
                                         #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                        self.Devices[IEEE]['Banned'] = True
                                         continue
+                                        
                                 #Not exist > create
                                 if GetDomoDeviceInfo(IEEE) == False:
                                     if 'lumi.sensor_cube' in _Data[i]['modelid']:
@@ -309,16 +319,16 @@ class BasePlugin:
                     else:
                         for i in _Data:
                             Name = str(_Data[i]['name'])
-
                             Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
-                            
                             Dev_name = 'GROUP_' + Name
-                            
-                            self.ListGroups[i] = Dev_name
+                            self.Devices[Dev_name] = {}
+                            self.Devices[Dev_name]['id'] = i
+                            self.Devices[Dev_name]['type'] = "groups"
                             
                             #Create it in domoticz if not exist
                             if Dev_name in self.Banned_Devices:
                                 Domoticz.Log("Skipping Device (Banned) : " + str(Dev_name) )
+                                self.Devices[Dev_name]['Banned'] = True
                                 
                             else:
                                 #Not exist > create
@@ -326,18 +336,19 @@ class BasePlugin:
                                     CreateDevice(Dev_name,Name,'groups')
                             
                     #Update initialisation
-                    if self.Init == GROUP:
-                        self.Init = True
+                    if self.Ready == "groups":
+                        self.Ready = True
                         Domoticz.Status("### deCONZ ready")
-                        Domoticz.Status("### Found " + str(len(self.ListLights)) + " Operators, " + str(len(self.ListSensors)) + " Sensors and " + str(len(self.ListGroups)) + " Groups")
+                        l,s,g = Count_Type(self.Devices)
+                        Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors and " + str(g) + " Groups")
 
-                    if self.Init == SENSOR:
-                        self.Init = GROUP
+                    if self.Ready == "sensors":
+                        self.Ready = "groups"
                         Domoticz.Log("### Request Groups")
                         self.SendCommand("/api/" + Parameters["Mode2"] + "/groups/")
                             
-                    if self.Init == LIGHT:
-                        self.Init = SENSOR
+                    if self.Ready == "lights":
+                        self.Ready = "sensors"
                         Domoticz.Log("### Request sensors")
                         self.SendCommand("/api/" + Parameters["Mode2"] + "/sensors/")
 
@@ -356,6 +367,12 @@ class BasePlugin:
                     #Error
                     if First_item == 'error':
                         Domoticz.Error("deCONZ error :" + str(_Data2))
+                        if _Data2['error']['type'] == 3:
+                            dev = _Data2['error']['address'].split('/')
+                            _id = dev[2]
+                            _type = dev[1]
+                            #Set red header
+                            kwarg.update({'TimedOut':1})
                         
                     #Command sucess
                     elif First_item == 'success':
@@ -368,7 +385,6 @@ class BasePlugin:
                             _id = dev[2]
                             _type = dev[1]
 
-                            
                         kwarg.update(ReturnUpdateValue(dev[4],val))
                         
                     else:
@@ -391,7 +407,7 @@ class BasePlugin:
         #on/off
         if Command == 'On':
             _json =_json + '"on":true,'
-            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
         if Command == 'Off':
             _json =_json + '"on":false,'
             
@@ -401,12 +417,12 @@ class BasePlugin:
 
         #level
         if Command == 'Set Level':
-            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
         
         #color
         if Command == 'Set Color':
         
-            _json = _json + '"bri":' + str(round(Level*255/100)) + ','
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
         
             Hue_List = json.loads(Hue)
             
@@ -467,16 +483,16 @@ class BasePlugin:
         Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
-        Domoticz.Log("onDisconnect called for " + str(Connection) )
+        Domoticz.Debug("onDisconnect called for " + str(Connection) )
         ccc = str(Connection)
         if 'deCONZ_Com' in ccc:
             self.UpdateBuffer()
 
     def onHeartbeat(self):
-        Domoticz.Log("onHeartbeat called")
-        if self.Init != True:
-            if self.Init == False:
-                self.Init = LIGHT
+        Domoticz.Debug("onHeartbeat called")
+        if self.Ready != True:
+            if self.Ready == False:
+                self.Ready = "lights"
                 Domoticz.Log("### Request lights")
                 self.SendCommand("/api/" + Parameters["Mode2"] + "/lights/")
                 
@@ -487,9 +503,9 @@ class BasePlugin:
                 kwarg['nValue'] = 0
                 kwarg['sValue'] = 'Off'
                 _id = False
-                for i in self.ListSensors:
-                    if self.ListSensors[i] == IEEE:
-                        _id = i
+                for i in self.Devices:
+                    if i == IEEE:
+                        _id = self.Devices[i]['id']
                 UpdateDevice(_id,'sensors',kwarg)
                 self.SelectorSwitch[IEEE]['r'] = 0
                 
@@ -521,17 +537,9 @@ class BasePlugin:
         self.UpdateBuffer()
         
     def GetDevicedeCONZ(self,IEEE):
-        for i in self.ListLights:
-            if self.ListLights[i] == IEEE:
-                return 'lights',i
-
-        for i in self.ListSensors:
-            if self.ListSensors[i] == IEEE:
-                return 'sensors',i
-                
-        for i in self.ListGroups:
-            if self.ListGroups[i] == IEEE:
-                return 'groups',i
+        for i in self.Devices:
+            if i == IEEE:
+                return self.Devices[IEEE]['type'],self.Devices[IEEE]['id']
 
         return False
         
@@ -543,31 +551,22 @@ class BasePlugin:
             self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
             self.Request.Connect()
             
-    def GetDeviceIEEE(self,id,type):
-        if type == 'lights':
-            return self.ListLights.get(id,False)
-        elif type == 'sensors':
-            return self.ListSensors.get(id,False)
-        elif type == 'groups':
-            return self.ListGroups.get(id,False)
+    def GetDeviceIEEE(self,_id,_type):
+        for IEEE in self.Devices:
+            if (self.Devices[IEEE]['type'] == _type) and (self.Devices[IEEE]['id'] == _id):
+                if self.Devices[IEEE].get('Banned',False) == True:
+                    return False
+                return IEEE
+
         return False
 
-    def SetDeviceDefautState(self,_id,_type):
-        try:
-            IEEE = self.GetDeviceIEEE(_id,_type)
-            dummy,Unit = GetDomoDeviceInfo(IEEE)
-        except:
-            Domoticz.Error("Can't find Unit > " + _id + ' ' + _type )
-            return
-        
+    def SetDeviceDefautState(self,IEEE,_type):
         # Set it off if bulb
         if _type == 'lights':
             _json = '{"on":false}'
-            dummy,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
+            dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
             url = '/api/' + Parameters["Mode2"] + '/lights/' + str(deCONZ_ID) + '/state'
             self.SendCommand(url,_json)
-
-
 
 global _plugin
 _plugin = BasePlugin()
@@ -632,7 +631,7 @@ def GetDeviceIEEE(id,type):
 def GetDomoDeviceInfo(IEEE):
     for x in Devices:
         if Devices[x].DeviceID == str(IEEE) :
-            return Devices[x],x
+            return x
     return False
 
 def FreeUnit() :
@@ -645,16 +644,25 @@ def FreeUnit() :
         FreeUnit=len(Devices)+1
     return FreeUnit
     
-def UpdateDevice(id,type,kwarg):
-
-    if not kwarg:
-        return
-
+def GetDomoUnit(_id,_type):
     try:
-        IEEE = GetDeviceIEEE(id,type)
-        dummy,Unit = GetDomoDeviceInfo(IEEE)
+        IEEE = GetDeviceIEEE(_id,_type)
+        
+        if IEEE == False:
+            Domoticz.Log("Banned device > " + str(_id) + ' (' + str(_type) + ')')
+            return False
+
+        Unit = GetDomoDeviceInfo(IEEE)
     except:
-        Domoticz.Error("Can't find Unit > " + str(id) + ' ' + str(type) )
+        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ')' )
+        return False
+    return Unit
+    
+def UpdateDevice(_id,_type,kwarg):
+        
+    Unit = GetDomoUnit(_id,_type)
+    
+    if not Unit or not kwarg:
         return
         
     if 'nValue' not in kwarg:
