@@ -40,7 +40,7 @@
 </plugin>
 """
 import Domoticz
-import json,urllib
+import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import ReturnUpdateValue, Count_Type
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R
@@ -215,7 +215,7 @@ class BasePlugin:
                         current = time.time()
                         
                         #Check if the device has been see, at least 1 mn ago
-                        if (current-LUpdate) > 60:
+                        if (current-LUpdate) > 10:
                             Domoticz.Status("###### Device just connected : " + str(_Data) )
                             self.SetDeviceDefautState(IEEE,_Data['r'])
                         else:
