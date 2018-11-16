@@ -43,7 +43,7 @@ import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import ReturnUpdateValue, Count_Type
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -191,6 +191,8 @@ class BasePlugin:
                     kwarg.update(ReturnUpdateValue( 'lux' , state['lux'] ) )
                 if 'bri' in state:
                     kwarg.update(ReturnUpdateValue( 'bri' , state['bri'] ) )
+                if 'daylight' in state:
+                    kwarg.update(ReturnUpdateValue( 'daylight' , state['daylight'] ) )
                 if 'buttonevent' in state:
                     IEEE = str(_Data['uniqueid'])
                     if IEEE in self.SelectorSwitch:
@@ -199,6 +201,9 @@ class BasePlugin:
                             self.SelectorSwitch[IEEE]['r'] = 1
                         if self.SelectorSwitch[IEEE]['t'] == 'XCube_R':
                             kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
+                            self.SelectorSwitch[IEEE]['r'] = 1
+                        if self.SelectorSwitch[IEEE]['t'] == 'Tradfri_remote':
+                            kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                             self.SelectorSwitch[IEEE]['r'] = 1
                     else:
                         kwarg.update(ReturnUpdateValue( 'buttonevent' , state['buttonevent'] ) )
@@ -209,14 +214,13 @@ class BasePlugin:
                     if state['reachable'] == True:
                         IEEE = _Data['uniqueid']
                         Unit = GetDomoDeviceInfo(IEEE)
-                        Domoticz.Status("###### Device just connected : " + str(_Data) )
                         LUpdate = Devices[Unit].LastUpdate
                         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                         current = time.time()
                         
-                        #Check if the device has been see, at least 1 mn ago
+                        #Check if the device has been see, at least 10 s ago
                         if (current-LUpdate) > 10:
-                            Domoticz.Status("###### Device just connected : " + str(_Data) )
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
                             self.SetDeviceDefautState(IEEE,_Data['r'])
                         else:
                             Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
@@ -300,10 +304,12 @@ class BasePlugin:
                                         #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
                                         self.Devices[IEEE]['Banned'] = True
                                         continue
+                                if 'TRADFRI remote control' in _Data[i]['modelid']:
+                                    self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
                                         
                                 #Not exist > create
                                 if GetDomoDeviceInfo(IEEE) == False:
-                                    if 'lumi.sensor_cube' in _Data[i]['modelid']:
+                                    if self.SelectorSwitch.get(IEEE,False):
                                         CreateDevice(IEEE,Name,self.SelectorSwitch[IEEE]['t'])
                                     else:
                                         CreateDevice(IEEE,Name,Type)
@@ -561,9 +567,13 @@ class BasePlugin:
         return False
 
     def SetDeviceDefautState(self,IEEE,_type):
-        # Set it off if bulb
+        # Set bulb on same state than in domoticz
         if _type == 'lights':
-            _json = '{"on":false}'
+            Unit = GetDomoDeviceInfo(IEEE)
+            if Devices[Unit].nValue == 0:
+                _json = '{"on":false}'
+            else:
+                _json = '{"on":true}'
             dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
             url = '/api/' + Parameters["Mode2"] + '/lights/' + str(deCONZ_ID) + '/state'
             self.SendCommand(url,_json)
@@ -680,6 +690,7 @@ def CreateDevice(IEEE,_Name,_Type):
     Unit = FreeUnit()
     TypeName = ''
     
+    #Operator
     if _Type == 'Color light':
         kwarg['Type'] = 241
         kwarg['Subtype'] = 2
@@ -689,16 +700,19 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 7
-        
+
+    #Sensors
     elif _Type == 'Daylight':
-        kwarg['TypeName'] = 'Illumination'
-        
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 9
+
     elif _Type == 'ZHATemperature':
         kwarg['TypeName'] = 'Temperature'
-        
+
     elif _Type == 'ZHAHumidity':
         kwarg['TypeName'] = 'Humidity'
-        
+
     elif _Type == 'ZHAPressure':
         kwarg['TypeName'] = 'Pressure'
         
@@ -706,37 +720,45 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 11
-        
+
     elif _Type == 'ZHAPresence':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 8
-        
+
     elif _Type == 'ZHALightLevel':
         kwarg['TypeName'] = 'Illumination'
-        
+
     elif _Type == 'ZHAAlarm':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 2
-        
+
+    #Switch
     elif _Type == 'ZHASwitch':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 9
-        
+
+    elif _Type == 'Tradfri_remote':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
+
     elif _Type == 'XCube_C':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
-        
+ 
     elif _Type == 'XCube_R':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Left Rot|Right Rot", "LevelOffHidden": "true", "SelectorStyle": "0"}
-        
+
+    #groups
     elif _Type == 'groups':
         kwarg['Type'] = 241
         kwarg['Subtype'] = 2
@@ -750,5 +772,5 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Name'] = _Name
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
-    
+
     Domoticz.Status("### Create Device " + IEEE + " > " + _Name )
