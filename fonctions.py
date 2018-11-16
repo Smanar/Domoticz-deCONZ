@@ -174,6 +174,14 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
+
+    if command == 'daylight':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
             
     #switch
     if command == 'buttonevent':
@@ -222,5 +230,21 @@ def ButtonconvertionXCUBE(val):
         kwarg['nValue'] = 70
     else:#90 flip
         kwarg['nValue'] = 40
+    kwarg['sValue'] = str( kwarg['nValue'] )
+    return kwarg
+
+def ButtonconvertionTradfriRemote(val):
+    kwarg = {}
+    val = str(val)
+    if val == '1002':
+        kwarg['nValue'] = 10
+    if val == '2002':
+        kwarg['nValue'] = 20
+    if val == '3002':
+        kwarg['nValue'] = 30
+    if val == '4002':
+        kwarg['nValue'] = 40
+    if val == '5002':
+        kwarg['nValue'] = 50
     kwarg['sValue'] = str( kwarg['nValue'] )
     return kwarg
