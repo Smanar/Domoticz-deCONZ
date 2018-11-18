@@ -6,6 +6,44 @@ import Domoticz
 #****************************************************************************************************
 # Global fonctions
 
+def DecodeByteArray(stringStreamIn):
+    # Turn string values into opererable numeric byte values
+    byteArray = [ord(character) for character in stringStreamIn]
+    datalength = byteArray[1] & 127
+    indexFirstMask = 2
+
+    if datalength == 126:
+        indexFirstMask = 4
+    elif datalength == 127:
+        indexFirstMask = 10
+
+    indexFirstDataByte = indexFirstMask
+
+    #Data are masked ?
+    if byteArray[1] & 128:
+        # Extract masks
+        masks = [m for m in byteArray[indexFirstMask : indexFirstMask+4]]
+        indexFirstDataByte = indexFirstDataByte + 4
+        print (str(masks))
+    else:
+        masks = [0,0,0,0]
+
+    # List of decoded characters
+    decodedChars = []
+    i = indexFirstDataByte
+    j = 0
+
+    # Loop through each byte that was received
+    while i < len(byteArray):
+
+        # Unmask this byte and add to the decoded buffer
+        decodedChars.append( chr(byteArray[i] ^ masks[j % 4]) )
+        i += 1
+        j += 1
+
+    # Return the decoded string
+    return  ''.join(decodedChars).strip()
+
 def rgb_to_xy(rgb):
     ''' convert rgb tuple to xy tuple '''
     red, green, blue = rgb
@@ -46,21 +84,21 @@ def rgb_to_hsl(rgb):
         h /= 6
 
     return h, s, l
-    
+
 def xy_to_rgb(x, y, brightness = 1):
-    
+
     x = float(x)
     y = float(y)
     z = 1.0 - x - y;
-    
+
     Y = brightness
     X = (Y / y) * x
     Z = (Y / y) * z
-    
+
     r =  X * 1.656492 - Y * 0.354851 - Z * 0.255038;
     g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152;
     b =  X * 0.051713 - Y * 0.121364 + Z * 1.011530;
-  
+
     r = 12.92 * r if r <= 0.0031308 else (1.0 + 0.055) * pow(r, (1.0 / 2.4)) - 0.055
     g = 12.92 * g if g <= 0.0031308 else (1.0 + 0.055) * pow(g, (1.0 / 2.4)) - 0.055
     b = 12.92 * b if b <= 0.0031308 else (1.0 + 0.055) * pow(b, (1.0 / 2.4)) - 0.055
@@ -84,7 +122,7 @@ def xy_to_rgb(x, y, brightness = 1):
             b = 1.0
 
     return {'r': int(r * 255), 'g': int(g * 255), 'b': int(b * 255)}
-    
+
 
 def Count_Type(d):
     l = s = g = 0
@@ -108,9 +146,9 @@ def ReturnUpdateValue(command,val):
 
     val = str(val)
     command = str(command)
-    
+
     kwarg = {}
-    
+
     #operator
     if command == 'on':
         if val == 'True':
@@ -119,19 +157,19 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'off'
-            
+
     if command == 'bri':
         kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
         kwarg['sValue'] = str(val)
-        
+
     if command == 'xy':
         x,y = eval(str(val))
         rgb = xy_to_rgb(x,y,1)
         kwarg['nValue'] = 1
         #kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
-        
+
     if command == 'all_on' or command == 'any_on':
         if val == 'True':
             kwarg['nValue'] = 1
@@ -139,7 +177,7 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'off'
-        
+
     #sensor
     if command == 'open':
         if val == 'True':
@@ -148,22 +186,34 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
-    
+
     if command == 'temperature':
         kwarg['nValue'] = 0
         val = round( int(val) / 100 , 2  )
         kwarg['sValue'] = str(val)
-        
+
     if command == 'pressure':
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
-        
+
     if command == 'humidity':
         val = int( int(val) / 100)
         kwarg['nValue'] = val
         kwarg['sValue'] = '0'
-        
+
     if command == 'lux':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'consumption':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'power':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'current':
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
@@ -182,7 +232,7 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
-            
+
     #switch
     if command == 'buttonevent':
         kwarg['nValue'] = int(val)
@@ -212,7 +262,7 @@ def ButtonconvertionXCUBE_R(val):
         kwarg['nValue'] = 20
     kwarg['sValue'] = str( kwarg['nValue'] )
     return kwarg
-        
+
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
