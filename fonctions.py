@@ -170,6 +170,13 @@ def ReturnUpdateValue(command,val):
         #kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
 
+    if command == 'ct':
+        ct = int(val)
+        ct = -(((1000000 // b) - 1700) // ((6500-1700)/255) - 255 )
+        kwarg['nValue'] = 1
+        #kwarg['sValue'] = str(255)
+        kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
+
     if command == 'all_on' or command == 'any_on':
         if val == 'True':
             kwarg['nValue'] = 1
@@ -243,7 +250,7 @@ def ReturnUpdateValue(command,val):
         if not val.isdigit():
             kwarg['BatteryLevel'] = 255
         else:
-            kwarg['BatteryLevel'] = int( int(val) * 255 / 100 ) - 5
+            kwarg['BatteryLevel'] = int(val)
 
     if command == 'xxxx':
         kwarg['SignalLevel'] = 100
