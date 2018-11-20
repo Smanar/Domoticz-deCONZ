@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="BasePlug" name="deCONZ plugin" author="xxx" version="1.0.0" wikilink="http://www.domoticz.com/wiki/plugins/plugin.html" externallink="https://www.google.com/">
+<plugin key="BasePlug" name="deCONZ plugin" author="xxx" version="1.0.0" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <h2>deCONZ Bridge</h2><br/>
         Overview...
@@ -72,7 +72,9 @@ class BasePlugin:
 
         #Read banned devices
         with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
-            self.Banned_Devices.append(myPluginConfFile.read())
+            for line in myPluginConfFile:
+                if not line.startswith('#'):
+                    self.Banned_Devices.append(line.strip())
         myPluginConfFile.close()
 
         #Web socket connexion
@@ -471,11 +473,9 @@ class BasePlugin:
             #With saturation and hue, not seen in domoticz but present on deCONZ, and some device need it
             elif Hue_List['m'] == 9998:
                 h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
-                saturation = s * 100   #0 > 100
-                hue = h *360           #0 > 360
-                hue = int(hue*254//360)
-                saturation = int(saturation*254//100)
-                value = int(l * 254//100)
+                hue = int(h * 65535)
+                saturation = int(s * 254)
+                value = int(l * 254/100)
                 _json = _json + '"hue":' + str(hue) + ',"sat":' + str(saturation) + ',"bri":' + str(value) + ','
 
         if _json[-1] == ',':
