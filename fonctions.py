@@ -84,6 +84,26 @@ def rgb_to_hsl(rgb):
         h /= 6
 
     return h, s, l
+    
+def hsl_to_rgb(h, s, l):
+    def hue_to_rgb(p, q, t):
+        t += 1 if t < 0 else 0
+        t -= 1 if t > 1 else 0
+        if t < 1/6: return p + (q - p) * 6 * t
+        if t < 1/2: return q
+        if t < 2/3: p + (q - p) * (2/3 - t) * 6
+        return p
+
+    if s == 0:
+        r, g, b = l, l, l
+    else:
+        q = l * (1 + s) if l < 0.5 else l + s - l * s
+        p = 2 * l - q
+        r = hue_to_rgb(p, q, h + 1/3)
+        g = hue_to_rgb(p, q, h)
+        b = hue_to_rgb(p, q, h - 1/3)
+
+    return r, g, b
 
 def xy_to_rgb(x, y, brightness = 1):
 
