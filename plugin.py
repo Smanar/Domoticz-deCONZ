@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="BasePlug" name="deCONZ plugin" author="xxx" version="1.0.0" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="BasePlug" name="deCONZ plugin" author="Smanar" version="1.0.0" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <h2>deCONZ Bridge</h2><br/>
         Overview...
@@ -39,6 +39,7 @@
     </params>
 </plugin>
 """
+
 import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
@@ -92,9 +93,7 @@ class BasePlugin:
     def onConnect(self, Connection, Status, Description):
         Domoticz.Log("onConnect called")
 
-        ccc = str(Connection)
-
-        if 'deCONZ_WebSocket' in ccc:
+        if Connection.Name == 'deCONZ_WebSocket':
 
             if (Status != 0):
                 Domoticz.Log("WebSocket connexion error : " + str(Connection))
@@ -117,8 +116,8 @@ class BasePlugin:
                         "Upgrade: websocket\r\n\r\n"
             self.WebSocket.Send(wsHeader)
 
-        elif 'deCONZ_Com' in ccc:
-            
+        elif Connection.Name == 'deCONZ_Com':
+
             self.NeedWaitForCon = False
 
             if (Status != 0):
@@ -141,7 +140,7 @@ class BasePlugin:
 
         #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
-        
+
         #New line ?
         if Data.startswith(b'HTTP') or Data.startswith(b'\x81'):
             Data = Data.decode("utf-8", "ignore")
@@ -152,14 +151,15 @@ class BasePlugin:
             _Data = Data[p:]
         else:
             _Data = Data.decode("utf-8", "ignore")
-        
+
         _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','')
-        _Data = str(_Data)
         #Domoticz.Debug("Data Cleaned : " + _Data)
-        
+
         if not _Data:
+            if Connection.Name == 'deCONZ_Com':
+                self.Request.Disconnect()
             return
-                
+
         if Connection.Name == 'deCONZ_Com':
             self.BufferReceive = self.BufferReceive + _Data
             try:
@@ -167,7 +167,13 @@ class BasePlugin:
             except:
                 #Not complete frame
                 return
+
             self.NormalConnexion(_Data)
+
+            #Next command ?
+            self.Request.Disconnect()
+            self.UpdateBuffer()
+
         elif Connection.Name == 'deCONZ_WebSocket':
             try:
                 _Data = eval(_Data)
@@ -185,12 +191,11 @@ class BasePlugin:
 
         #Homemade json
         _json = '{'
-        _json2 = None
 
         #on/off
         if Command == 'On':
             _json =_json + '"on":true,'
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
         if Command == 'Off':
             _json =_json + '"on":false,'
 
@@ -198,18 +203,14 @@ class BasePlugin:
         if Command == 'Set Level':
             #To prevent bug
             _json =_json + '"on":true,'
-            
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
+
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
 
         #color
         if Command == 'Set Color':
 
-            #_json2 = '{"on":true,"bri":' + str(round(Level*254/100)) + ',"transitiontime":0}'
-            
             #To prevent bug
             _json =_json + '"on":true,'
-            
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
 
             Hue_List = json.loads(Hue)
 
@@ -231,10 +232,18 @@ class BasePlugin:
                 _json = _json + '"ct":' + str(TempMired) + ','
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
-                x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
-                x = round(x,6)
-                y = round(y,6)
-                _json = _json + '"xy":[' + str(x) + ','+ str(y) + '],'
+                IEEE = Devices[Unit].DeviceID
+                if self.Devices[IEEE]['colormode'] == 'hs':
+                    h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                    hue = int(h * 65535)
+                    saturation = int(s * 254)
+                    value = int(l * 254/100)
+                    _json = _json + '"hue":' + str(hue) + ',"sat":' + str(saturation) + ',"bri":' + str(value) + ',"transitiontime":0,'
+                else:
+                    x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                    x = round(x,6)
+                    y = round(y,6)
+                    _json = _json + '"xy":[' + str(x) + ','+ str(y) + '],'
             #ColorModeCustom = 4, // Custom (color + white). Valid fields: r, g, b, cw, ww, depending on device capabilities
             elif Hue_List['m'] == 4:
                 ww = int(Hue_List['ww'])
@@ -242,13 +251,10 @@ class BasePlugin:
                 x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                 #TODO, Pas trouve de device avec ca encore ...
                 Domoticz.Debug("Not implemented device color 2")
-            #With saturation and hue, not seen in domoticz but present on deCONZ, and some device need it
-            elif Hue_List['m'] == 9998:
-                h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
-                hue = int(h * 65535)
-                saturation = int(s * 254)
-                value = int(l * 254/100)
-                _json = _json + '"hue":' + str(hue) + ',"sat":' + str(saturation) + ',"bri":' + str(value) + ','
+
+            #To prevent bug
+            if '"bri":' not in _json:
+                _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
 
         if _json[-1] == ',':
             _json = _json[:-1]
@@ -262,7 +268,7 @@ class BasePlugin:
             url = url + '/state'
         else:
             url = url + '/action'
-            
+
         self.SendCommand(url,_json)
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
@@ -298,13 +304,10 @@ class BasePlugin:
     def onDeviceRemoved(self,unit):
         Domoticz.Log("Device Removed")
         #TODO : Need to rescan all
-        
+
 #---------------------------------------------------------------------------------------
-        
+
     def NormalConnexion(self,_Data):
-        #Next command ?
-        self.Request.Disconnect()
-        self.UpdateBuffer()
 
         Domoticz.Log("Classic Data : " + str(_Data) )
 
@@ -335,6 +338,13 @@ class BasePlugin:
                             config = _Data[i]['config']
                             if 'battery' in config:
                                 kwarg.update(ReturnUpdateValue( 'battery' , config['battery'] ) )
+                            if 'reachable' in config:
+                                if config['reachable'] == False:
+                                    kwarg.update({'TimedOut':1})
+                        if 'state' in _Data[i]:
+                            state = _Data[i]['state']
+                            if 'colormode' in state:
+                                self.Devices[IEEE]['colormode'] = state['colormode']
 
                         #Create it in domoticz if not exist
                         if IEEE in self.Banned_Devices:
@@ -449,15 +459,12 @@ class BasePlugin:
             if kwarg:
                 UpdateDevice(_id,_type,kwarg)
 
-        
     def WebSocketConnexion(self,_Data):
         Domoticz.Log("###### WebSocket Data : " + str(_Data) )
 
         if not self.Ready:
             Domoticz.Log("deCONZ not ready")
             return
-
-        #First_item = next(iter(_Data))
 
         if 'e' in _Data:
             #Device just deleted ?
@@ -583,12 +590,12 @@ class BasePlugin:
     def UpdateBuffer(self):
         if len(self.Buffer_Command) == 0:
             return
-            
+
         if ANTIFLOOD == False:
             self.NeedWaitForCon = False
 
         if (self.NeedWaitForCon == False) and (self.Request == None or not (self.Request.Connecting() or self.Request.Connected())):
-            self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
+            self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"], Protocol='JSON')
             self.Request.Connect()
             self.NeedWaitForCon = True
 
