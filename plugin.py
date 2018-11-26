@@ -327,6 +327,8 @@ class BasePlugin:
                         Name = str(_Data[i]['name'])
                         Type = str(_Data[i]['type'])
                         Model = str(_Data[i].get('modelid',''))
+                        if not Model:
+                            Model = ''
 
                         Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
