@@ -127,6 +127,7 @@ class BasePlugin:
 
             if len(self.Buffer_Command) > 0:
                 c = self.Buffer_Command.pop(0)
+                #Domoticz.Log("### Send" + str(c))
                 self.Request.Send(c)
                 self.BufferReceive = ''
 
@@ -195,7 +196,7 @@ class BasePlugin:
         #on/off
         if Command == 'On':
             _json =_json + '"on":true,'
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
         if Command == 'Off':
             _json =_json + '"on":false,'
 
@@ -204,7 +205,7 @@ class BasePlugin:
             #To prevent bug
             _json =_json + '"on":true,'
 
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
+            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
 
         #color
         if Command == 'Set Color':
@@ -325,6 +326,7 @@ class BasePlugin:
                         IEEE = str(_Data[i]['uniqueid'])
                         Name = str(_Data[i]['name'])
                         Type = str(_Data[i]['type'])
+                        Model = str(_Data[i].get('modelid',''))
 
                         Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
@@ -353,7 +355,7 @@ class BasePlugin:
 
                         else:
                             #It's a switch ? Need special process
-                            if 'lumi.sensor_cube' in _Data[i]['modelid']:
+                            if 'lumi.sensor_cube' in Model:
                                 if IEEE.endswith('-03-000c'):
                                     self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
                                 elif IEEE.endswith('-02-0012'):
@@ -363,7 +365,7 @@ class BasePlugin:
                                     #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
                                     self.Devices[IEEE]['Banned'] = True
                                     continue
-                            if 'TRADFRI remote control' in _Data[i]['modelid']:
+                            if 'TRADFRI remote control' in Model:
                                 self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
 
                             #Not exist > create
@@ -553,7 +555,6 @@ class BasePlugin:
         else:
             Domoticz.Error("Unknow MAJ" + str(_Data) )
 
-        #Domoticz.Log("###### "+ str(Unit) + str(kwarg) )
         if kwarg:
             UpdateDevice(_Data['id'],_Data['r'],kwarg)
 
@@ -595,7 +596,7 @@ class BasePlugin:
             self.NeedWaitForCon = False
 
         if (self.NeedWaitForCon == False) and (self.Request == None or not (self.Request.Connecting() or self.Request.Connected())):
-            self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"], Protocol='JSON')
+            self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
             self.Request.Connect()
             self.NeedWaitForCon = True
 
@@ -786,6 +787,14 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 2
+
+    elif _Type == 'ZHAWater':
+        kwarg['TypeName'] = 'Waterflow'
+
+    elif _Type == 'ZHAFire':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 5
 
     #Switch
     elif _Type == 'ZHASwitch':
