@@ -84,7 +84,7 @@ def rgb_to_hsl(rgb):
         h /= 6
 
     return h, s, l
-    
+
 def hsl_to_rgb(h, s, l):
     def hue_to_rgb(p, q, t):
         t += 1 if t < 0 else 0
@@ -323,5 +323,31 @@ def ButtonconvertionTradfriRemote(val):
         kwarg['nValue'] = 40
     if val == '5002':
         kwarg['nValue'] = 50
+    kwarg['sValue'] = str( kwarg['nValue'] )
+    return kwarg
+
+def ButtonconvertionGeneric(val):
+    kwarg = {}
+    val = str(val)
+    Button_Number = val[0]
+    Button_Action = val[3]
+
+    v = 0
+
+    if Button_Action == '2': #  Release (after press)
+        v = 10
+    if Button_Action == '3': # Release (after hold)
+        v = 20
+    if Button_Action == '4': # Double press
+        v = 30
+    if Button_Action == '5': # Triple press
+        v = 40
+    if Button_Action == '6': # Quadruple press
+        v = 50
+    if Button_Action == '7': # shake
+        v = 60
+
+    kwarg['nValue'] = v * int(Button_Number)
+
     kwarg['sValue'] = str( kwarg['nValue'] )
     return kwarg
