@@ -44,7 +44,7 @@ import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import ReturnUpdateValue, Count_Type
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -357,18 +357,21 @@ class BasePlugin:
 
                         else:
                             #It's a switch ? Need special process
-                            if 'lumi.sensor_cube' in Model:
-                                if IEEE.endswith('-03-000c'):
-                                    self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
-                                elif IEEE.endswith('-02-0012'):
-                                    self.SelectorSwitch[IEEE] = { 't': 'XCube_C', 'r': 0 }
+                            if Type == 'ZHASwitch' or Type == 'ZGPSwitch':
+                                if 'lumi.sensor_cube' in Model:
+                                    if IEEE.endswith('-03-000c'):
+                                        self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                    elif IEEE.endswith('-02-0012'):
+                                        self.SelectorSwitch[IEEE] = { 't': 'XCube_C', 'r': 0 }
+                                    else:
+                                        #Useless
+                                        #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                        self.Devices[IEEE]['Banned'] = True
+                                        continue
+                                elif 'TRADFRI remote control' in Model:
+                                    self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
                                 else:
-                                    #Useless
-                                    #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
-                                    self.Devices[IEEE]['Banned'] = True
-                                    continue
-                            if 'TRADFRI remote control' in Model:
-                                self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
+                                    self.SelectorSwitch[IEEE] = { 't': 'Switch_Generic', 'r': 0 }
 
                             #Not exist > create
                             if GetDomoDeviceInfo(IEEE) == False:
@@ -513,11 +516,14 @@ class BasePlugin:
                     if self.SelectorSwitch[IEEE]['t'] == 'XCube_C':
                         kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
-                    if self.SelectorSwitch[IEEE]['t'] == 'XCube_R':
+                    elif self.SelectorSwitch[IEEE]['t'] == 'XCube_R':
                         kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
-                    if self.SelectorSwitch[IEEE]['t'] == 'Tradfri_remote':
+                    elif self.SelectorSwitch[IEEE]['t'] == 'Tradfri_remote':
                         kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                        self.SelectorSwitch[IEEE]['r'] = 1
+                    else:
+                        kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
                 else:
                     kwarg.update(ReturnUpdateValue( 'buttonevent' , state['buttonevent'] ) )
@@ -751,6 +757,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 7
 
+    elif _Type == 'Smart plug':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 1
+
     #Sensors
     elif _Type == 'Daylight':
         kwarg['Type'] = 244
@@ -792,6 +804,7 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'ZHAWater':
         kwarg['TypeName'] = 'Waterflow'
+        kwarg['Image'] = 11
 
     elif _Type == 'ZHAFire':
         kwarg['Type'] = 244
@@ -799,10 +812,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 5
 
     #Switch
-    elif _Type == 'ZHASwitch':
+    elif _Type == 'Switch_Generic':
         kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 9
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
