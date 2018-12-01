@@ -44,3 +44,7 @@ And use this plugin to make bridge beetween their webserver and domoticz.
 Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
 
 The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCON, so not realy robust
+
+Don't take care about the error message   
+```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
+I can't find the problem, but it change nothing on working mode.
