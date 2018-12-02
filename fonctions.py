@@ -145,7 +145,7 @@ def xy_to_rgb(x, y, brightness = 1):
 
 
 def Count_Type(d):
-    l = s = g = 0
+    b = l = s = g = 0
     for i in d:
         if d[i]['type'] == 'lights':
             l += 1
@@ -153,16 +153,77 @@ def Count_Type(d):
             s += 1
         else:
             g += 1
-    return l,s,g
+        if d[i].get('Banned',False) == True:
+            b += 1
+    return l,s,g,b
 
 
 #**************************************************************************************************
 # Domoticz fonctions
-
-CubeEvent = {'7000':'wake'}
+#
 #https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
+def ProcessAllConfig(data):
+    kwarg = {}
+
+    if 'battery' in data:
+        kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+    if 'reachable' in data:
+        if data['reachable'] == False:
+            kwarg.update({'TimedOut':1})
+
+    return kwarg
+
+def ProcessAllState(data):
+    kwarg = {}
+
+    if 'on' in data:
+        kwarg.update(ReturnUpdateValue( 'on' , data['on'] ) )
+    if 'xy' in data:
+        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
+    if 'ct' in data:
+        kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
+    if 'bri' in data:
+        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] ) )
+    if 'temperature' in data:
+        kwarg.update(ReturnUpdateValue( 'temperature' , data['temperature'] ) )
+    if 'pressure' in data:
+        kwarg.update(ReturnUpdateValue( 'pressure' , data['pressure'] ) )
+    if 'humidity' in data:
+        kwarg.update(ReturnUpdateValue( 'humidity' , data['humidity'] ) )
+    if 'open' in data:
+        kwarg.update(ReturnUpdateValue( 'open' , data['open'] ) )
+    if 'presence' in data:
+        kwarg.update(ReturnUpdateValue( 'presence' , data['presence'] ) )
+    if 'lux' in data:
+        kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
+    if 'daylight' in data:
+        kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
+    if 'consumption' in data:
+        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
+    if 'power' in data:
+        kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
+    if 'current' in data:
+        kwarg.update(ReturnUpdateValue( 'current' , data['current'] ) )
+    if 'battery' in data:
+        kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+    if 'buttonevent' in data:
+        kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
+    #if 'lastupdated' in data:
+    #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
+
+    #For groups
+    if 'all_on' in data:
+        kwarg.update(ReturnUpdateValue( 'all_on' , data['all_on'] ) )
+    if 'any_on' in data:
+        kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
+
+    return kwarg
+
 def ReturnUpdateValue(command,val):
+
+    if not val:
+        val = 0
 
     val = str(val)
     command = str(command)
@@ -179,24 +240,25 @@ def ReturnUpdateValue(command,val):
             kwarg['sValue'] = 'off'
 
     if command == 'bri':
-        kwarg['nValue'] = 1
+        #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
         kwarg['sValue'] = str(val)
 
     if command == 'xy':
         x,y = eval(str(val))
         rgb = xy_to_rgb(x,y,1)
-        kwarg['nValue'] = 1
+        #kwarg['nValue'] = 1
         #kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
 
     if command == 'ct':
         ct = int(val)
         ct = -(((1000000 // b) - 1700) // ((6500-1700)/255) - 255 )
-        kwarg['nValue'] = 1
+        #kwarg['nValue'] = 1
         #kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
 
+    #groups
     if command == 'all_on' or command == 'any_on':
         if val == 'True':
             kwarg['nValue'] = 1
@@ -283,52 +345,74 @@ def ReturnUpdateValue(command,val):
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/138
 def ButtonconvertionXCUBE_R(val):
     kwarg = {}
-    if int(val) < 0:
+    if int(val) == 0:
+        kwarg['nValue'] = 0
+    elif int(val) < 0:
         kwarg['nValue'] = 10
     else:
         kwarg['nValue'] = 20
-    kwarg['sValue'] = str( kwarg['nValue'] )
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
     return kwarg
 
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
-    if val == '7007':#shake
+    if val == '0':# off
+        kwarg['nValue'] = 0
+    elif val == '7007':# shake
         kwarg['nValue'] = 10
-    elif val == '7000': #wake
+    elif val == '7000': # wake
         kwarg['nValue'] = 20
-    elif val == '7008':#drop
+    elif val == '7008':# drop
         kwarg['nValue'] = 30
-    elif int(val[3]) == (7 - int(val[0])) :#180 flip
+    elif int(val[3]) == (7 - int(val[0])) :# 180 flip
         kwarg['nValue'] = 50
-    elif val[1:] == '000':#push
+    elif val[1:] == '000':# push
         kwarg['nValue'] = 60
-    elif val[0] == val[3]:#double tap
+    elif val[0] == val[3]:# double tap
         kwarg['nValue'] = 70
-    else:#90 flip
+    else:# 90 flip
         kwarg['nValue'] = 40
-    kwarg['sValue'] = str( kwarg['nValue'] )
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
     return kwarg
 
 def ButtonconvertionTradfriRemote(val):
     kwarg = {}
     val = str(val)
+
     if val == '1002':
         kwarg['nValue'] = 10
-    if val == '2002':
+    elif val == '2002':
         kwarg['nValue'] = 20
-    if val == '3002':
+    elif val == '3002':
         kwarg['nValue'] = 30
-    if val == '4002':
+    elif val == '4002':
         kwarg['nValue'] = 40
-    if val == '5002':
+    elif val == '5002':
         kwarg['nValue'] = 50
-    kwarg['sValue'] = str( kwarg['nValue'] )
+    else:
+        kwarg['nValue'] = 0
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
     return kwarg
 
 def ButtonconvertionGeneric(val):
     kwarg = {}
-    val = str(val)
+    val = "%04d" % val
     Button_Number = val[0]
     Button_Action = val[3]
 
@@ -349,5 +433,9 @@ def ButtonconvertionGeneric(val):
 
     kwarg['nValue'] = v * int(Button_Number)
 
-    kwarg['sValue'] = str( kwarg['nValue'] )
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
     return kwarg
