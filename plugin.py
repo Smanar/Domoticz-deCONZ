@@ -203,7 +203,8 @@ class BasePlugin:
         #on/off
         if Command == 'On':
             _json =_json + '"on":true,'
-            _json = _json + '"bri":' + str(round(Level*254/100)) + ','
+            if Level:
+                _json = _json + '"bri":' + str(round(Level*254/100)) + ','
         if Command == 'Off':
             _json =_json + '"on":false,'
 
@@ -414,7 +415,7 @@ class BasePlugin:
         if self.Ready == "groups":
             self.Ready = True
             Domoticz.Status("### deCONZ ready")
-            b,l,s,g = Count_Type(self.Devices)
+            l,s,g,b = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups with " + str(b) + " Ignored")
 
         if self.Ready == "sensors":
@@ -739,7 +740,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 7
 
-    elif _Type == 'Smart plug':
+    elif _Type == 'Smart plug' or _Type == 'On/Off plug-in unit':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
@@ -833,4 +834,4 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name )
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +')' )
