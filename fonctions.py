@@ -153,6 +153,7 @@ def Count_Type(d):
             s += 1
         else:
             g += 1
+            
         if d[i].get('Banned',False) == True:
             b += 1
     return l,s,g,b
