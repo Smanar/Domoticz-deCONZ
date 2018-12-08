@@ -25,7 +25,7 @@ For theses ones who have problems with API Key, there is a file called API_KEY.p
 # Information.
 To resume you need deCONZ (application to control and set up ZigBee network) https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
 
-You need too a deCONZ gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, XIAOMI, Heiman, IKEA, PHILIPS, ect ....
+You need too a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, XIAOMI, Heiman, IKEA, PHILIPS, ect ....
 
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
