@@ -6,7 +6,7 @@ It use the deCONZ rest api to make a bridge beetween your zigbee network and Dom
 # WIP Project
 
 # Requirement.
-deCONZ 2.05.44
+deCONZ 2.05.44, ATM, But there a new version every week, so I can't be sure the plugin don't use a special feature you don't have on your version if you use an older one.
 
 # Installation.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
