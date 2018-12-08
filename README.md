@@ -30,11 +30,11 @@ You need too a deCONZ gateway, a Raspbee (for raspberry) or Conbee (USB key), it
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
 
-You can use their GUI, for maintenance, support, look traffic, set attributes, manage router, ect ....
+You can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify, update firmware, make RAZ, ect ....
 ![alt text](https://www.dresden-elektronik.de/typo3temp/pics/f0afa1a806.png)
 
 
-You can use their Web app, for devices management, pairing, groups, ect ...
+You can use their Web app, for devices management, pairing, groups, scenes, events, ect ...
 ![alt text](https://user-images.githubusercontent.com/20152487/48567509-77dad480-e8fd-11e8-877d-2970ebb2c08c.png)
 
 
