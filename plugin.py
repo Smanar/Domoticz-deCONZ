@@ -50,6 +50,7 @@ from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, Buttonconv
 DOMOTICZ_IP = '127.0.0.1'
 
 ANTIFLOOD = False
+POWERLOG = False #Disable power info in log, to stop spamming
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -172,17 +173,20 @@ class BasePlugin:
                 #Not complete frame
                 return
 
+            #Complete frame, force disconnexion
+            self.Request.Disconnect()
+
+            #traitement
             self.NormalConnexion(_Data)
 
             #Next command ?
-            self.Request.Disconnect()
             self.UpdateBuffer()
 
         elif Connection.Name == 'deCONZ_WebSocket':
             try:
                 _Data = eval(_Data)
             except:
-                Domoticz.Error("Data : " + _Data)
+                Domoticz.Error("Data : " + str(_Data))
                 Domoticz.Error("Response not JSON format")
                 return
             self.WebSocketConnexion(_Data)
@@ -284,7 +288,7 @@ class BasePlugin:
         Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
-        Domoticz.Debug("onDisconnect called for " + str(Connection) )
+        #Domoticz.Debug("onDisconnect called for " + str(Connection) )
         if Connection.Name == 'deCONZ_Com':
             self.UpdateBuffer()
         else:
@@ -292,11 +296,18 @@ class BasePlugin:
 
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
+
+        #Initialisation
         if self.Ready != True:
             if self.Ready == False:
                 self.Ready = "lights"
                 Domoticz.Log("### Request lights")
                 self.SendCommand("/api/" + Parameters["Mode2"] + "/lights/")
+
+        #Check websocket connexion
+        if not self.WebSocket.Connected():
+            Domoticz.Error("WebSocket Disconnected, reconnexion !")
+            self.WebSocket.Connect()
 
         #reset switchs
         for IEEE in self.SelectorSwitch:
@@ -349,6 +360,18 @@ class BasePlugin:
                     if 'colormode' in state:
                         self.Devices[IEEE]['colormode'] = state['colormode']
 
+                #hack
+                if Type == 'ZHAPower':
+                    try:
+                        if _Data[i]['manufacturername'] == 'OSRAM':
+                            #This device not working
+                            dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
+                            if deCONZ_ID:
+                                self.DeleteDeviceFromdeCONZ(deCONZ_ID)
+                            continue
+                    except:
+                        Domoticz.Log("### Can't disable unworking device : Osram plug")
+
                 #Create it in domoticz if not exist
                 if IEEE in self.Banned_Devices:
                     Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
@@ -396,7 +419,7 @@ class BasePlugin:
                 Name = str(_Data[i]['name'])
                 Type = str(_Data[i]['type'])
                 Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
-                Dev_name = 'GROUP_' + Name
+                Dev_name = 'GROUP_' + Name.replace(' ','_')
                 self.Devices[Dev_name] = {}
                 self.Devices[Dev_name]['id'] = i
                 self.Devices[Dev_name]['type'] = Type
@@ -467,11 +490,14 @@ class BasePlugin:
                     dev = (list(data.keys())[0] ).split('/')
                     val = data[list(data.keys())[0]]
 
-                    if not _id:
-                        _id = dev[2]
-                        _type = dev[1]
+                    if len(dev) < 3:
+                        Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                    else:
+                        if not _id:
+                            _id = dev[2]
+                            _type = dev[1]
 
-                    _FakeJson.update( { dev[4] : val } )
+                        _FakeJson.update( { dev[4] : val } )
 
                 else:
                     Domoticz.Error("Not managed JSON : " + str(_Data2) )
@@ -544,6 +570,18 @@ class BasePlugin:
         if kwarg:
             UpdateDevice(_Data['id'],_Data['r'],kwarg)
 
+    def DeleteDeviceFromdeCONZ(self,_id):
+        url = '/api/' + Parameters["Mode2"] + '/sensors/' + str(_id)
+
+        sendData = "DELETE " + url + " HTTP/1.1\r\n" \
+                    "Host: " + Parameters["Address"] + ':' + Parameters["Port"] + "\r\n" \
+                    "Connection: keep-alive\r\n\r\n"
+
+        self.Buffer_Command.append(sendData)
+        self.UpdateBuffer()
+
+        Domoticz.Status("### Deleting device " + str(_id))
+
     def SendCommand(self,url,data=None):
 
         Domoticz.Log("Send Command " + url + " with " + str(data))
@@ -572,7 +610,7 @@ class BasePlugin:
             if i == IEEE:
                 return self.Devices[IEEE]['type'],self.Devices[IEEE]['id']
 
-        return False
+        return False,False
 
     def UpdateBuffer(self):
         if len(self.Buffer_Command) == 0:
