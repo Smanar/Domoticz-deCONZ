@@ -253,8 +253,13 @@ def ReturnUpdateValue(command,val):
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
 
     if command == 'ct':
-        ct = int(val)
-        ct = -(((1000000 // b) - 1700) // ((6500-1700)/255) - 255 )
+        ct = 1000000  // int(val)
+        ct = -((ct - 1700) / ((6500.0-1700.0)/255.0) - 255 )
+        ct = int(ct)
+        if ct < 0:
+            ct = 0
+        if ct > 255:
+            ct = 255
         #kwarg['nValue'] = 1
         #kwarg['sValue'] = str(255)
         kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
