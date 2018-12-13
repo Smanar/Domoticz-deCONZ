@@ -456,7 +456,11 @@ class BasePlugin:
 
         Domoticz.Log("Classic Data : " + str(_Data) )
 
-        First_item = next(iter(_Data))
+        try:
+            First_item = next(iter(_Data))
+        except:
+            Domoticz.Error("Not JSON response : " + str(_Data) )
+            return
 
         if isinstance(First_item, str):
             if First_item.isnumeric():
