@@ -187,8 +187,12 @@ class BasePlugin:
                 _Data = eval(_Data)
             except:
                 Domoticz.Error("Data : " + str(_Data))
-                Domoticz.Error("Response not JSON format")
-                return
+                Domoticz.Error("Response not JSON format, Trying to repair")
+                try:
+                    _Data = eval(First_Json(_Data))
+                    Domoticz.Error("New Data : " + str(_Data))
+                except:
+                    return
             self.WebSocketConnexion(_Data)
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
@@ -197,8 +201,8 @@ class BasePlugin:
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
 
-        if not self.Ready:
-            Domoticz.Log("deCONZ not ready")
+        if not self.Ready == True:
+            Domoticz.Error("deCONZ not ready")
             return
 
         #Homemade json
@@ -299,7 +303,7 @@ class BasePlugin:
 
         #Initialisation
         if self.Ready != True:
-            if self.Ready == False:
+            if ((self.Ready == False) or (self.Ready == 'lights')):
                 self.Ready = "lights"
                 Domoticz.Log("### Request lights")
                 self.SendCommand("/api/" + Parameters["Mode2"] + "/lights/")
@@ -459,7 +463,7 @@ class BasePlugin:
         try:
             First_item = next(iter(_Data))
         except:
-            Domoticz.Error("Not JSON response : " + str(_Data) )
+            Domoticz.Error("Bad JSON response : " + str(_Data) )
             return
 
         if isinstance(First_item, str):
@@ -514,8 +518,8 @@ class BasePlugin:
     def WebSocketConnexion(self,_Data):
         Domoticz.Log("###### WebSocket Data : " + str(_Data) )
 
-        if not self.Ready:
-            Domoticz.Log("deCONZ not ready")
+        if not self.Ready == True:
+            Domoticz.Error("deCONZ not ready")
             return
 
         if 'e' in _Data:
