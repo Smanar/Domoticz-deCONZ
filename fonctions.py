@@ -153,11 +153,23 @@ def Count_Type(d):
             s += 1
         else:
             g += 1
-            
+
         if d[i].get('Banned',False) == True:
             b += 1
     return l,s,g,b
 
+def First_Json(data):
+    s = ''
+    b = 0
+    for c in data:
+        s += c
+        if c == '{':
+            b += 1
+        if c == '}':
+            b -= 1
+            if b == 0:
+                return s
+    return False
 
 #**************************************************************************************************
 # Domoticz fonctions
