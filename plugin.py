@@ -43,7 +43,7 @@
 import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
-from fonctions import Count_Type, ProcessAllState, ProcessAllConfig
+from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric
 
 #Better to use 'localhost' ?
