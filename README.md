@@ -24,6 +24,7 @@ And use this plugin to make bridge beetween their webserver and domoticz.
 
 # Requirement.
 deCONZ 2.05.44, ATM, But there a new version every week, so I can't be sure the plugin don't use a special feature you don't have on your version if you use an older one.
+
 Domoticz, current stable version.
 
 # Installation.
