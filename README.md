@@ -1,7 +1,6 @@
 # Domoticz-deCONZ
-deCONZ plugin for Domoticz in python, waiting for native hardware support https://www.domoticz.com/forum/viewtopic.php?f=68&t=25179&p=195222&hilit=deconz#p195222.
-
-It use the deCONZ rest api to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
+It's a python plugin for Domoticz (home automation application).   
+It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
 
 # Description
 To resume you need deCONZ (application to control and set up ZigBee network) https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
