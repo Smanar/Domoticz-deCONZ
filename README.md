@@ -48,4 +48,12 @@ The plugin works fine, but I haven't tested all possibles devices, so not finish
 # Known issues
 Don't take care about the error message   
 ```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
-I can't find the problem, but it change nothing on working mode.
+I know where is the problem the problem, but I haven't find a way to avoid it, But it change nothing on working mode.
+
+If you add devices or change devices name for exemple in Phoscon after the plugin have started, the plugin will de desynchronized, and you will have this kind of error message   
+```2018-12-29 20:49:32.807 Error: (deConz) Unknow MAJ{'name': 'TRÅDFRI Motion sensor', 'uniqueid': '00:0b:57:ff:xx:xx:xx:xx', 'id': '2', 'r': 'sensors', 't': 'event', 'e': 'changed'}```   
+or   
+```2018-12-29 20:54:04.979 (deConz) Banned device > 2 (sensors)```   
+To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
+To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"
+
