@@ -45,6 +45,9 @@ Take care if you have too much devices, at startup, the plugin add ALL your devi
 
 The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCON, so not realy robust
 
+At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
+
+
 # Known issues
 Don't take care about the error message   
 ```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
