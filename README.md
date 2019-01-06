@@ -42,11 +42,11 @@ For theses ones who have problems with API Key, there is a file called API_KEY.p
 ```python3 API_KEY.py```
 
 # Remark
-Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
+- Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
 
-The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCON, so not realy robust
+- The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCONZ, and I don't know yet if it's a good method.
 
-At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
+- At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
 
 
 # Known issues
