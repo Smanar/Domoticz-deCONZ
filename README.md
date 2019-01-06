@@ -38,7 +38,8 @@ The plugin don't use special configuration file, except the banned.txt file.
 At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
 Don't worry for name, the plugin never update name even you change it in deCONZ to prevent problems with scripts.
 
-For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file.
+For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all command or params just use:   
+```python3 API_KEY.py```
 
 # Remark
 Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
@@ -49,11 +50,11 @@ At final, you can have more devices you have in reality, it's normal, deCONZ can
 
 
 # Known issues
-Don't take care about the error message   
+- Don't take care about the error message   
 ```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
 I know where is the problem the problem, but I haven't find a way to avoid it, But it change nothing on working mode.
 
-If you add devices or change devices name for exemple in Phoscon after the plugin have started, the plugin will de desynchronized, and you will have this kind of error message   
+- If you add devices or change devices name for exemple in Phoscon after the plugin have started, the plugin will de desynchronized, and you will have this kind of error message   
 ```2018-12-29 20:49:32.807 Error: (deConz) Unknow MAJ{'name': 'TRÅDFRI Motion sensor', 'uniqueid': '00:0b:57:ff:xx:xx:xx:xx', 'id': '2', 'r': 'sensors', 't': 'event', 'e': 'changed'}```   
 or   
 ```2018-12-29 20:54:04.979 (deConz) Banned device > 2 (sensors)```   
