@@ -3,13 +3,16 @@
 # Author: Smanar
 #
 """
-<plugin key="BasePlug" name="deCONZ plugin" author="Smanar" version="1.0.0" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.1" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
+        <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
         It use the deCONZ rest api to make a bridge beetween your zigbee network and Domoticz (Using Conbee or Raspbee)
+        <br/><br/>
         <h3>Remark</h3>
         <ul style="list-style-type:square">
             <li>You can use the file API_KEY.py if you have problem to get your API Key</li>
+            <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
             <li>...</li>
         </ul>
         <h3>Supported Devices</h3>
@@ -86,6 +89,14 @@ class BasePlugin:
         #Web socket connexion
         self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=Parameters["Mode1"])
         self.WebSocket.Connect()
+
+        # Disabled, not working for selector ...
+        #check for new icons
+        #if 'bulbs_group' not in Images:
+        #    try:
+        #        Domoticz.Image('icons/bulbs_group.zip').Create()
+        #    except:
+        #        Domoticz.Error("Can't create new icons")
 
     def onStop(self):
         Domoticz.Log("onStop called")
@@ -186,12 +197,27 @@ class BasePlugin:
             try:
                 _Data = eval(_Data)
             except:
+                #Sometime the socket bug, trying to repair
                 Domoticz.Error("Data : " + str(_Data))
-                Domoticz.Error("Response not JSON format, Trying to repair")
+                Domoticz.Error("Malformed JSON response, Trying to repair")
                 try:
-                    _Data = eval(First_Json(_Data))
-                    Domoticz.Error("New Data : " + str(_Data))
+                    last = ''
+                    p = _Data.find('{')
+                    while p != -1:
+                        b = First_Json(_Data[p:])
+                        if b:
+                            _Data = _Data[len(b):]
+                            p = _Data.find('{')
+                            if last != b:
+                                _Data2 = eval(b)
+                                Domoticz.Error("New Data repaired : " + str(_Data2))
+                                self.WebSocketConnexion(_Data2)
+                                last = b
+                        else:
+                            break
+                    return
                 except:
+                    Domoticz.Error("Can't repair")
                     return
             self.WebSocketConnexion(_Data)
         else:
@@ -386,7 +412,7 @@ class BasePlugin:
                     if Type == 'ZHASwitch' or Type == 'ZGPSwitch':
 
                         #Set it to off
-                        kwarg.update({'sValue': 'Off', 'nValue': 0,})
+                        kwarg.update({'sValue': 'Off', 'nValue': 0})
 
                         if 'lumi.sensor_cube' in Model:
                             if IEEE.endswith('-03-000c'):
@@ -430,7 +456,7 @@ class BasePlugin:
 
                 #Create it in domoticz if not exist
                 if Dev_name in self.Banned_Devices:
-                    Domoticz.Log("Skipping Device (Banned) : " + str(Dev_name) )
+                    Domoticz.Log("Skipping Group (Banned) : " + str(Dev_name) )
                     self.Devices[Dev_name]['Banned'] = True
 
                 else:
@@ -445,12 +471,12 @@ class BasePlugin:
             l,s,g,b = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups with " + str(b) + " Ignored")
 
-        if self.Ready == "sensors":
+        elif self.Ready == "sensors":
             self.Ready = "groups"
             Domoticz.Log("### Request Groups")
             self.SendCommand("/api/" + Parameters["Mode2"] + "/groups/")
 
-        if self.Ready == "lights":
+        elif self.Ready == "lights":
             self.Ready = "sensors"
             Domoticz.Log("### Request sensors")
             self.SendCommand("/api/" + Parameters["Mode2"] + "/sensors/")
@@ -636,7 +662,7 @@ class BasePlugin:
         for IEEE in self.Devices:
             if (self.Devices[IEEE]['type'] == _type) and (self.Devices[IEEE]['id'] == _id):
                 if self.Devices[IEEE].get('Banned',False) == True:
-                    return False
+                    return 'banned'
                 return IEEE
 
         return False
@@ -725,6 +751,8 @@ def FreeUnit() :
         if x not in Devices :
             FreeUnit=x
             return FreeUnit
+        else:
+            Domoticz.Log("-----" + str(x) + str(Devices[x]) )
     if FreeUnit == "" :
         FreeUnit=len(Devices)+1
     return FreeUnit
@@ -733,8 +761,11 @@ def GetDomoUnit(_id,_type):
     try:
         IEEE = GetDeviceIEEE(_id,_type)
 
-        if IEEE == False:
+        if IEEE == 'banned':
             Domoticz.Log("Banned device > " + str(_id) + ' (' + str(_type) + ')')
+            return False
+        elif IEEE == False:
+            Domoticz.Log("Device not in base, need resynchronisation ? > " + str(_id) + ' (' + str(_type) + ')')
             return False
 
         Unit = GetDomoDeviceInfo(IEEE)
@@ -756,6 +787,11 @@ def UpdateDevice(_id,_type,kwarg):
         kwarg['sValue'] = Devices[Unit].sValue
     if Devices[Unit].TimedOut != 0:
         kwarg['TimedOut'] = 0
+
+    #Disabled because no update for battery or last seen for exemple
+    #No need to trigger in this situation
+    #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
+    #    kwarg['SuppressTriggers'] = True
 
     Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
     Devices[Unit].Update(**kwarg)
@@ -860,16 +896,16 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_R':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Left Rot|Right Rot", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['TypeName'] = 'Custom'
+        kwarg['Options'] = {"Custom": ("1;degree")}
 
     #groups
     elif _Type == 'LightGroup':
         kwarg['Type'] = 241
         kwarg['Subtype'] = 2
         kwarg['Switchtype'] = 7
+        #if 'bulbs_group' in Images:
+        #    kwarg['Image'] = Images['bulbs_group'].ID
 
     else:
         Domoticz.Error("Unknow device type " + _Type )
