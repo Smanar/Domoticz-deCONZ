@@ -363,12 +363,8 @@ def ReturnUpdateValue(command,val):
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/138
 def ButtonconvertionXCUBE_R(val):
     kwarg = {}
-    if int(val) == 0:
-        kwarg['nValue'] = 0
-    elif int(val) < 0:
-        kwarg['nValue'] = 10
-    else:
-        kwarg['nValue'] = 20
+
+    kwarg['nValue'] = int(val)
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
