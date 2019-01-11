@@ -76,7 +76,7 @@ I know where is the problem the problem, but I haven't find a way to avoid it, B
 or   
 ```2018-12-29 20:54:04.979 (deConz) Banned device > 2 (sensors)```   
 To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
-To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"
+To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
-#Versions
+# Versions
 - 15/01/19 : First official version, The Xiaomi cube now use custom sensor for Rotation, it send now numeric value, so you can use it to vary a light or a volume speaker.
