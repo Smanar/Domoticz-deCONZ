@@ -12,7 +12,7 @@ I m making the first official version ATM, so If you have already installed a pr
 - Select again "deCONZ plugin" in the selectbox "Type"
 - Reconfigure the plugin, all the editbox on the bottom was reset to defaut.
 
-Your devices won't be reset. But your API key yes, so remember it before updating the plugin. I m sorry for that, but I have used a generic name as key on my previous version.
+Your devices won't be reset. But your setting, yes, so remember your API key before updating the plugin. I m sorry for that, but I have used a generic name as key on my previous version.
 
 
 # Domoticz-deCONZ
