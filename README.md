@@ -1,3 +1,20 @@
+# WARNING !   
+I m making the first official version ATM, so If you have already installed a previous version and install the new one (the 1.0.1), you will have an import error on log   
+```
+2019-01-11 20:13:35.441 Error: (BasePlug) failed to load 'plugin.py', Python Path used was ':/usr/lib/python35.zip:/usr/lib/python3.5:/usr/lib/python3.5/plat-arm-linux-gnueabihf:/usr/lib/python3.5/lib-dynload'.
+2019-01-11 20:13:35.441 Error: (deCONZ) Module Import failed, exception: 'ImportError'
+2019-01-11 20:13:35.441 Error: (deCONZ) Module Import failed: ' Name: plugin'
+2019-01-11 20:13:35.441 Error: (deCONZ) Error Line details not available.
+```
+"Easy" to correct.   
+- Go to Setting/Hardware
+- Select deCONZ on hardware list, all will be empty at bottom.
+- Select again "deCONZ plugin" in the selectbox "Type"
+- Reconfigure the plugin, all the editbox on the bottom was reset to defaut.
+
+Your devices won't be reset. But your API key yes, so remember it before updating the plugin. I m sorry for that, but I have used a generic name as key on my previous version.
+
+
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
@@ -61,3 +78,5 @@ or
 To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"
 
+#Versions
+- 15/01/19 : First official version, The Xiaomi cube now use custom sensor for Rotation, it send now numeric value, so you can use it to vary a light or a volume speaker.
