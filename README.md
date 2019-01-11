@@ -19,7 +19,7 @@ Your devices won't be reset. But your setting, yes, so remember your API key bef
 It's a python plugin for Domoticz (home automation application).   
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
 
-# Description
+## Description
 To resume you need deCONZ (application to control and set up ZigBee network) https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
 
 You need too a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....
@@ -38,19 +38,19 @@ You can use their Web app, for devices management, pairing, groups, scenes, even
 
 And use this plugin to make bridge beetween their webserver and domoticz.
 
-# Requirement.
+## Requirement.
 deCONZ 2.05.44, ATM, But there a new version every week, so I can't be sure the plugin don't use a special feature you don't have on your version if you use an older one.
 
 Domoticz, current stable version.
 
-# Installation.
+## Installation.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
 - Run:
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
 - Restart Domoticz.   
 - Enable the plugin in hardware page.   
 
-# Configuration.
+## Configuration.
 The plugin don't use special configuration file, except the banned.txt file.   
 At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
 Don't worry for name, the plugin never update name even you change it in deCONZ to prevent problems with scripts.
@@ -58,7 +58,7 @@ Don't worry for name, the plugin never update name even you change it in deCONZ 
 For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
 ```python3 API_KEY.py```
 
-# Remark
+## Remark
 - Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
 
 - The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCONZ, and I don't know yet if it's a good method.
@@ -66,7 +66,7 @@ For theses ones who have problems with API Key, there is a file called API_KEY.p
 - At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
 
 
-# Known issues
+## Known issues
 - Don't take care about the error message   
 ```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
 I know where is the problem the problem, but I haven't find a way to avoid it, But it change nothing on working mode.
@@ -78,5 +78,5 @@ or
 To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
-# Versions
+## Versions
 - 11/01/19 : 1.0.1 > First official version, The Xiaomi cube now use custom sensor for Rotation, it send now numeric value, so you can use it to vary a light or a volume speaker.
