@@ -9,7 +9,7 @@ I m making the first official version ATM, so If you have already installed a pr
 "Easy" to correct.   
 - Go to Setting/Hardware
 - Select deCONZ on hardware list, all will be empty at bottom.
-- Select again "deCONZ plugin" in the selectbox "Type"
+- Select again "deCONZ plugin" in the selectbox "Type", all the bottom will be back.
 - Reconfigure the plugin, all the editbox on the bottom was reset to defaut.
 
 Your devices won't be reset. But your setting, yes, so remember your API key before updating the plugin. I m sorry for that, but I have used a generic name as key on my previous version.
