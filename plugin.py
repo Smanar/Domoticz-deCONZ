@@ -751,8 +751,6 @@ def FreeUnit() :
         if x not in Devices :
             FreeUnit=x
             return FreeUnit
-        else:
-            Domoticz.Log("-----" + str(x) + str(Devices[x]) )
     if FreeUnit == "" :
         FreeUnit=len(Devices)+1
     return FreeUnit
