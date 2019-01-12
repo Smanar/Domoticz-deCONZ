@@ -65,6 +65,8 @@ For theses ones who have problems with API Key, there is a file called API_KEY.p
 
 - At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
 
+- If you haven't github acount, the support in domoticz forum is here https://www.domoticz.com/forum/viewtopic.php?f=68&t=25631
+
 
 ## Known issues
 - Don't take care about the error message   
