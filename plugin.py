@@ -361,108 +361,109 @@ class BasePlugin:
     def InitDeconz(self,_Data,First_item):
         #Read all devices
 
-        #Lights or sensors ?
-        if 'uniqueid' in _Data[First_item]:
-            for i in _Data:
+        if First_item:
+            #Lights or sensors ?
+            if 'uniqueid' in _Data[First_item]:
+                for i in _Data:
 
-                IEEE = str(_Data[i]['uniqueid'])
-                Name = str(_Data[i]['name'])
-                Type = str(_Data[i]['type'])
-                Model = str(_Data[i].get('modelid',''))
-                if not Model:
-                    Model = ''
+                    IEEE = str(_Data[i]['uniqueid'])
+                    Name = str(_Data[i]['name'])
+                    Type = str(_Data[i]['type'])
+                    Model = str(_Data[i].get('modelid',''))
+                    if not Model:
+                        Model = ''
 
-                Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
+                    Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
-                self.Devices[IEEE] = {}
-                self.Devices[IEEE]['id'] = i
-                self.Devices[IEEE]['type'] = self.Ready
+                    self.Devices[IEEE] = {}
+                    self.Devices[IEEE]['id'] = i
+                    self.Devices[IEEE]['type'] = self.Ready
 
-                kwarg = {}
-                #Get some infos
-                if 'config' in _Data[i]:
-                    config = _Data[i]['config']
-                    kwarg.update(ProcessAllConfig(config))
+                    kwarg = {}
+                    #Get some infos
+                    if 'config' in _Data[i]:
+                        config = _Data[i]['config']
+                        kwarg.update(ProcessAllConfig(config))
 
-                if 'state' in _Data[i]:
-                    state = _Data[i]['state']
-                    kwarg.update(ProcessAllState(state))
-                    if 'colormode' in state:
-                        self.Devices[IEEE]['colormode'] = state['colormode']
+                    if 'state' in _Data[i]:
+                        state = _Data[i]['state']
+                        kwarg.update(ProcessAllState(state))
+                        if 'colormode' in state:
+                            self.Devices[IEEE]['colormode'] = state['colormode']
 
-                #hack
-                if Type == 'ZHAPower':
-                    try:
-                        if _Data[i]['manufacturername'] == 'OSRAM':
-                            #This device not working
-                            dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
-                            if deCONZ_ID:
-                                self.DeleteDeviceFromdeCONZ(deCONZ_ID)
-                            continue
-                    except:
-                        Domoticz.Log("### Can't disable unworking device : Osram plug")
-
-                #Create it in domoticz if not exist
-                if IEEE in self.Banned_Devices:
-                    Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
-                    self.Devices[IEEE]['Banned'] = True
-
-                else:
-                    #It's a switch ? Need special process
-                    if Type == 'ZHASwitch' or Type == 'ZGPSwitch':
-
-                        #Set it to off
-                        kwarg.update({'sValue': 'Off', 'nValue': 0})
-
-                        if 'lumi.sensor_cube' in Model:
-                            if IEEE.endswith('-03-000c'):
-                                self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
-                            elif IEEE.endswith('-02-0012'):
-                                self.SelectorSwitch[IEEE] = { 't': 'XCube_C', 'r': 0 }
-                            else:
-                                #Useless
-                                #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
-                                self.Devices[IEEE]['Banned'] = True
+                    #hack
+                    if Type == 'ZHAPower':
+                        try:
+                            if _Data[i]['manufacturername'] == 'OSRAM':
+                                #This device not working
+                                dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
+                                if deCONZ_ID:
+                                    self.DeleteDeviceFromdeCONZ(deCONZ_ID)
                                 continue
-                        elif 'TRADFRI remote control' in Model:
-                            self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
-                        else:
-                            self.SelectorSwitch[IEEE] = { 't': 'Switch_Generic', 'r': 0 }
+                        except:
+                            Domoticz.Log("### Can't disable unworking device : Osram plug")
 
-                    #Not exist > create
-                    if GetDomoDeviceInfo(IEEE) == False:
-                        if self.SelectorSwitch.get(IEEE,False):
-                            CreateDevice(IEEE,Name,self.SelectorSwitch[IEEE]['t'])
-                        else:
-                            CreateDevice(IEEE,Name,Type)
-                    #Exist > update
+                    #Create it in domoticz if not exist
+                    if IEEE in self.Banned_Devices:
+                        Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
+                        self.Devices[IEEE]['Banned'] = True
+
                     else:
-                        if kwarg:
-                            Type_device = 'lights'
-                            if not 'hascolor' in _Data[i]:
-                                Type_device = 'sensors'
-                            UpdateDevice(i,Type_device,kwarg)
+                        #It's a switch ? Need special process
+                        if Type == 'ZHASwitch' or Type == 'ZGPSwitch':
 
-        #groups
-        else:
-            for i in _Data:
-                Name = str(_Data[i]['name'])
-                Type = str(_Data[i]['type'])
-                Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
-                Dev_name = 'GROUP_' + Name.replace(' ','_')
-                self.Devices[Dev_name] = {}
-                self.Devices[Dev_name]['id'] = i
-                self.Devices[Dev_name]['type'] = Type
+                            #Set it to off
+                            kwarg.update({'sValue': 'Off', 'nValue': 0})
 
-                #Create it in domoticz if not exist
-                if Dev_name in self.Banned_Devices:
-                    Domoticz.Log("Skipping Group (Banned) : " + str(Dev_name) )
-                    self.Devices[Dev_name]['Banned'] = True
+                            if 'lumi.sensor_cube' in Model:
+                                if IEEE.endswith('-03-000c'):
+                                    self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                elif IEEE.endswith('-02-0012'):
+                                    self.SelectorSwitch[IEEE] = { 't': 'XCube_C', 'r': 0 }
+                                else:
+                                    #Useless
+                                    #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                    self.Devices[IEEE]['Banned'] = True
+                                    continue
+                            elif 'TRADFRI remote control' in Model:
+                                self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
+                            else:
+                                self.SelectorSwitch[IEEE] = { 't': 'Switch_Generic', 'r': 0 }
 
-                else:
-                    #Not exist > create
-                    if GetDomoDeviceInfo(Dev_name) == False:
-                        CreateDevice(Dev_name,Name,Type)
+                        #Not exist > create
+                        if GetDomoDeviceInfo(IEEE) == False:
+                            if self.SelectorSwitch.get(IEEE,False):
+                                CreateDevice(IEEE,Name,self.SelectorSwitch[IEEE]['t'])
+                            else:
+                                CreateDevice(IEEE,Name,Type)
+                        #Exist > update
+                        else:
+                            if kwarg:
+                                Type_device = 'lights'
+                                if not 'hascolor' in _Data[i]:
+                                    Type_device = 'sensors'
+                                UpdateDevice(i,Type_device,kwarg)
+
+            #groups
+            else:
+                for i in _Data:
+                    Name = str(_Data[i]['name'])
+                    Type = str(_Data[i]['type'])
+                    Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
+                    Dev_name = 'GROUP_' + Name.replace(' ','_')
+                    self.Devices[Dev_name] = {}
+                    self.Devices[Dev_name]['id'] = i
+                    self.Devices[Dev_name]['type'] = Type
+
+                    #Create it in domoticz if not exist
+                    if Dev_name in self.Banned_Devices:
+                        Domoticz.Log("Skipping Group (Banned) : " + str(Dev_name) )
+                        self.Devices[Dev_name]['Banned'] = True
+
+                    else:
+                        #Not exist > create
+                        if GetDomoDeviceInfo(Dev_name) == False:
+                            CreateDevice(Dev_name,Name,Type)
 
         #Update initialisation
         if self.Ready == "groups":
@@ -489,7 +490,11 @@ class BasePlugin:
         try:
             First_item = next(iter(_Data))
         except:
-            Domoticz.Error("Bad JSON response : " + str(_Data) )
+            #Special case, if the user don't have this kind of device
+            if (self.Ready != True) and ( len(_Data) == 0) :
+                self.InitDeconz(_Data,None)
+            else:
+                Domoticz.Error("Bad JSON response : " + str(_Data) )
             return
 
         if isinstance(First_item, str):
