@@ -58,7 +58,7 @@ Don't worry for name, the plugin never update name even you change it in deCONZ 
 For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
 ```python3 API_KEY.py```
 
-## Remark
+## Remark.
 - Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
 
 - The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCONZ, and I don't know yet if it's a good method.
@@ -68,7 +68,7 @@ For theses ones who have problems with API Key, there is a file called API_KEY.p
 - If you haven't github acount, the support in domoticz forum is here https://www.domoticz.com/forum/viewtopic.php?f=68&t=25631
 
 
-## Known issues
+## Known issues.
 - Don't take care about the error message   
 ```Error: (deCONZ): Socket Shutdown Error: 9, Bad file descriptor```   
 I know where is the problem the problem, but I haven't find a way to avoid it, But it change nothing on working mode.
@@ -80,6 +80,6 @@ or
 To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
-## Versions
+## Changelog.
 - 12/01/19 : 1.0.2 > Correction in the situation the user don't have a device category, for exemple, no bulbs.
 - 11/01/19 : 1.0.1 > First official version, The Xiaomi cube now use custom sensor for Rotation, it send now numeric value, so you can use it to vary a light or a volume speaker.
