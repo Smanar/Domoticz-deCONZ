@@ -1,5 +1,5 @@
 # WARNING !   
-I m making the first official version ATM, so If you have already installed a previous version and install the new one (the 1.0.1), you will have an import error on log   
+I m making the first official version ATM, so If you have already installed a previous version and installing the new one (the 1.0.1), you will have an import error on log   
 ```
 2019-01-11 20:13:35.441 Error: (BasePlug) failed to load 'plugin.py', Python Path used was ':/usr/lib/python35.zip:/usr/lib/python3.5:/usr/lib/python3.5/plat-arm-linux-gnueabihf:/usr/lib/python3.5/lib-dynload'.
 2019-01-11 20:13:35.441 Error: (deCONZ) Module Import failed, exception: 'ImportError'
