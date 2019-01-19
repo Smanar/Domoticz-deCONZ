@@ -48,7 +48,13 @@ Domoticz, current stable version.
 - Run:
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
 - Restart Domoticz.   
-- Enable the plugin in hardware page.   
+- Enable the plugin in hardware page (hardware page, select deconz plugin, clic "update").   
+
+You can later update the plugin
+- With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
+- Run:
+```git pull```
+- Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
 ## Configuration.
 The plugin don't use special configuration file, except the banned.txt file.   
