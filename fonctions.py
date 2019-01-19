@@ -265,16 +265,17 @@ def ReturnUpdateValue(command,val):
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
 
     if command == 'ct':
-        ct = 1000000  // int(val)
-        ct = -((ct - 1700) / ((6500.0-1700.0)/255.0) - 255 )
-        ct = int(ct)
-        if ct < 0:
-            ct = 0
-        if ct > 255:
-            ct = 255
-        #kwarg['nValue'] = 1
-        #kwarg['sValue'] = str(255)
-        kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
+        if int(val) > 1:
+            ct = 1000000  // int(val)
+            ct = -((ct - 1700) / ((6500.0-1700.0)/255.0) - 255 )
+            ct = int(ct)
+            if ct < 0:
+                ct = 0
+            if ct > 255:
+                ct = 255
+            #kwarg['nValue'] = 1
+            #kwarg['sValue'] = str(255)
+            kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
 
     #groups
     if command == 'all_on' or command == 'any_on':
