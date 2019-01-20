@@ -222,6 +222,8 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'buttonevent' in data:
         kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
+    if ('status' in data) and not ('daylight' in data) :
+        kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -265,6 +267,7 @@ def ReturnUpdateValue(command,val):
         kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
 
     if command == 'ct':
+        #Correct values are from 153 (6500K) up to 588 (1700K) so uselss if < 1
         if int(val) > 1:
             ct = 1000000  // int(val)
             ct = -((ct - 1700) / ((6500.0-1700.0)/255.0) - 255 )
@@ -299,6 +302,14 @@ def ReturnUpdateValue(command,val):
         kwarg['nValue'] = 0
         val = round( int(val) / 100 , 2  )
         kwarg['sValue'] = str(val)
+
+    if command == 'status':
+        if int(val) == 0:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(val)
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = str(val)
 
     if command == 'pressure':
         kwarg['nValue'] = 0
