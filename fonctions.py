@@ -188,8 +188,15 @@ def ProcessAllConfig(data):
     return kwarg
 
 def ProcessAllState(data):
+    # Lux need to be > daylight > dark
+    # xy > ct > bri >on/off
+    # current > power > consumption
+    # status > daylight > all
+
     kwarg = {}
 
+    if 'status' in data:
+        kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
         kwarg.update(ReturnUpdateValue( 'on' , data['on'] ) )
     if 'xy' in data:
@@ -208,10 +215,10 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'open' , data['open'] ) )
     if 'presence' in data:
         kwarg.update(ReturnUpdateValue( 'presence' , data['presence'] ) )
-    if 'lux' in data:
-        kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
     if 'daylight' in data:
         kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
+    if 'lux' in data:
+        kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
     if ('consumption' in data) and not ('power' in data):
         kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'power' in data:
@@ -222,8 +229,6 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'buttonevent' in data:
         kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
-    if ('status' in data) and not ('daylight' in data) :
-        kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'flag' in data:
         kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
     #if 'lastupdated' in data:
