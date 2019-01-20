@@ -212,7 +212,7 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
     if 'daylight' in data:
         kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
-    if 'consumption' in data:
+    if ('consumption' in data) and not ('power' in data):
         kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'power' in data:
         kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
@@ -224,6 +224,8 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
     if ('status' in data) and not ('daylight' in data) :
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
+    if 'flag' in data:
+        kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -297,6 +299,14 @@ def ReturnUpdateValue(command,val):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
+
+    if command == 'flag':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
 
     if command == 'temperature':
         kwarg['nValue'] = 0
