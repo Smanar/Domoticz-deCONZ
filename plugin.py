@@ -74,6 +74,8 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Log("onStart called")
+        #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
+        #PyArg_ParseTuple
 
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
@@ -410,7 +412,7 @@ class BasePlugin:
 
                     else:
                         #It's a switch ? Need special process
-                        if Type == 'ZHASwitch' or Type == 'ZGPSwitch':
+                        if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
 
                             #Set it to off
                             kwarg.update({'sValue': 'Off', 'nValue': 0})
@@ -837,21 +839,21 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 9
 
-    elif _Type == 'ZHATemperature':
+    elif _Type == 'ZHATemperature' or _Type == 'CLIPTemperature':
         kwarg['TypeName'] = 'Temperature'
 
-    elif _Type == 'ZHAHumidity':
+    elif _Type == 'ZHAHumidity' or _Type == 'CLIPHumidity':
         kwarg['TypeName'] = 'Humidity'
 
     elif _Type == 'ZHAPressure':
         kwarg['TypeName'] = 'Pressure'
 
-    elif _Type == 'ZHAOpenClose':
+    elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 11
 
-    elif _Type == 'ZHAPresence':
+    elif _Type == 'ZHAPresence' or _Type == 'CLIPPresence':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 8
@@ -878,6 +880,14 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
+
+    elif _Type == 'CLIPGenericStatus':
+        kwarg['TypeName'] = 'Text'
+
+    elif _Type == 'CLIPGenericFlag':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 2
 
     #Switch
     elif _Type == 'Switch_Generic':
