@@ -231,6 +231,8 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
     if 'flag' in data:
         kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
+    if 'water' in data:
+        kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -306,6 +308,14 @@ def ReturnUpdateValue(command,val):
             kwarg['sValue'] = 'Closed'
 
     if command == 'flag':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+
+    if command == 'water':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
