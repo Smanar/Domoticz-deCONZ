@@ -873,8 +873,10 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 2
 
     elif _Type == 'ZHAWater':
-        kwarg['TypeName'] = 'Waterflow'
-        kwarg['Image'] = 11
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 5
+        #kwarg['Image'] = 11 # Not working for this kind of device
 
     elif _Type == 'ZHAFire':
         kwarg['Type'] = 244
