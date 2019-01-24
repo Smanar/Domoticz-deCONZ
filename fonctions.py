@@ -233,6 +233,8 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
     if 'water' in data:
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
+    if 'fire' in data:
+        kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -316,6 +318,14 @@ def ReturnUpdateValue(command,val):
             kwarg['sValue'] = 'Off'
 
     if command == 'water':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+
+    if command == 'fire':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
