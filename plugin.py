@@ -70,12 +70,16 @@ class BasePlugin:
         self.NeedWaitForCon = False
         self.BufferReceive = ''
 
+        self.bug = ''
+
         return
 
     def onStart(self):
         Domoticz.Log("onStart called")
         #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
         #PyArg_ParseTuple
+        #CreateDevice('1234','1234','ZHAWater')
+        self.bug = Parameters["Mode2"]
 
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
@@ -329,8 +333,17 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
 
+        #Just to debug
+        try:
+            aa = Parameters["Mode2"]
+        except Exception as inst:
+            Domoticz.Error("Exception detail: '"+str(inst)+"'")
+            Domoticz.Error("**** " + str(self.bug) + ' ' + str(Parameters))
+            raise
+
         #Initialisation
         if self.Ready != True:
+            Domoticz.Log("### Initialisation >" + str(self.Ready))
             if ((self.Ready == False) or (self.Ready == 'lights')):
                 self.Ready = "lights"
                 Domoticz.Log("### Request lights")
@@ -549,6 +562,7 @@ class BasePlugin:
                 UpdateDevice(_id,_type,kwarg)
 
     def WebSocketConnexion(self,_Data):
+
         Domoticz.Log("###### WebSocket Data : " + str(_Data) )
 
         if not self.Ready == True:
@@ -599,6 +613,14 @@ class BasePlugin:
                         self.SetDeviceDefautState(IEEE,_Data['r'])
                     else:
                         Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+
+            if ('tampered' in state) or ('lowbattery' in state):
+                tampered = state.get('tampered',False)
+                lowbattery = state.get('lowbattery',False)
+                if tampered or lowbattery:
+                    kwarg.update({'TimedOut':1})
+                    Domoticz.Error("###### Device with hardware defaut : " + str(_Data))
+
 
         #MAJ config
         elif 'config' in _Data:
@@ -876,7 +898,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
-        #kwarg['Image'] = 11 # Not working for this kind of device
+        kwarg['Image'] = 11 # Visible only on floorplan
 
     elif _Type == 'ZHAFire':
         kwarg['Type'] = 244
