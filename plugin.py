@@ -53,7 +53,7 @@ from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, Buttonconv
 DOMOTICZ_IP = '127.0.0.1'
 
 ANTIFLOOD = False
-POWERLOG = False #Disable power info in log, to stop spamming
+LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -69,6 +69,7 @@ class BasePlugin:
         self.Banned_Devices = []
         self.NeedWaitForCon = False
         self.BufferReceive = ''
+        self.BufferLenght = 0
 
         self.bug = ''
 
@@ -157,23 +158,54 @@ class BasePlugin:
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
+        
+        _Data = ''
 
         #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
         #Domoticz.Log("Byte needed : " + str(Connection.BytesTransferred()) +  "ATM : " + str(len(Data)))
         #The max is 4096 so if the data size excess 4096 byte it will be cut
 
-        #New line ?
-        if Data.startswith(b'HTTP') or Data.startswith(b'\x81'):
-            Data = Data.decode("utf-8", "ignore")
-            if Data[-1] == ']':
-                p = Data.find('[')
-            else:
+        #Websocket data ?
+        if (Connection.Name == 'deCONZ_WebSocket'):
+            if Data.startswith(b'\x81'):
+                Data = Data.decode("utf-8", "ignore")
                 p = Data.find('{')
-            _Data = Data[p:]
+                _Data = Data[p:]
+            else:
+                Domoticz.Log("Websocket Http data : " + str(Data.decode("utf-8", "ignore").replace('\n','')) )
+        #Normal connexion
+        elif Connection.Name == 'deCONZ_Com':
+            #New frame
+            if Data.startswith(b'HTTP'):
+                self.BufferLenght = len(Data)
+                self.BufferReceive = ''
+                Data = Data.decode("utf-8", "ignore")
+                if Data[-1] == ']':
+                    p = Data.find('[')
+                else:
+                    p = Data.find('{')
+                _Data = Data[p:]
+            else:
+                self.BufferLenght += len(Data)
+                _Data = Data.decode("utf-8", "ignore")
+                
+            self.BufferReceive = self.BufferReceive + _Data
+            
+            #Frame is completed ?
+            l = Connection.BytesTransferred() - self.BufferLenght
+            if l > 0:
+                #Not complete frame
+                Domoticz.Log("Incomplete trame, miss " + str(l) + " bytes" )
+                return
+                
+            _Data = self.BufferReceive
         else:
-            _Data = Data.decode("utf-8", "ignore")
+            Domoticz.Log("Unknow Connection" + str(Connection))
+            Domoticz.Log("Data : " + str(Data))
+            return
 
+        #Clean data
         _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','')
         #Domoticz.Debug("Data Cleaned : " + _Data)
 
@@ -183,11 +215,10 @@ class BasePlugin:
             return
 
         if Connection.Name == 'deCONZ_Com':
-            self.BufferReceive = self.BufferReceive + _Data
             try:
-                _Data = eval(self.BufferReceive)
+                _Data = eval(_Data)
             except:
-                #Not complete frame
+                Domoticz.Error("INVALID JSON Normal Connexion : " + str(_Data) )
                 return
 
             #Complete frame, force disconnexion
@@ -815,13 +846,31 @@ def UpdateDevice(_id,_type,kwarg):
     if Devices[Unit].TimedOut != 0:
         kwarg['TimedOut'] = 0
 
+    NeedUpdate = False
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
+    for a in kwarg:
+        if kwarg[a] != getattr(Devices[Unit], a ):
+            NeedUpdate = True
+            break
+    if 'Color' in kwarg:
+        NeedUpdate = True
+    if not NeedUpdate:
+        LUpdate = Devices[Unit].LastUpdate
+        LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+        current = time.time()
 
-    Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
-    Devices[Unit].Update(**kwarg)
+        #Check if the device has been see, at least 24h ago
+        if (current-LUpdate) > 86400:
+            NeedUpdate = True
+
+    if NeedUpdate or not LIGHTLOG:
+        Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Devices[Unit].Update(**kwarg)
+    else:
+        Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
 def CreateDevice(IEEE,_Name,_Type):
     kwarg = {}
@@ -953,4 +1002,4 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +')' )
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) )
