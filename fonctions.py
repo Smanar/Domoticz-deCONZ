@@ -188,7 +188,7 @@ def ProcessAllConfig(data):
     return kwarg
 
 def ProcessAllState(data):
-    # Lux need to be > daylight > dark
+    # Lux need to be > lightlevel > daylight > dark
     # xy > ct > bri >on/off
     # current > power > consumption
     # status > daylight > all
@@ -217,9 +217,11 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'presence' , data['presence'] ) )
     if 'daylight' in data:
         kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
+    #if 'lightlevel' in data:
+    #    kwarg.update(ReturnUpdateValue( 'lightlevel' , data['lightlevel'] ) )
     if 'lux' in data:
         kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
-    if ('consumption' in data) and not ('power' in data):
+    if 'consumption' in data:
         kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'power' in data:
         kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
@@ -235,6 +237,8 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
+    if 'alert' in data:
+        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -355,6 +359,10 @@ def ReturnUpdateValue(command,val):
         kwarg['nValue'] = val
         kwarg['sValue'] = '0'
 
+    if command == 'lightlevel':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
     if command == 'lux':
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
@@ -372,6 +380,14 @@ def ReturnUpdateValue(command,val):
         kwarg['sValue'] = str(val)
 
     if command == 'presence':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+
+    if command == 'alert':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
