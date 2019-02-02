@@ -87,6 +87,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
+- 02/02/19 : 1.0.4 > Modification the way the plugin receive data. Decrease the device update amount, less logs, less notifications, but at least 1 update every 24h to see if the device is still alive.
 - 22/01/19 : 1.0.3 > Division by zero bug correction, adding some missing devices, and Xiaomi water leak update (thx to @stefan1957 and @AdamWeglarz)
 - 12/01/19 : 1.0.2 > Correction in the situation the user don't have a device category, for exemple, no bulbs.
 - 11/01/19 : 1.0.1 > First official version, The Xiaomi cube now use custom sensor for Rotation, it send now numeric value, so you can use it to vary a light or a volume speaker.
