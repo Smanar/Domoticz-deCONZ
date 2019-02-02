@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.3" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.4" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -53,7 +53,7 @@ from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, Buttonconv
 DOMOTICZ_IP = '127.0.0.1'
 
 ANTIFLOOD = False
-POWERLOG = False #Disable power info in log, to stop spamming
+LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -69,6 +69,7 @@ class BasePlugin:
         self.Banned_Devices = []
         self.NeedWaitForCon = False
         self.BufferReceive = ''
+        self.BufferLenght = 0
 
         return
 
@@ -154,23 +155,54 @@ class BasePlugin:
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
 
+        _Data = ''
+
         #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
         #Domoticz.Log("Byte needed : " + str(Connection.BytesTransferred()) +  "ATM : " + str(len(Data)))
         #The max is 4096 so if the data size excess 4096 byte it will be cut
 
-        #New line ?
-        if Data.startswith(b'HTTP') or Data.startswith(b'\x81'):
-            Data = Data.decode("utf-8", "ignore")
-            if Data[-1] == ']':
-                p = Data.find('[')
-            else:
+        #Websocket data ?
+        if (Connection.Name == 'deCONZ_WebSocket'):
+            if Data.startswith(b'\x81'):
+                Data = Data.decode("utf-8", "ignore")
                 p = Data.find('{')
-            _Data = Data[p:]
-        else:
-            _Data = Data.decode("utf-8", "ignore")
+                _Data = Data[p:]
+            else:
+                Domoticz.Log("Websocket Http data : " + str(Data.decode("utf-8", "ignore").replace('\n','')) )
+        #Normal connexion
+        elif Connection.Name == 'deCONZ_Com':
+            #New frame
+            if Data.startswith(b'HTTP'):
+                self.BufferLenght = len(Data)
+                self.BufferReceive = ''
+                Data = Data.decode("utf-8", "ignore")
+                if Data[-1] == ']':
+                    p = Data.find('[')
+                else:
+                    p = Data.find('{')
+                _Data = Data[p:]
+            else:
+                self.BufferLenght += len(Data)
+                _Data = Data.decode("utf-8", "ignore")
 
-        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','')
+            self.BufferReceive = self.BufferReceive + _Data
+
+            #Frame is completed ?
+            l = Connection.BytesTransferred() - self.BufferLenght
+            if l > 0:
+                #Not complete frame
+                Domoticz.Log("Incomplete trame, miss " + str(l) + " bytes" )
+                return
+
+            _Data = self.BufferReceive
+        else:
+            Domoticz.Log("Unknow Connection" + str(Connection))
+            Domoticz.Log("Data : " + str(Data))
+            return
+
+        #Clean data
+        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','').replace('\00','')
         #Domoticz.Debug("Data Cleaned : " + _Data)
 
         if not _Data:
@@ -179,11 +211,10 @@ class BasePlugin:
             return
 
         if Connection.Name == 'deCONZ_Com':
-            self.BufferReceive = self.BufferReceive + _Data
             try:
-                _Data = eval(self.BufferReceive)
+                _Data = eval(_Data)
             except:
-                #Not complete frame
+                Domoticz.Error("INVALID JSON Normal Connexion : " + str(_Data) )
                 return
 
             #Complete frame, force disconnexion
@@ -200,8 +231,7 @@ class BasePlugin:
                 _Data = eval(_Data)
             except:
                 #Sometime the socket bug, trying to repair
-                Domoticz.Error("Data : " + str(_Data))
-                Domoticz.Error("Malformed JSON response, Trying to repair")
+                Domoticz.Log("Malformed JSON response, Trying to repair : " + str(_Data) )
                 try:
                     last = ''
                     p = _Data.find('{')
@@ -212,15 +242,16 @@ class BasePlugin:
                             p = _Data.find('{')
                             if last != b:
                                 _Data2 = eval(b)
-                                Domoticz.Error("New Data repaired : " + str(_Data2))
+                                Domoticz.Log("New Data repaired : " + str(_Data2))
                                 self.WebSocketConnexion(_Data2)
                                 last = b
                         else:
                             break
                     return
                 except:
-                    Domoticz.Error("Can't repair")
+                    Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
                     return
+
             self.WebSocketConnexion(_Data)
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
@@ -492,13 +523,14 @@ class BasePlugin:
         try:
             First_item = next(iter(_Data))
         except:
-            #Special case, if the user don't have this kind of device
+            #Special case, if the user don't have this kind of device >> _Data = {}
             if (self.Ready != True) and ( len(_Data) == 0) :
                 self.InitDeconz(_Data,None)
             else:
-                Domoticz.Error("Bad JSON response : " + str(_Data) )
+                Domoticz.Error("Bad JSON response (or empty): " + str(_Data) )
             return
 
+        # JSON with device list >  {'1': {'data:1}}
         if isinstance(First_item, str):
             if First_item.isnumeric():
                 self.InitDeconz(_Data,First_item)
@@ -506,6 +538,7 @@ class BasePlugin:
                 Domoticz.Error("Not managed JSON : " + str(_Data) )
 
         else:
+        #JSON with data returned >> _Data = [{'success': {'/lights/2/state/on': True}}, {'success': {'/lights/2/state/bri': 251}}]
             kwarg = {}
             _id = False
             _type = False
@@ -793,13 +826,31 @@ def UpdateDevice(_id,_type,kwarg):
     if Devices[Unit].TimedOut != 0:
         kwarg['TimedOut'] = 0
 
+    NeedUpdate = False
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
+    for a in kwarg:
+        if kwarg[a] != getattr(Devices[Unit], a ):
+            NeedUpdate = True
+            break
+    if 'Color' in kwarg:
+        NeedUpdate = True
+    if not NeedUpdate:
+        LUpdate = Devices[Unit].LastUpdate
+        LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+        current = time.time()
 
-    Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
-    Devices[Unit].Update(**kwarg)
+        #Check if the device has been see, at least 24h ago
+        if (current-LUpdate) > 86400:
+            NeedUpdate = True
+
+    if NeedUpdate or not LIGHTLOG:
+        Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Devices[Unit].Update(**kwarg)
+    else:
+        Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
 def CreateDevice(IEEE,_Name,_Type):
     kwarg = {}
@@ -931,4 +982,4 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +')' )
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) )
