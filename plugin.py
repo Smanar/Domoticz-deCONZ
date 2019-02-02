@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.3" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.4" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -235,8 +235,7 @@ class BasePlugin:
                 _Data = eval(_Data)
             except:
                 #Sometime the socket bug, trying to repair
-                Domoticz.Error("Data : " + str(_Data) )
-                Domoticz.Error("Malformed JSON response, Trying to repair")
+                Domoticz.Log("Malformed JSON response, Trying to repair : " + str(_Data) )
                 try:
                     last = ''
                     p = _Data.find('{')
@@ -247,15 +246,16 @@ class BasePlugin:
                             p = _Data.find('{')
                             if last != b:
                                 _Data2 = eval(b)
-                                Domoticz.Error("New Data repaired : " + str(_Data2))
+                                Domoticz.Log("New Data repaired : " + str(_Data2))
                                 self.WebSocketConnexion(_Data2)
                                 last = b
                         else:
                             break
                     return
                 except:
-                    Domoticz.Error("Can't repair")
+                    Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
                     return
+
             self.WebSocketConnexion(_Data)
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
