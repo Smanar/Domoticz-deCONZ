@@ -158,7 +158,7 @@ class BasePlugin:
 
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
-        
+
         _Data = ''
 
         #Domoticz.Log("Data : " + str(Data))
@@ -189,16 +189,16 @@ class BasePlugin:
             else:
                 self.BufferLenght += len(Data)
                 _Data = Data.decode("utf-8", "ignore")
-                
+
             self.BufferReceive = self.BufferReceive + _Data
-            
+
             #Frame is completed ?
             l = Connection.BytesTransferred() - self.BufferLenght
             if l > 0:
                 #Not complete frame
                 Domoticz.Log("Incomplete trame, miss " + str(l) + " bytes" )
                 return
-                
+
             _Data = self.BufferReceive
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
@@ -206,7 +206,7 @@ class BasePlugin:
             return
 
         #Clean data
-        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','')
+        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','').replace('\00','')
         #Domoticz.Debug("Data Cleaned : " + _Data)
 
         if not _Data:
@@ -235,7 +235,7 @@ class BasePlugin:
                 _Data = eval(_Data)
             except:
                 #Sometime the socket bug, trying to repair
-                Domoticz.Error("Data : " + str(_Data))
+                Domoticz.Error("Data : " + str(_Data) )
                 Domoticz.Error("Malformed JSON response, Trying to repair")
                 try:
                     last = ''
@@ -536,13 +536,14 @@ class BasePlugin:
         try:
             First_item = next(iter(_Data))
         except:
-            #Special case, if the user don't have this kind of device
+            #Special case, if the user don't have this kind of device >> _Data = {}
             if (self.Ready != True) and ( len(_Data) == 0) :
                 self.InitDeconz(_Data,None)
             else:
-                Domoticz.Error("Bad JSON response : " + str(_Data) )
+                Domoticz.Error("Bad JSON response (or empty): " + str(_Data) )
             return
 
+        # JSON with device list >  {'1': {'data:1}}
         if isinstance(First_item, str):
             if First_item.isnumeric():
                 self.InitDeconz(_Data,First_item)
@@ -550,6 +551,7 @@ class BasePlugin:
                 Domoticz.Error("Not managed JSON : " + str(_Data) )
 
         else:
+        #JSON with data returned >> _Data = [{'success': {'/lights/2/state/on': True}}, {'success': {'/lights/2/state/bri': 251}}]
             kwarg = {}
             _id = False
             _type = False
