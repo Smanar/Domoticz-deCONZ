@@ -57,12 +57,12 @@ You can later update the plugin
 - Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
 ## Configuration.
-The plugin don't use special configuration file, except the banned.txt file.   
-At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
-Don't worry for name, the plugin never update name even you change it in deCONZ to prevent problems with scripts.
-
-For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
-```python3 API_KEY.py```
+- The plugin don't use special configuration file, except the banned.txt file.   
+- At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
+- Don't worry for name, the plugin never update name even you change it in deCONZ to prevent problems with scripts.
+- For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
+```python3 API_KEY.py```   
+And for theses ones who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
 
 ## Remark.
 - Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
