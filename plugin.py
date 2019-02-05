@@ -59,7 +59,9 @@ LIGHTLOG = True #To disable some activation, log will be lighter, but less infor
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
 class BasePlugin:
+
     enabled = False
+
     def __init__(self):
         self.Devices = {}
         self.SelectorSwitch = {} #IEEE,update,model
@@ -81,6 +83,13 @@ class BasePlugin:
         #PyArg_ParseTuple
         #CreateDevice('1234','1234','ZHAWater')
         self.bug = Parameters["Mode2"]
+
+        #Check Domoticz IP
+        if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
+            global DOMOTICZ_IP
+            DOMOTICZ_IP = get_ip()
+            Domoticz.Log("Your haven't use 127.0.0.1 as IP, so I suppose deCONZ and Domoticz aren't on same machine")
+            Domoticz.Log("Taking " + DOMOTICZ_IP + " as Domoticz IP")
 
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
@@ -800,6 +809,19 @@ def GetDeviceIEEE(id,type):
     return _plugin.GetDeviceIEEE(id,type)
 
 #*****************************************************************************************************
+
+def get_ip():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 def GetDomoDeviceInfo(IEEE):
     for x in Devices:
