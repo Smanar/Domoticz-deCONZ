@@ -1014,7 +1014,7 @@ def CreateDevice(IEEE,_Name,_Type):
     #groups
     elif _Type == 'LightGroup':
         kwarg['Type'] = 241
-        kwarg['Subtype'] = 2
+        kwarg['Subtype'] = 7
         kwarg['Switchtype'] = 7
         #if 'bulbs_group' in Images:
         #    kwarg['Image'] = Images['bulbs_group'].ID
