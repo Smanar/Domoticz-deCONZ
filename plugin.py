@@ -13,7 +13,7 @@
         <ul style="list-style-type:square">
             <li>You can use the file API_KEY.py if you have problem to get your API Key</li>
             <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
-            <li>...</li>
+            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine)</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
@@ -90,6 +90,8 @@ class BasePlugin:
             DOMOTICZ_IP = get_ip()
             Domoticz.Log("Your haven't use 127.0.0.1 as IP, so I suppose deCONZ and Domoticz aren't on same machine")
             Domoticz.Log("Taking " + DOMOTICZ_IP + " as Domoticz IP")
+        else:
+            Domoticz.Log("Domoticz and deCONZ are on same machine")
 
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
@@ -508,7 +510,7 @@ class BasePlugin:
                     Dev_name = 'GROUP_' + Name.replace(' ','_')
                     self.Devices[Dev_name] = {}
                     self.Devices[Dev_name]['id'] = i
-                    self.Devices[Dev_name]['type'] = Type
+                    self.Devices[Dev_name]['type'] = 'groups'
 
                     #Create it in domoticz if not exist
                     if Dev_name in self.Banned_Devices:
@@ -991,7 +993,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
