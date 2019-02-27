@@ -11,7 +11,7 @@
         <br/><br/>
         <h3>Remark</h3>
         <ul style="list-style-type:square">
-            <li>You can use the file API_KEY.py if you have problem to get your API Key</li>
+            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port</li>
             <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
             <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine)</li>
         </ul>
@@ -90,6 +90,9 @@ class BasePlugin:
             DOMOTICZ_IP = get_ip()
             Domoticz.Log("Your haven't use 127.0.0.1 as IP, so I suppose deCONZ and Domoticz aren't on same machine")
             Domoticz.Log("Taking " + DOMOTICZ_IP + " as Domoticz IP")
+
+            if DOMOTICZ_IP == Parameters["Address"]:
+                Domoticz.Status("Your have same IP for deCONZ and Domoticz why don't use 127.0.0.1 as IP")
         else:
             Domoticz.Log("Domoticz and deCONZ are on same machine")
 
@@ -130,7 +133,7 @@ class BasePlugin:
                 Domoticz.Error("Status : " + str(Status) + " Description : " + str(Description) )
                 return
 
-            Domoticz.Status("Laucnhing websocket")
+            Domoticz.Status("Launching websocket on port" + str(Parameters["Mode1"]) )
             #Need to Add Sec-Websocket-Protocol : domoticz ????
             #Boring error > Socket Shutdown Error: 9, Bad file descriptor
             #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
@@ -865,6 +868,12 @@ def UpdateDevice(_id,_type,kwarg):
     if not Unit or not kwarg:
         return
 
+    NeedUpdate = False
+
+    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event.
+    if ('nValue' in kwarg) or ('sValue' in kwarg):
+        NeedUpdate = True
+
     if 'nValue' not in kwarg:
         kwarg['nValue'] = Devices[Unit].nValue
     if 'sValue' not in kwarg:
@@ -872,23 +881,23 @@ def UpdateDevice(_id,_type,kwarg):
     if Devices[Unit].TimedOut != 0:
         kwarg['TimedOut'] = 0
 
-    NeedUpdate = False
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
+
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
             break
     if 'Color' in kwarg:
         NeedUpdate = True
+
+    #force update, at least 1 every 24h
     if not NeedUpdate:
         LUpdate = Devices[Unit].LastUpdate
         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
         current = time.time()
-
-        #Check if the device has been see, at least 24h ago
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
