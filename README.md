@@ -73,6 +73,8 @@ And for theses ones who don't know where to find the API key and don't wana use 
 
 - If you haven't github acount, the support in domoticz forum is here https://www.domoticz.com/forum/viewtopic.php?f=68&t=25631
 
+- You can't use the native fonction in domoticz for switch (activation devices), because this plugin trigger device event for useless information, like battery level. So instead of using trigger event, you need to use button detected. You have some LUA exemples here : https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-switch
+
 
 ## Known issues.
 - Don't take care about the error message   
