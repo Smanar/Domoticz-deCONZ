@@ -133,7 +133,7 @@ class BasePlugin:
                 Domoticz.Error("Status : " + str(Status) + " Description : " + str(Description) )
                 return
 
-            Domoticz.Status("Launching websocket on port" + str(Parameters["Mode1"]) )
+            Domoticz.Status("Launching websocket on port " + str(Parameters["Mode1"]) )
             #Need to Add Sec-Websocket-Protocol : domoticz ????
             #Boring error > Socket Shutdown Error: 9, Bad file descriptor
             #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
@@ -870,8 +870,8 @@ def UpdateDevice(_id,_type,kwarg):
 
     NeedUpdate = False
 
-    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event.
-    if ('nValue' in kwarg) or ('sValue' in kwarg):
+    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event, But only for switch
+    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ('LevelNames' in Devices[Unit].Options):
         NeedUpdate = True
 
     if 'nValue' not in kwarg:
