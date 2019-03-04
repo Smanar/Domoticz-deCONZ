@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.4" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.5" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -11,9 +11,9 @@
         <br/><br/>
         <h3>Remark</h3>
         <ul style="list-style-type:square">
-            <li>You can use the file API_KEY.py if you have problem to get your API Key</li>
+            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port</li>
             <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
-            <li>...</li>
+            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine)</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
@@ -59,7 +59,9 @@ LIGHTLOG = True #To disable some activation, log will be lighter, but less infor
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
 class BasePlugin:
+
     enabled = False
+
     def __init__(self):
         self.Devices = {}
         self.SelectorSwitch = {} #IEEE,update,model
@@ -77,6 +79,18 @@ class BasePlugin:
         Domoticz.Log("onStart called")
         #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
         #PyArg_ParseTuple
+
+        #Check Domoticz IP
+        if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
+            global DOMOTICZ_IP
+            DOMOTICZ_IP = get_ip()
+            Domoticz.Log("Your haven't use 127.0.0.1 as IP, so I suppose deCONZ and Domoticz aren't on same machine")
+            Domoticz.Log("Taking " + DOMOTICZ_IP + " as Domoticz IP")
+
+            if DOMOTICZ_IP == Parameters["Address"]:
+                Domoticz.Status("Your have same IP for deCONZ and Domoticz why don't use 127.0.0.1 as IP")
+        else:
+            Domoticz.Log("Domoticz and deCONZ are on same machine")
 
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
@@ -115,7 +129,7 @@ class BasePlugin:
                 Domoticz.Error("Status : " + str(Status) + " Description : " + str(Description) )
                 return
 
-            Domoticz.Status("Laucnhing websocket")
+            Domoticz.Status("Launching websocket on port " + str(Parameters["Mode1"]) )
             #Need to Add Sec-Websocket-Protocol : domoticz ????
             #Boring error > Socket Shutdown Error: 9, Bad file descriptor
             #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
@@ -486,7 +500,7 @@ class BasePlugin:
                     Dev_name = 'GROUP_' + Name.replace(' ','_')
                     self.Devices[Dev_name] = {}
                     self.Devices[Dev_name]['id'] = i
-                    self.Devices[Dev_name]['type'] = Type
+                    self.Devices[Dev_name]['type'] = 'groups'
 
                     #Create it in domoticz if not exist
                     if Dev_name in self.Banned_Devices:
@@ -779,6 +793,19 @@ def GetDeviceIEEE(id,type):
 
 #*****************************************************************************************************
 
+def get_ip():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 def GetDomoDeviceInfo(IEEE):
     for x in Devices:
         if Devices[x].DeviceID == str(IEEE) :
@@ -819,6 +846,12 @@ def UpdateDevice(_id,_type,kwarg):
     if not Unit or not kwarg:
         return
 
+    NeedUpdate = False
+
+    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event, But only for switch
+    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ('LevelNames' in Devices[Unit].Options):
+        NeedUpdate = True
+
     if 'nValue' not in kwarg:
         kwarg['nValue'] = Devices[Unit].nValue
     if 'sValue' not in kwarg:
@@ -826,23 +859,23 @@ def UpdateDevice(_id,_type,kwarg):
     if Devices[Unit].TimedOut != 0:
         kwarg['TimedOut'] = 0
 
-    NeedUpdate = False
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
+
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
             break
     if 'Color' in kwarg:
         NeedUpdate = True
+
+    #force update, at least 1 every 24h
     if not NeedUpdate:
         LUpdate = Devices[Unit].LastUpdate
         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
         current = time.time()
-
-        #Check if the device has been see, at least 24h ago
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
@@ -947,7 +980,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
@@ -968,7 +1001,7 @@ def CreateDevice(IEEE,_Name,_Type):
     #groups
     elif _Type == 'LightGroup':
         kwarg['Type'] = 241
-        kwarg['Subtype'] = 2
+        kwarg['Subtype'] = 7
         kwarg['Switchtype'] = 7
         #if 'bulbs_group' in Images:
         #    kwarg['Image'] = Images['bulbs_group'].ID
