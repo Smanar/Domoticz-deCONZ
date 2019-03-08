@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.5" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.6" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -81,7 +81,7 @@ class BasePlugin:
         Domoticz.Log("onStart called")
         #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
         #PyArg_ParseTuple
-        #CreateDevice('1234','1234','ZHAWater')
+        #CreateDevice('1111','1234','test1')
         self.bug = Parameters["Mode2"]
 
         #Check Domoticz IP
@@ -282,6 +282,8 @@ class BasePlugin:
             Domoticz.Error("deCONZ not ready")
             return
 
+        ConfigMode = False
+
         #Homemade json
         _json = '{'
 
@@ -299,6 +301,11 @@ class BasePlugin:
             _json =_json + '"on":true,'
 
             _json = _json + '"bri":' + str(round(Level*254/100)) + ','
+
+            #thermostat situation
+            if True == False:
+                _json = '{"mode": "auto","heatsetpoint":' + Level
+                ConfigMode = True
 
         #color
         if Command == 'Set Color':
@@ -360,6 +367,8 @@ class BasePlugin:
         url = '/api/' + Parameters["Mode2"] + '/' + _type + '/' + str(deCONZ_ID)
         if _type == 'lights':
             url = url + '/state'
+        elif ConfigMode:
+            url = url + '/config'
         else:
             url = url + '/action'
 
@@ -939,6 +948,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 0
         kwarg['Image'] = 1
 
+    elif _Type == 'Window covering device':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 16
+
     #Sensors
     elif _Type == 'Daylight':
         kwarg['Type'] = 244
@@ -973,6 +987,15 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHAPower':
         kwarg['TypeName'] = 'Usage'
 
+    elif _Type == 'ZHAVibration':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 2
+
+    elif _Type == 'ZHAThermostat':
+        kwarg['Type'] = 242
+        kwarg['Subtype'] = 1
+
     elif _Type == 'ZHAAlarm':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
@@ -984,7 +1007,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 5
         kwarg['Image'] = 11 # Visible only on floorplan
 
-    elif _Type == 'ZHAFire':
+    elif _Type == 'ZHAFire' or _Type == 'ZHACarbonMonoxide':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
