@@ -181,6 +181,8 @@ def ProcessAllConfig(data):
 
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+    if 'heatsetpoint' in data:
+        kwarg.update(ReturnUpdateValue( 'temperature' , data['heatsetpoint'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -239,6 +241,10 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
     if 'alert' in data:
         kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    if 'vibration' in data:
+        kwarg.update(ReturnUpdateValue( 'vibration' , data['vibration'] ) )
+    if 'carbonmonoxide' in data:
+        kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -305,7 +311,7 @@ def ReturnUpdateValue(command,val):
             kwarg['sValue'] = 'off'
 
     #sensor
-    if command == 'open':
+    if command == 'open' or command == 'vibration':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'Open'
@@ -313,23 +319,7 @@ def ReturnUpdateValue(command,val):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
 
-    if command == 'flag':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'water':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'fire':
+    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'alert' or command == 'carbonmonoxide':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
@@ -378,22 +368,6 @@ def ReturnUpdateValue(command,val):
     if command == 'current':
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
-
-    if command == 'presence':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'alert':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
 
     if command == 'daylight':
         if val == 'True':
