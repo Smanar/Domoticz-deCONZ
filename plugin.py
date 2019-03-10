@@ -30,7 +30,7 @@
         <param field="Mode3" label="Debug" width="150px">
             <options>
                 <option label="None" value="0"  default="true" />
-                <option label="Python Only" value="2"/>
+                <option label="Debug info Only" value="2"/>
                 <option label="Basic Debugging" value="62"/>
                 <option label="Basic+Messages" value="126"/>
                 <option label="Connections Only" value="16"/>
@@ -78,10 +78,10 @@ class BasePlugin:
         return
 
     def onStart(self):
-        Domoticz.Log("onStart called")
+        Domoticz.Debug("onStart called")
         #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
         #PyArg_ParseTuple
-        #CreateDevice('1111','1234','test1')
+        #CreateDevice('1111','sensors','ZHAThermostat')
         self.bug = Parameters["Mode2"]
 
         #Check Domoticz IP
@@ -120,11 +120,11 @@ class BasePlugin:
         #        Domoticz.Error("Can't create new icons")
 
     def onStop(self):
-        Domoticz.Log("onStop called")
+        Domoticz.Debug("onStop called")
         self.WebSocket.Disconnect()
 
     def onConnect(self, Connection, Status, Description):
-        Domoticz.Log("onConnect called")
+        Domoticz.Debug("onConnect called")
 
         if Connection.Name == 'deCONZ_WebSocket':
 
@@ -210,7 +210,7 @@ class BasePlugin:
             l = Connection.BytesTransferred() - self.BufferLenght
             if l > 0:
                 #Not complete frame
-                Domoticz.Log("Incomplete trame, miss " + str(l) + " bytes" )
+                Domoticz.Debug("Incomplete trame, miss " + str(l) + " bytes" )
                 return
 
             _Data = self.BufferReceive
@@ -281,8 +281,12 @@ class BasePlugin:
         if not self.Ready == True:
             Domoticz.Error("deCONZ not ready")
             return
-
-        ConfigMode = False
+            
+        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
+        
+        if _type == 'sensors':
+            Domoticz.Error("This device don't support action")
+            return
 
         #Homemade json
         _json = '{'
@@ -305,7 +309,6 @@ class BasePlugin:
             #thermostat situation
             if True == False:
                 _json = '{"mode": "auto","heatsetpoint":' + Level
-                ConfigMode = True
 
         #color
         if Command == 'Set Color':
@@ -362,12 +365,10 @@ class BasePlugin:
 
         _json = _json + '}'
 
-        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
-
         url = '/api/' + Parameters["Mode2"] + '/' + _type + '/' + str(deCONZ_ID)
         if _type == 'lights':
             url = url + '/state'
-        elif ConfigMode:
+        elif _type == 'config':
             url = url + '/config'
         else:
             url = url + '/action'
@@ -442,23 +443,32 @@ class BasePlugin:
                     if not Model:
                         Model = ''
 
+                    #Type_device = 'lights'
+                    #if not 'hascolor' in _Data[i]:
+                    #    Type_device = 'sensors'
+                    Type_device = self.Ready
+
+                    #Special device
+                    if Type == 'ZHAThermostat':
+                        Type_device = 'config'
+
                     Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
                     self.Devices[IEEE] = {}
                     self.Devices[IEEE]['id'] = i
-                    self.Devices[IEEE]['type'] = self.Ready
+                    self.Devices[IEEE]['type'] = Type_device
 
                     kwarg = {}
                     #Get some infos
-                    if 'config' in _Data[i]:
-                        config = _Data[i]['config']
-                        kwarg.update(ProcessAllConfig(config))
-
                     if 'state' in _Data[i]:
                         state = _Data[i]['state']
                         kwarg.update(ProcessAllState(state))
                         if 'colormode' in state:
                             self.Devices[IEEE]['colormode'] = state['colormode']
+
+                    if 'config' in _Data[i]:
+                        config = _Data[i]['config']
+                        kwarg.update(ProcessAllConfig(config))
 
                     #hack
                     if Type == 'ZHAPower':
@@ -505,13 +515,10 @@ class BasePlugin:
                                 CreateDevice(IEEE,Name,self.SelectorSwitch[IEEE]['t'])
                             else:
                                 CreateDevice(IEEE,Name,Type)
-                        #Exist > update
-                        else:
-                            if kwarg:
-                                Type_device = 'lights'
-                                if not 'hascolor' in _Data[i]:
-                                    Type_device = 'sensors'
-                                UpdateDevice(i,Type_device,kwarg)
+
+                        #update
+                        if kwarg:
+                            UpdateDevice(i,Type_device,kwarg)
 
             #groups
             else:
@@ -538,8 +545,8 @@ class BasePlugin:
         if self.Ready == "groups":
             self.Ready = True
             Domoticz.Status("### deCONZ ready")
-            l,s,g,b = Count_Type(self.Devices)
-            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups with " + str(b) + " Ignored")
+            l,s,g,b,o = Count_Type(self.Devices)
+            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups and " + str(o) + " others, with " + str(b) + " Ignored")
 
         elif self.Ready == "sensors":
             self.Ready = "groups"
@@ -703,7 +710,7 @@ class BasePlugin:
 
     def SendCommand(self,url,data=None):
 
-        Domoticz.Log("Send Command " + url + " with " + str(data))
+        Domoticz.Debug("Send Command " + url + " with " + str(data))
 
         if data == None:
             sendData = "GET " + url + " HTTP/1.1\r\n" \
@@ -952,6 +959,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 16
+
+    elif _Type == 'Door Lock':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
 
     #Sensors
     elif _Type == 'Daylight':
