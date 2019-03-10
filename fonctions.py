@@ -145,18 +145,20 @@ def xy_to_rgb(x, y, brightness = 1):
 
 
 def Count_Type(d):
-    b = l = s = g = 0
+    b = l = s = g = o = 0
     for i in d:
         if d[i]['type'] == 'lights':
             l += 1
         elif d[i]['type'] == 'sensors':
             s += 1
-        else:
+        elif d[i]['type'] == 'groups':
             g += 1
+        else:
+            o += 1
 
         if d[i].get('Banned',False) == True:
             b += 1
-    return l,s,g,b
+    return l,s,g,b,o
 
 def First_Json(data):
     s = ''
