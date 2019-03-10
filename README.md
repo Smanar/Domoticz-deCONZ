@@ -89,7 +89,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.6 (On beta branch) > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat.
+- xx/xx/xx : 1.0.6 (On beta branch) > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock.
 - 04/03/19 : 1.0.5 > improve the case deCONZ is not on same machine than Domoticz. Groups reparation, now you can send for exemple a color level to a complete group with only 1 device. Device update modification, for fast event, like if you press a switch too fast.
 - 02/02/19 : 1.0.4 > Modification the way the plugin receive data. Decrease the device update amount, less logs, less notifications, but at least 1 update every 24h to see if the device is still alive.
 - 22/01/19 : 1.0.3 > Division by zero bug correction, adding some missing devices, and Xiaomi water leak update (thx to @stefan1957 and @AdamWeglarz)
