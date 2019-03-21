@@ -173,6 +173,29 @@ def First_Json(data):
                 return s
     return False
 
+def JSON_Repair(data):
+    s = e = p = 0
+    c = 0
+    b = ''
+
+    while True:
+        if c == 0:
+            p = data.find('[',p)
+            s = p
+        else:
+            p = data.find(']',p)
+            e = p
+        c = 1 - c
+        if p == -1:
+            break
+
+        if e > s:
+            if len(b) > 0:
+                b += ','
+            b += data[s + 1:e]
+
+    return '[' + b + ']'
+
 #**************************************************************************************************
 # Domoticz fonctions
 #
@@ -191,9 +214,9 @@ def ProcessAllConfig(data):
 
     return kwarg
 
-def ProcessAllState(data):
+def ProcessAllState(data,model):
     # Lux need to be > lightlevel > daylight > dark
-    # xy > ct > bri >on/off
+    # xy > ct > bri > on/off
     # current > power > consumption
     # status > daylight > all
 
@@ -202,13 +225,13 @@ def ProcessAllState(data):
     if 'status' in data:
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue( 'on' , data['on'] ) )
+        kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
     if 'xy' in data:
         kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
     if 'bri' in data:
-        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] ) )
+        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] , model) )
     if 'temperature' in data:
         kwarg.update(ReturnUpdateValue( 'temperature' , data['temperature'] ) )
     if 'pressure' in data:
@@ -258,7 +281,7 @@ def ProcessAllState(data):
 
     return kwarg
 
-def ReturnUpdateValue(command,val):
+def ReturnUpdateValue(command,val,model = None):
 
     if not val:
         val = 0
@@ -272,15 +295,32 @@ def ReturnUpdateValue(command,val):
     if command == 'on':
         if val == 'True':
             kwarg['nValue'] = 1
-            kwarg['sValue'] = 'on'
+            if model == 'Window covering device':
+                kwarg['sValue'] = '100'
+            else:
+                kwarg['sValue'] = 'on'
         else:
             kwarg['nValue'] = 0
-            kwarg['sValue'] = 'off'
+            if model == 'Window covering device':
+                kwarg['sValue'] = '0'
+            else:
+                kwarg['sValue'] = 'off'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
-        kwarg['sValue'] = str(val)
+        if model == 'Window covering device':
+            if val < 2:
+                kwarg['sValue'] = '0'
+                kwarg['nValue'] = 0
+            elif val > 99:
+                kwarg['sValue'] = '100'
+                kwarg['nValue'] = 1
+            else:
+                kwarg['sValue'] = str(val)
+                kwarg['nValue'] = 2
+        else:
+            kwarg['sValue'] = str(val)
 
     if command == 'xy':
         x,y = eval(str(val))
