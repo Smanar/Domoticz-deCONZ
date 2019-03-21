@@ -47,7 +47,7 @@
 import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
-from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json
+from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric
 
 #Better to use 'localhost' ?
@@ -64,8 +64,8 @@ class BasePlugin:
     enabled = False
 
     def __init__(self):
-        self.Devices = {} # id, type, banned
-        self.SelectorSwitch = {} #IEEE,update,model
+        self.Devices = {} # id, type, banned , model
+        self.SelectorSwitch = {} #IEEE,update
         self.Ready = False
         self.Buffer_Command = []
         self.Request = None
@@ -74,16 +74,11 @@ class BasePlugin:
         self.BufferReceive = ''
         self.BufferLenght = 0
 
-        self.bug = ''
-
         return
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #Domoticz.Error("xx : " + str('--a ---a \x01 \xFF \ua000 -a --  a\xac\u1234\u20ac\U00008000 -- - ---a '))
-        #PyArg_ParseTuple
-        #CreateDevice('1111','sensors','ZHAThermostat')
-        self.bug = Parameters["Mode2"]
+        #CreateDevice('1111','lights','Window covering device')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -233,8 +228,15 @@ class BasePlugin:
             try:
                 _Data = eval(_Data)
             except:
-                Domoticz.Error("INVALID JSON Normal Connexion : " + str(_Data) )
-                return
+                #Sometime the connexion bug, trying to repair
+                Domoticz.Error("Malformed JSON response, Trying to repair : " + str(_Data) )
+                _Data = JSON_Repair(_Data)
+                try:
+                    _Data = eval(_Data)
+                    Domoticz.Error("New Data repaired : " + str(_Data))
+                except:
+                    Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
+                    return
 
             #Complete frame, force disconnexion
             self.Request.Disconnect()
@@ -389,14 +391,6 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
 
-        #Just to debug
-        try:
-            aa = Parameters["Mode2"]
-        except Exception as inst:
-            Domoticz.Error("Exception detail: '"+str(inst)+"'")
-            Domoticz.Error("**** " + str(self.bug) + ' ' + str(Parameters))
-            raise
-
         #Initialisation
         if self.Ready != True:
             Domoticz.Debug("### Initialisation > " + str(self.Ready))
@@ -448,7 +442,7 @@ class BasePlugin:
 
                     Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
-                    self.Devices[IEEE] = {'id' : i , 'type' : Type_device }
+                    self.Devices[IEEE] = {'id' : i , 'type' : Type_device , 'model' : Type}
 
                     #Skip banned device
                     if IEEE in self.Banned_Devices:
@@ -460,7 +454,7 @@ class BasePlugin:
                     kwarg = {}
                     if 'state' in _Data[i]:
                         state = _Data[i]['state']
-                        kwarg.update(ProcessAllState(state))
+                        kwarg.update(ProcessAllState(state,Model))
                         if 'colormode' in state:
                             self.Devices[IEEE]['colormode'] = state['colormode']
 
@@ -488,18 +482,23 @@ class BasePlugin:
 
                         if 'lumi.sensor_cube' in Model:
                             if IEEE.endswith('-03-000c'):
-                                self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
+                                self.SelectorSwitch[IEEE] = { 'r': 0 }
+                                Type = 'XCube_R'
                             elif IEEE.endswith('-02-0012'):
-                                self.SelectorSwitch[IEEE] = { 't': 'XCube_C', 'r': 0 }
+                                self.SelectorSwitch[IEEE] = { 'r': 0 }
+                                Type = 'XCube_C'
                             else:
                                 #Useless
-                                #self.SelectorSwitch[IEEE] = { 't': 'XCube_R', 'r': 0 }
                                 self.Devices[IEEE]['Banned'] = True
                                 continue
                         elif 'TRADFRI remote control' in Model:
-                            self.SelectorSwitch[IEEE] = { 't': 'Tradfri_remote', 'r': 0 }
+                            self.SelectorSwitch[IEEE] = { 'r': 0 }
+                            Type = 'Tradfri_remote'
                         else:
-                            self.SelectorSwitch[IEEE] = { 't': 'Switch_Generic', 'r': 0 }
+                            self.SelectorSwitch[IEEE] = { 'r': 0 }
+                            Type = 'Switch_Generic'
+
+                        self.Devices[IEEE]['model'] = Type
 
                     #Special device
                     if Type == 'ZHAPressure':#ZHAThermostat
@@ -510,8 +509,6 @@ class BasePlugin:
                         if Type == 'ZHAThermostat':
                             CreateDevice(IEEE,Name,'ZHATemperature') #Temperature device
                             CreateDevice(IEEE + "_heatsetpoint" ,Name,'ZHAThermostat') #Setpoint device
-                        elif self.SelectorSwitch.get(IEEE,False):
-                            CreateDevice(IEEE,Name,self.SelectorSwitch[IEEE]['t'])
                         else:
                             CreateDevice(IEEE,Name,Type)
 
@@ -617,7 +614,7 @@ class BasePlugin:
                     Domoticz.Error("Not managed JSON : " + str(_Data2) )
 
             if _FakeJson:
-                kwarg.update(ProcessAllState( _FakeJson ))
+                kwarg.update(ProcessAllState( _FakeJson , ''))
             if kwarg:
                 UpdateDevice(_id,_type,kwarg)
 
@@ -636,23 +633,25 @@ class BasePlugin:
             if _Data['e'] == 'added':
                 return
 
+        IEEE = str(_Data['uniqueid'])
+        model = self.Devices[IEEE]['model']
+
         kwarg = {}
 
         #MAJ State : _Data['e'] == 'changed'
         if 'state' in _Data:
             state = _Data['state']
-            kwarg.update(ProcessAllState(state))
+            kwarg.update(ProcessAllState(state , model))
 
             if 'buttonevent' in state:
-                IEEE = str(_Data['uniqueid'])
                 if IEEE in self.SelectorSwitch:
-                    if self.SelectorSwitch[IEEE]['t'] == 'XCube_C':
+                    if model == 'XCube_C':
                         kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
-                    elif self.SelectorSwitch[IEEE]['t'] == 'XCube_R':
+                    elif model == 'XCube_R':
                         kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
-                    elif self.SelectorSwitch[IEEE]['t'] == 'Tradfri_remote':
+                    elif model == 'Tradfri_remote':
                         kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                         self.SelectorSwitch[IEEE]['r'] = 1
                     else:
@@ -661,7 +660,6 @@ class BasePlugin:
 
             if 'reachable' in state:
                 if state['reachable'] == True:
-                    IEEE = _Data['uniqueid']
                     Unit = GetDomoDeviceInfo(IEEE)
                     LUpdate = Devices[Unit].LastUpdate
                     LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
@@ -863,7 +861,7 @@ def GetDomoUnit(_id,_type):
 
         if IEEE == 'banned':
             Domoticz.Log("Banned device > " + str(_id) + ' (' + str(_type) + ')')
-            return False
+            return 'banned'
         elif IEEE == False:
             Domoticz.Log("Device not in base, need resynchronisation ? > " + str(_id) + ' (' + str(_type) + ')')
             return False
@@ -877,6 +875,9 @@ def GetDomoUnit(_id,_type):
 def UpdateDevice(_id,_type,kwarg):
 
     Unit = GetDomoUnit(_id,_type)
+
+    if Unit == 'banned':
+        return
 
     if not Unit or not kwarg:
         Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ')' )
