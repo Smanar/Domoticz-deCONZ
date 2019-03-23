@@ -48,7 +48,7 @@ import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric, VibrationSensorConvertion
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -65,7 +65,7 @@ class BasePlugin:
 
     def __init__(self):
         self.Devices = {} # id, type, banned , model
-        self.SelectorSwitch = {} #IEEE,update
+        self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
         self.Request = None
@@ -183,7 +183,7 @@ class BasePlugin:
                 p = Data.find('{')
                 _Data = Data[p:]
             else:
-                Domoticz.Debug("Websocket Http data : " + str(Data.decode("utf-8", "ignore").replace('\n','')) )
+                Domoticz.Debug("Websocket Http data : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
         #Normal connexion
         elif Connection.Name == 'deCONZ_Com':
             #New frame
@@ -216,7 +216,7 @@ class BasePlugin:
             return
 
         #Clean data
-        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','').replace('\00','')
+        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','***').replace('\00','')
         #Domoticz.Debug("Data Cleaned : " + _Data)
 
         if not _Data:
@@ -405,14 +405,14 @@ class BasePlugin:
             self.WebSocket.Connect()
 
         #reset switchs
-        for IEEE in self.SelectorSwitch:
-            if self.SelectorSwitch[IEEE]['r'] == 1:
+        if len(self.NeedToReset) > 0 :
+            for IEEE in self.NeedToReset:
                 _id = False
                 for i in self.Devices:
                     if i == IEEE:
                         _id = self.Devices[i]['id']
                 UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' } )
-                self.SelectorSwitch[IEEE]['r'] = 0
+            self.NeedToReset = []
 
     def onDeviceRemoved(self,unit):
         Domoticz.Log("Device Removed")
@@ -475,27 +475,23 @@ class BasePlugin:
                             Domoticz.Log("### Can't disable unworking device : Osram plug")
 
                     #It's a switch ? Need special process
-                    if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
+                    if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch' or Type == 'ZHAVibration':
 
                         #Set it to off
                         kwarg.update({'sValue': 'Off', 'nValue': 0})
 
                         if 'lumi.sensor_cube' in Model:
                             if IEEE.endswith('-03-000c'):
-                                self.SelectorSwitch[IEEE] = { 'r': 0 }
                                 Type = 'XCube_R'
                             elif IEEE.endswith('-02-0012'):
-                                self.SelectorSwitch[IEEE] = { 'r': 0 }
                                 Type = 'XCube_C'
                             else:
                                 #Useless
                                 self.Devices[IEEE]['Banned'] = True
                                 continue
                         elif 'TRADFRI remote control' in Model:
-                            self.SelectorSwitch[IEEE] = { 'r': 0 }
                             Type = 'Tradfri_remote'
                         else:
-                            self.SelectorSwitch[IEEE] = { 'r': 0 }
                             Type = 'Switch_Generic'
 
                         self.Devices[IEEE]['model'] = Type
@@ -523,7 +519,7 @@ class BasePlugin:
                     Type = str(_Data[i]['type'])
                     Domoticz.Log("### Groupe > " + str(i) + ' Name:' + Name )
                     Dev_name = 'GROUP_' + Name.replace(' ','_')
-                    self.Devices[Dev_name] = {'id' : i , 'type' : 'groups' }
+                    self.Devices[Dev_name] = {'id' : i , 'type' : 'groups' , 'model' : 'groups'}
 
                     #Create it in domoticz if not exist
                     if Dev_name in self.Banned_Devices:
@@ -633,7 +629,8 @@ class BasePlugin:
             if _Data['e'] == 'added':
                 return
 
-        IEEE = str(_Data['uniqueid'])
+        #Take care, no uniqueid for groups
+        IEEE = str(_Data.get('uniqueid',self.GetDeviceIEEE(_Data['id'],_Data['r'])))
         model = self.Devices[IEEE]['model']
 
         kwarg = {}
@@ -644,19 +641,19 @@ class BasePlugin:
             kwarg.update(ProcessAllState(state , model))
 
             if 'buttonevent' in state:
-                if IEEE in self.SelectorSwitch:
-                    if model == 'XCube_C':
-                        kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
-                        self.SelectorSwitch[IEEE]['r'] = 1
-                    elif model == 'XCube_R':
-                        kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
-                        self.SelectorSwitch[IEEE]['r'] = 1
-                    elif model == 'Tradfri_remote':
-                        kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
-                        self.SelectorSwitch[IEEE]['r'] = 1
-                    else:
-                        kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
-                        self.SelectorSwitch[IEEE]['r'] = 1
+                if model == 'XCube_C':
+                    kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
+                elif model == 'XCube_R':
+                    kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
+                elif model == 'Tradfri_remote':
+                    kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                else:
+                    kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
+                self.NeedToReset.append(IEEE)
+
+            if 'vibration' in state:
+                kwarg.update(VibrationSensorConvertion( state['vibration'] , state['tiltangle']) )
+                self.NeedToReset.append(IEEE)
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -1009,7 +1006,8 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHAVibration':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 2
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Tilt|Vibrate|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'ZHAThermostat':
         kwarg['Type'] = 242
