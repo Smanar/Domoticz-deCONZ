@@ -266,8 +266,6 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
     if 'alert' in data:
         kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
-    if 'vibration' in data:
-        kwarg.update(ReturnUpdateValue( 'vibration' , data['vibration'] ) )
     if 'carbonmonoxide' in data:
         kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
@@ -353,7 +351,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['sValue'] = 'off'
 
     #sensor
-    if command == 'open' or command == 'vibration':
+    if command == 'open':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'Open'
@@ -529,6 +527,21 @@ def ButtonconvertionGeneric(val):
         v = 60
 
     kwarg['nValue'] = v * int(Button_Number)
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+
+#https://github.com/dresden-elektronik/deconz-rest-plugin/issues/748
+def VibrationSensorConvertion(val_v,val_t):
+    kwarg = {}
+
+    v = 0
+
+    kwarg['nValue'] = v
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
