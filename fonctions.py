@@ -2,6 +2,7 @@
 # coding: utf-8 -*-
 
 import Domoticz
+buffercommand = {}
 
 #****************************************************************************************************
 # Global fonctions
@@ -228,6 +229,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
     if 'xy' in data:
         kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
+    if 'x' in data:
+        kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
+    if 'y' in data:
+        kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
     if 'bri' in data:
@@ -277,6 +282,11 @@ def ProcessAllState(data,model):
     if 'any_on' in data:
         kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
 
+    #Special
+    if 'reachable' in data:
+        if data['reachable'] == False:
+            kwarg.update({'TimedOut':1})
+
     return kwarg
 
 def ReturnUpdateValue(command,val,model = None):
@@ -319,6 +329,13 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['nValue'] = 2
         else:
             kwarg['sValue'] = str(val)
+
+    if command == 'x' or command == 'y':
+        buffercommand[command] = val
+        if buffercommand.get('x') and buffercommand.get('y'):
+            rgb = xy_to_rgb(int(buffercommand['x']),int(buffercommand['y']),1)
+            kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
+            buffercommand.clear()
 
     if command == 'xy':
         x,y = eval(str(val))
