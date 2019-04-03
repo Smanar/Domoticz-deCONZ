@@ -476,10 +476,14 @@ class BasePlugin:
                             Domoticz.Log("### Can't disable unworking device : Osram plug")
 
                     #It's a switch ? Need special process
-                    if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch' or Type == 'ZHAVibration':
+                    if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
 
                         #Set it to off
                         kwarg.update({'sValue': 'Off', 'nValue': 0})
+                        
+                        #ignore ZHASwitch if vibration sensor
+                        if 'sensitivity' in _Data[i]['config']:
+                            continue
 
                         if 'lumi.sensor_cube' in Model:
                             if IEEE.endswith('-03-000c'):
@@ -494,7 +498,7 @@ class BasePlugin:
                             Type = 'Tradfri_remote'
                         else:
                             Type = 'Switch_Generic'
-
+                            
                         self.Devices[IEEE]['model'] = Type
 
                     #Special device
@@ -657,8 +661,6 @@ class BasePlugin:
 
             if 'vibration' in state:
                 kwarg.update(VibrationSensorConvertion( state['vibration'] , state['tiltangle']) )
-                if IEEE not in self.NeedToReset:
-                    self.NeedToReset.append(IEEE)
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -1013,7 +1015,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Tilt|Vibrate|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'ZHAThermostat':
         kwarg['Type'] = 242
