@@ -564,14 +564,19 @@ def ButtonconvertionGeneric(val):
     return kwarg
 
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/748
+#For the moment only vibrations are working
 def VibrationSensorConvertion(val_v,val_t):
+
     kwarg = {}
 
     v = 0
 
+    if val_v == True:
+        v = 10
+
     kwarg['nValue'] = v
 
-    if kwarg['nValue'] == 0:
+    if v == 0:
         kwarg['sValue'] = 'Off'
     else:
         kwarg['sValue'] = str( kwarg['nValue'] )
