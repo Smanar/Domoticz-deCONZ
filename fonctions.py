@@ -253,10 +253,10 @@ def ProcessAllState(data,model):
     #    kwarg.update(ReturnUpdateValue( 'lightlevel' , data['lightlevel'] ) )
     if 'lux' in data:
         kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
-    if 'consumption' in data:
-        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'power' in data:
         kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
+    if 'consumption' in data:
+        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'current' in data:
         kwarg.update(ReturnUpdateValue( 'current' , data['current'] ) )
     if 'battery' in data:
@@ -402,8 +402,17 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['sValue'] = str(val)
 
     if command == 'pressure':
+        val = int(val)
+        if val < 1000:
+            Bar_forecast = 4
+        elif val < 1020:
+            Bar_forecast = 3
+        elif val < 1030:
+            Bar_forecast = 2
+        else:
+            Bar_forecast = 1
         kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
+        kwarg['sValue'] = str(val) + ';' + str(Bar_forecast)
 
     if command == 'humidity':
         val = int( int(val) / 100)
@@ -419,6 +428,8 @@ def ReturnUpdateValue(command,val,model = None):
         kwarg['sValue'] = str(val)
 
     if command == 'consumption':
+        #Wh to Kwh
+        val = round( int(val) *0.001,3)
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
