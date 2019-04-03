@@ -236,13 +236,14 @@ class BasePlugin:
                     Domoticz.Error("New Data repaired : " + str(_Data))
                 except:
                     Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
-                    return
+                    _Data = None
 
             #Complete frame, force disconnexion
             self.Request.Disconnect()
 
             #traitement
-            self.NormalConnexion(_Data)
+            if _Data:
+                self.NormalConnexion(_Data)
 
             #Next command ?
             self.UpdateBuffer()
@@ -593,18 +594,20 @@ class BasePlugin:
 
                 #Command sucess
                 elif First_item == 'success':
-                    data = _Data2['success']
-                    dev = (list(data.keys())[0] ).split('/')
-                    val = data[list(data.keys())[0]]
+                    #Disabled, because not reliable, better to use websocket return
+                    if (False):
+                        data = _Data2['success']
+                        dev = (list(data.keys())[0] ).split('/')
+                        val = data[list(data.keys())[0]]
 
-                    if len(dev) < 3:
-                        Domoticz.Error("Not managed JSON : " + str(_Data2) )
-                    else:
-                        if not _id:
-                            _id = dev[2]
-                            _type = dev[1]
+                        if len(dev) < 3:
+                            Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                        else:
+                            if not _id:
+                                _id = dev[2]
+                                _type = dev[1]
 
-                        _FakeJson.update( { dev[4] : val } )
+                            _FakeJson.update( { dev[4] : val } )
 
                 else:
                     Domoticz.Error("Not managed JSON : " + str(_Data2) )
@@ -631,7 +634,7 @@ class BasePlugin:
 
         #Take care, no uniqueid for groups
         IEEE = str(_Data.get('uniqueid',self.GetDeviceIEEE(_Data['id'],_Data['r'])))
-        model = self.Devices[IEEE]['model']
+        model = self.Devices[IEEE].get('model','')
 
         kwarg = {}
 
@@ -649,11 +652,13 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                 else:
                     kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
-                self.NeedToReset.append(IEEE)
+                if IEEE not in self.NeedToReset:
+                    self.NeedToReset.append(IEEE)
 
             if 'vibration' in state:
                 kwarg.update(VibrationSensorConvertion( state['vibration'] , state['tiltangle']) )
-                self.NeedToReset.append(IEEE)
+                if IEEE not in self.NeedToReset:
+                    self.NeedToReset.append(IEEE)
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -744,6 +749,7 @@ class BasePlugin:
 
     def GetDeviceIEEE(self,_id,_type):
         for IEEE in self.Devices:
+            #Domoticz.Log("#################" + str(IEEE) + ' ' + str( self.Devices[IEEE]['id']) + ' ' + str(self.Devices[IEEE]['type'] ) )
             if (self.Devices[IEEE]['type'] == _type) and (self.Devices[IEEE]['id'] == _id):
                 if self.Devices[IEEE].get('Banned',False) == True:
                     return 'banned'
@@ -982,7 +988,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['TypeName'] = 'Humidity'
 
     elif _Type == 'ZHAPressure':
-        kwarg['TypeName'] = 'Pressure'
+        kwarg['TypeName'] = 'Barometer'
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose':
         kwarg['Type'] = 244
@@ -997,10 +1003,10 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHALightLevel':
         kwarg['TypeName'] = 'Illumination'
 
-    elif _Type == 'ZHAConsumption':
-        kwarg['TypeName'] = 'Usage'
+    elif _Type == 'ZHAConsumption':# in kWh
+        kwarg['TypeName'] = 'kWh'
 
-    elif _Type == 'ZHAPower':
+    elif _Type == 'ZHAPower':# in W
         kwarg['TypeName'] = 'Usage'
 
     elif _Type == 'ZHAVibration':
