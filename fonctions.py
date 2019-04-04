@@ -218,7 +218,7 @@ def ProcessAllConfig(data):
 def ProcessAllState(data,model):
     # Lux need to be > lightlevel > daylight > dark
     # xy > ct > bri > on/off
-    # current > power > consumption
+    # consumption > power
     # status > daylight > all
 
     kwarg = {}
@@ -257,8 +257,6 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
     if 'consumption' in data:
         kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
-    if 'current' in data:
-        kwarg.update(ReturnUpdateValue( 'current' , data['current'] ) )
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'buttonevent' in data:
@@ -429,15 +427,16 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'consumption':
         #Wh to Kwh
-        val = round( int(val) *0.001,3)
+        kwh = round( int(val) * 1 ,3)
+        p = 0
+        if buffercommand.get('power'):
+            p = buffercommand['power']
+            buffercommand.clear()
         kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
+        kwarg['sValue'] = str(p) + ';' + str(kwh)
 
     if command == 'power':
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
-
-    if command == 'current':
+        buffercommand['power'] = val
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
