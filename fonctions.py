@@ -267,8 +267,8 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
-    if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    #if 'alert' in data:
+    #    kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
     if 'carbonmonoxide' in data:
         kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
@@ -374,7 +374,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
 
-    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'alert' or command == 'carbonmonoxide':
+    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'carbonmonoxide':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
