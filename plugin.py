@@ -78,7 +78,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','lights','Window covering device')
+        #CreateDevice('1111','sensors','ZHAConsumption')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -480,7 +480,7 @@ class BasePlugin:
 
                         #Set it to off
                         kwarg.update({'sValue': 'Off', 'nValue': 0})
-                        
+
                         #ignore ZHASwitch if vibration sensor
                         if 'sensitivity' in _Data[i]['config']:
                             continue
@@ -498,7 +498,7 @@ class BasePlugin:
                             Type = 'Tradfri_remote'
                         else:
                             Type = 'Switch_Generic'
-                            
+
                         self.Devices[IEEE]['model'] = Type
 
                     #Special device
@@ -638,6 +638,12 @@ class BasePlugin:
 
         #Take care, no uniqueid for groups
         IEEE = str(_Data.get('uniqueid',self.GetDeviceIEEE(_Data['id'],_Data['r'])))
+        if IEEE == 'banned':
+            Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+            return
+        if not IEEE:
+            Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+            return
         model = self.Devices[IEEE].get('model','')
 
         kwarg = {}
