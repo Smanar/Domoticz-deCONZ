@@ -432,8 +432,8 @@ def ReturnUpdateValue(command,val,model = None):
         if buffercommand.get('power'):
             p = buffercommand['power']
             buffercommand.clear()
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(p) + ';' + str(kwh)
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(p) + ';' + str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
