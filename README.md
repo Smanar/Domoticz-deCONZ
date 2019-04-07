@@ -67,13 +67,15 @@ And for theses ones who don't know where to find the API key and don't wana use 
 ## Remark.
 - Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
 
-- The plugin works fine, but I haven't tested all possibles devices, so not finished, for group I m using group name from deCONZ, and I don't know yet if it's a good method.
-
 - At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
 
 - If you haven't github acount, the support in domoticz forum is here https://www.domoticz.com/forum/viewtopic.php?f=68&t=25631
 
-- You can't use the native fonction in domoticz for switch (activation devices), because this plugin trigger device event for useless information, like battery level. So instead of using trigger event, you need to use button detected. You have some LUA exemples here : https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-switch
+- You can't use the native fonction in domoticz for switch (activation devices), because this plugin trigger device event for useless information, like battery level. So instead of using trigger event, you need to use button detected. You have some LUA exemples here : [Use LUA for switch](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-switch).   
+
+- You have some others exemples here :
+>[Some LUA exemples for sensors](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-various-sensors).   
+[Using LUA to chnage setting on the fly](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-to-change-setting-on-the-fly).   
 
 
 ## Known issues.
