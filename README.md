@@ -89,7 +89,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.7 (On beta branch) > continuing the implementation of new devices.
+- xx/xx/xx : 1.0.7 (On beta branch) > continuing new devices implementation.
 - 07/04/19 : 1.0.6 > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock. Trying to correct bad JSON data on normal connexion. Enable timeout display for no rechables devices. Devices Units correction (thx @fswmlu). Corrections for initialisation device on plugin start and bug on banning groups (Thx @dobber81).
 - 04/03/19 : 1.0.5 > improve the case deCONZ is not on same machine than Domoticz. Groups reparation, now you can send for exemple a color level to a complete group with only 1 device. Device update modification, for fast event, like if you press a switch too fast.
 - 02/02/19 : 1.0.4 > Modification the way the plugin receive data. Decrease the device update amount, less logs, less notifications, but at least 1 update every 24h to see if the device is still alive.
