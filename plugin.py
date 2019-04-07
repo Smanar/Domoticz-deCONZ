@@ -77,7 +77,6 @@ class BasePlugin:
         return
 
     def onStart(self):
-      
         Domoticz.Debug("onStart called")
         #CreateDevice('1111','sensors','ZHAConsumption')
 
@@ -415,6 +414,8 @@ class BasePlugin:
                         _id = self.Devices[i]['id']
                 UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' } )
             self.NeedToReset = []
+            
+        #Devices[27].Update(nValue=0, sValue='11;22' )
 
     def onDeviceRemoved(self,unit):
         Domoticz.Log("Device Removed")
@@ -682,6 +683,14 @@ class BasePlugin:
                         self.SetDeviceDefautState(IEEE,_Data['r'])
                     else:
                         Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+
+            if ('tampered' in state) or ('lowbattery' in state):
+                tampered = state.get('tampered',False)
+                lowbattery = state.get('lowbattery',False)
+                if tampered or lowbattery:
+                    kwarg.update({'TimedOut':1})
+                    Domoticz.Error("###### Device with hardware defaut : " + str(_Data))
+
 
         #MAJ config
         elif 'config' in _Data:
@@ -1029,7 +1038,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
-        #kwarg['Image'] = 11 # Not working for this kind of device
+        kwarg['Image'] = 11 # Visible only on floorplan
 
     elif _Type == 'ZHAFire' or _Type == 'ZHACarbonMonoxide':
         kwarg['Type'] = 244
