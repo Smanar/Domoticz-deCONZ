@@ -2,6 +2,7 @@
 # coding: utf-8 -*-
 
 import Domoticz
+buffercommand = {}
 
 #****************************************************************************************************
 # Global fonctions
@@ -145,18 +146,20 @@ def xy_to_rgb(x, y, brightness = 1):
 
 
 def Count_Type(d):
-    b = l = s = g = 0
+    b = l = s = g = o = 0
     for i in d:
         if d[i]['type'] == 'lights':
             l += 1
         elif d[i]['type'] == 'sensors':
             s += 1
-        else:
+        elif d[i]['type'] == 'groups':
             g += 1
+        else:
+            o += 1
 
         if d[i].get('Banned',False) == True:
             b += 1
-    return l,s,g,b
+    return l,s,g,b,o
 
 def First_Json(data):
     s = ''
@@ -171,6 +174,29 @@ def First_Json(data):
                 return s
     return False
 
+def JSON_Repair(data):
+    s = e = p = 0
+    c = 0
+    b = ''
+
+    while True:
+        if c == 0:
+            p = data.find('[',p)
+            s = p
+        else:
+            p = data.find(']',p)
+            e = p
+        c = 1 - c
+        if p == -1:
+            break
+
+        if e > s:
+            if len(b) > 0:
+                b += ','
+            b += data[s + 1:e]
+
+    return '[' + b + ']'
+
 #**************************************************************************************************
 # Domoticz fonctions
 #
@@ -181,16 +207,18 @@ def ProcessAllConfig(data):
 
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+    if 'heatsetpoint' in data:
+        kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
 
     return kwarg
 
-def ProcessAllState(data):
+def ProcessAllState(data,model):
     # Lux need to be > lightlevel > daylight > dark
-    # xy > ct > bri >on/off
-    # current > power > consumption
+    # xy > ct > bri > on/off
+    # consumption > power
     # status > daylight > all
 
     kwarg = {}
@@ -198,13 +226,17 @@ def ProcessAllState(data):
     if 'status' in data:
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue( 'on' , data['on'] ) )
+        kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
     if 'xy' in data:
         kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
+    if 'x' in data:
+        kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
+    if 'y' in data:
+        kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
     if 'bri' in data:
-        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] ) )
+        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] , model) )
     if 'temperature' in data:
         kwarg.update(ReturnUpdateValue( 'temperature' , data['temperature'] ) )
     if 'pressure' in data:
@@ -221,12 +253,10 @@ def ProcessAllState(data):
     #    kwarg.update(ReturnUpdateValue( 'lightlevel' , data['lightlevel'] ) )
     if 'lux' in data:
         kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
-    if 'consumption' in data:
-        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'power' in data:
         kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
-    if 'current' in data:
-        kwarg.update(ReturnUpdateValue( 'current' , data['current'] ) )
+    if 'consumption' in data:
+        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'buttonevent' in data:
@@ -237,8 +267,10 @@ def ProcessAllState(data):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
-    if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    #if 'alert' in data:
+    #    kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    if 'carbonmonoxide' in data:
+        kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -248,9 +280,14 @@ def ProcessAllState(data):
     if 'any_on' in data:
         kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
 
+    #Special
+    if 'reachable' in data:
+        if data['reachable'] == False:
+            kwarg.update({'TimedOut':1})
+
     return kwarg
 
-def ReturnUpdateValue(command,val):
+def ReturnUpdateValue(command,val,model = None):
 
     if not val:
         val = 0
@@ -264,15 +301,39 @@ def ReturnUpdateValue(command,val):
     if command == 'on':
         if val == 'True':
             kwarg['nValue'] = 1
-            kwarg['sValue'] = 'on'
+            if model == 'Window covering device':
+                kwarg['sValue'] = '100'
+            else:
+                kwarg['sValue'] = 'on'
         else:
             kwarg['nValue'] = 0
-            kwarg['sValue'] = 'off'
+            if model == 'Window covering device':
+                kwarg['sValue'] = '0'
+            else:
+                kwarg['sValue'] = 'off'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
-        kwarg['sValue'] = str(val)
+        if model == 'Window covering device':
+            if val < 2:
+                kwarg['sValue'] = '0'
+                kwarg['nValue'] = 0
+            elif val > 99:
+                kwarg['sValue'] = '100'
+                kwarg['nValue'] = 1
+            else:
+                kwarg['sValue'] = str(val)
+                kwarg['nValue'] = 2
+        else:
+            kwarg['sValue'] = str(val)
+
+    if command == 'x' or command == 'y':
+        buffercommand[command] = val
+        if buffercommand.get('x') and buffercommand.get('y'):
+            rgb = xy_to_rgb(int(buffercommand['x']),int(buffercommand['y']),1)
+            kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
+            buffercommand.clear()
 
     if command == 'xy':
         x,y = eval(str(val))
@@ -313,23 +374,7 @@ def ReturnUpdateValue(command,val):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
 
-    if command == 'flag':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'water':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'fire':
+    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'carbonmonoxide':
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
@@ -342,6 +387,10 @@ def ReturnUpdateValue(command,val):
         val = round( int(val) / 100 , 2  )
         kwarg['sValue'] = str(val)
 
+    if command == 'heatsetpoint':
+        val = round( int(val) / 100 , 2  )
+        kwarg['heatsetpoint'] = str(val)
+
     if command == 'status':
         if int(val) == 0:
             kwarg['nValue'] = 0
@@ -351,8 +400,17 @@ def ReturnUpdateValue(command,val):
             kwarg['sValue'] = str(val)
 
     if command == 'pressure':
+        val = int(val)
+        if val < 1000:
+            Bar_forecast = 4
+        elif val < 1020:
+            Bar_forecast = 3
+        elif val < 1030:
+            Bar_forecast = 2
+        else:
+            Bar_forecast = 1
         kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
+        kwarg['sValue'] = str(val) + ';' + str(Bar_forecast)
 
     if command == 'humidity':
         val = int( int(val) / 100)
@@ -368,32 +426,19 @@ def ReturnUpdateValue(command,val):
         kwarg['sValue'] = str(val)
 
     if command == 'consumption':
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
+        #Wh to Kwh
+        kwh = round( int(val) * 1 ,3)
+        p = 0
+        if buffercommand.get('power'):
+            p = buffercommand['power']
+            buffercommand.clear()
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(p) + ';' + str(kwh)
 
     if command == 'power':
+        buffercommand['power'] = val
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
-
-    if command == 'current':
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
-
-    if command == 'presence':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-
-    if command == 'alert':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
 
     if command == 'daylight':
         if val == 'True':
@@ -511,6 +556,26 @@ def ButtonconvertionGeneric(val):
     kwarg['nValue'] = v * int(Button_Number)
 
     if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+
+#https://github.com/dresden-elektronik/deconz-rest-plugin/issues/748
+#For the moment only vibrations are working
+def VibrationSensorConvertion(val_v,val_t):
+
+    kwarg = {}
+
+    v = 0
+
+    if val_v == True:
+        v = 10
+
+    kwarg['nValue'] = v
+
+    if v == 0:
         kwarg['sValue'] = 'Off'
     else:
         kwarg['sValue'] = str( kwarg['nValue'] )
