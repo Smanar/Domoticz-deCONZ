@@ -3,7 +3,11 @@
 
 import sys
 import urllib,json
-from urllib import request, parse
+try:
+	from urllib import request, parse
+except:
+	print('This tool is for python 3, use instead "python3 API_KEY.py" !')
+	sys.exit(0)
 
 try:
     ip = sys.argv[1]
