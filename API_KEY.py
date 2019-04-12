@@ -67,6 +67,7 @@ elif action == 'info':
         print ("Webscoket Port : " + str(j['websocketport']) )
         print ("IP adress: " + j['ipaddress'] )
         print ("Firmware version : " + j['fwversion'] )
+        print ("Websocketnotifyall : " + str(j['websocketnotifyall']) )
 
 
 else:
