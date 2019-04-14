@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.6" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.7" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -677,12 +677,13 @@ class BasePlugin:
                     LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                     current = time.time()
 
-                    #Check if the device has been see, at least 10 s ago
-                    if (current-LUpdate) > 10:
-                        Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
-                        self.SetDeviceDefautState(IEEE,_Data['r'])
-                    else:
-                        Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+                    if (False):
+                        #Check if the device has been see, at least 10 s ago
+                        if (current-LUpdate) > 10:
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
+                            self.SetDeviceDefautState(IEEE,_Data['r'])
+                        else:
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
 
             if ('tampered' in state) or ('lowbattery' in state):
                 tampered = state.get('tampered',False)
