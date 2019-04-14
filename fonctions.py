@@ -412,10 +412,16 @@ def ReturnUpdateValue(command,val,model = None):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val) + ';' + str(Bar_forecast)
 
+    # 0=Normal, 1=Comfortable, 2=Dry, 3=Wet
     if command == 'humidity':
         val = int( int(val) / 100)
         kwarg['nValue'] = val
-        kwarg['sValue'] = '0'
+        if val <= 40:
+            kwarg['sValue'] = '2'
+        elif val<=70:
+            kwarg['sValue'] = '1'
+        else:
+            kwarg['sValue'] = '3'
 
     if command == 'lightlevel':
         kwarg['nValue'] = 0
