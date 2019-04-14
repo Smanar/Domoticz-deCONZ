@@ -677,12 +677,13 @@ class BasePlugin:
                     LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                     current = time.time()
 
-                    #Check if the device has been see, at least 10 s ago
-                    if (current-LUpdate) > 10:
-                        Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
-                        self.SetDeviceDefautState(IEEE,_Data['r'])
-                    else:
-                        Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+                    if (False):
+                        #Check if the device has been see, at least 10 s ago
+                        if (current-LUpdate) > 10:
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
+                            self.SetDeviceDefautState(IEEE,_Data['r'])
+                        else:
+                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
 
             if ('tampered' in state) or ('lowbattery' in state):
                 tampered = state.get('tampered',False)
