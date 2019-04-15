@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.7" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.8" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -26,7 +26,6 @@
     <params>
         <param field="Address" label="deCONZ IP" width="150px" required="true" default="127.0.0.1"/>
         <param field="Port" label="Port" width="150px" required="true" default="80"/>
-        <param field="Mode1" label="Websocket port" width="75px" required="true" default="8088" />
         <param field="Mode2" label="API KEY" width="75px" required="true" default="1234567890" />
         <param field="Mode3" label="Debug" width="150px">
             <options>
@@ -55,6 +54,7 @@ DOMOTICZ_IP = '127.0.0.1'
 
 ANTIFLOOD = False
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
+SETTODEFAULT = False #To set device in default state after a rejoin
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -69,10 +69,13 @@ class BasePlugin:
         self.Ready = False
         self.Buffer_Command = []
         self.Request = None
+        self.WebSocket = None
         self.Banned_Devices = []
         self.NeedWaitForCon = False
         self.BufferReceive = ''
         self.BufferLenght = 0
+
+        self.INIT_STEP = ['config','lights','sensors','groups']
 
         return
 
@@ -103,9 +106,10 @@ class BasePlugin:
                     self.Banned_Devices.append(line.strip())
         myPluginConfFile.close()
 
-        #Web socket connexion
-        self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=Parameters["Mode1"])
-        self.WebSocket.Connect()
+        #Read and Set config
+        json = '{"websocketnotifyall":true}'
+        url = '/api/' + Parameters["Mode2"] + '/config/'
+        self.SendCommand(url,json)
 
         # Disabled, not working for selector ...
         #check for new icons
@@ -117,7 +121,8 @@ class BasePlugin:
 
     def onStop(self):
         Domoticz.Debug("onStop called")
-        self.WebSocket.Disconnect()
+        if self.WebSocket:
+            self.WebSocket.Disconnect()
 
     def onConnect(self, Connection, Status, Description):
         Domoticz.Debug("onConnect called")
@@ -129,12 +134,12 @@ class BasePlugin:
                 Domoticz.Error("Status : " + str(Status) + " Description : " + str(Description) )
                 return
 
-            Domoticz.Status("Launching websocket on port " + str(Parameters["Mode1"]) )
+            Domoticz.Status("Launching websocket on port " + str(Connection.Port) )
             #Need to Add Sec-Websocket-Protocol : domoticz ????
             #Boring error > Socket Shutdown Error: 9, Bad file descriptor
             #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
             wsHeader = "GET / HTTP/1.1\r\n" \
-                        "Host: "+ Parameters["Address"] + ':' + Parameters["Mode1"] + "\r\n" \
+                        "Host: "+ Parameters["Address"] + ':' + str(Connection.Port) + "\r\n" \
                         "User-Agent: Domoticz/1.0\r\n" \
                         "Accept: Content-Type: text/html; charset=UTF-8\r\n" \
                         "Sec-WebSocket-Version: 13\r\n" \
@@ -394,16 +399,20 @@ class BasePlugin:
 
         #Initialisation
         if self.Ready != True:
-            Domoticz.Debug("### Initialisation > " + str(self.Ready))
-            if ((self.Ready == False) or (self.Ready == 'lights')):
-                self.Ready = "lights"
-                Domoticz.Log("### Request lights")
-                self.SendCommand("/api/" + Parameters["Mode2"] + "/lights/")
+            if len(self.INIT_STEP) > 0:
+                Domoticz.Debug("### Initialisation > " + str(self.INIT_STEP[0]))
+                self.ManageInit()
+
+                #Stop all
+                return
+            else:
+               self.Ready = True
 
         #Check websocket connexion
-        if not self.WebSocket.Connected():
-            Domoticz.Error("WebSocket Disconnected, reconnexion !")
-            self.WebSocket.Connect()
+        if self.WebSocket:
+            if not self.WebSocket.Connected():
+                Domoticz.Error("WebSocket Disconnected, reconnexion !")
+                self.WebSocket.Connect()
 
         #reset switchs
         if len(self.NeedToReset) > 0 :
@@ -414,7 +423,7 @@ class BasePlugin:
                         _id = self.Devices[i]['id']
                 UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' } )
             self.NeedToReset = []
-            
+
         #Devices[27].Update(nValue=0, sValue='11;22' )
 
     def onDeviceRemoved(self,unit):
@@ -422,6 +431,21 @@ class BasePlugin:
         #TODO : Need to rescan all
 
 #---------------------------------------------------------------------------------------
+
+    def ManageInit(self,pop = False):
+        if pop:
+            self.INIT_STEP.pop(0)
+        if len(self.INIT_STEP) < 1:
+            self.Ready = True
+
+            Domoticz.Status("### deCONZ ready")
+            l,s,g,b,o = Count_Type(self.Devices)
+            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups and " + str(o) + " others, with " + str(b) + " Ignored")
+
+            return
+
+        Domoticz.Log("### Request " + self.INIT_STEP[0])
+        self.SendCommand("/api/" + Parameters["Mode2"] + "/" + self.INIT_STEP[0] + "/")
 
     def InitDeconz(self,_Data,First_item):
         #Read all devices
@@ -441,7 +465,7 @@ class BasePlugin:
                     #Type_device = 'lights'
                     #if not 'hascolor' in _Data[i]:
                     #    Type_device = 'sensors'
-                    Type_device = self.Ready
+                    Type_device = self.INIT_STEP[0]
 
                     Domoticz.Log("### Device > " + str(i) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data[i]['state']))
 
@@ -539,22 +563,7 @@ class BasePlugin:
                             CreateDevice(Dev_name,Name,Type)
 
         #Update initialisation
-        if self.Ready == "groups":
-            self.Ready = True
-            Domoticz.Status("### deCONZ ready")
-            l,s,g,b,o = Count_Type(self.Devices)
-            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups and " + str(o) + " others, with " + str(b) + " Ignored")
-
-        elif self.Ready == "sensors":
-            self.Ready = "groups"
-            Domoticz.Log("### Request Groups")
-            self.SendCommand("/api/" + Parameters["Mode2"] + "/groups/")
-
-        elif self.Ready == "lights":
-            self.Ready = "sensors"
-            Domoticz.Log("### Request sensors")
-            self.SendCommand("/api/" + Parameters["Mode2"] + "/sensors/")
-
+        self.ManageInit(True)
 
     def NormalConnexion(self,_Data):
 
@@ -574,6 +583,17 @@ class BasePlugin:
         if isinstance(First_item, str):
             if First_item.isnumeric():
                 self.InitDeconz(_Data,First_item)
+            elif 'websocketnotifyall' in _Data:
+                Domoticz.Status("Firmware version : " + _Data['fwversion'] )
+                Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
+                #Domoticz.Log("websocketport : " + str(_Data['websocketport']) )
+
+                #Web socket connexion
+                #Domoticz.Log('Name="deCONZ_WebSocket", Transport="TCP/IP", Address=' + str(Parameters["Address"]) + ', Port=' + str(_Data['websocketport'] ))
+                self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
+                self.WebSocket.Connect()
+
+                self.ManageInit(True)
             else:
                 Domoticz.Error("Not managed JSON : " + str(_Data) )
 
@@ -600,19 +620,23 @@ class BasePlugin:
 
                 #Command sucess
                 elif First_item == 'success':
-                    #Disabled, because not reliable, better to use websocket return
-                    if (False):
-                        data = _Data2['success']
-                        dev = (list(data.keys())[0] ).split('/')
-                        val = data[list(data.keys())[0]]
 
-                        if len(dev) < 3:
-                            Domoticz.Error("Not managed JSON : " + str(_Data2) )
-                        else:
-                            if not _id:
-                                _id = dev[2]
-                                _type = dev[1]
+                    data = _Data2['success']
+                    dev = (list(data.keys())[0] ).split('/')
+                    val = data[list(data.keys())[0]]
 
+                    if len(dev) < 3:
+                        Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                    else:
+                        if not _id:
+                            _id = dev[2]
+                            _type = dev[1]
+
+                        if _type == 'config':
+                            Domoticz.Status("Editing configuration : " + str(data) )
+
+                        #Disabled, because not reliable, better to use websocket return
+                        if (False):
                             _FakeJson.update( { dev[4] : val } )
 
                 else:
@@ -668,7 +692,7 @@ class BasePlugin:
                     self.NeedToReset.append(IEEE)
 
             if 'vibration' in state:
-                kwarg.update(VibrationSensorConvertion( state['vibration'] , state['tiltangle']) )
+                kwarg.update(VibrationSensorConvertion( state['vibration'] , state.get('tiltangle',None)) )
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -677,7 +701,7 @@ class BasePlugin:
                     LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                     current = time.time()
 
-                    if (False):
+                    if (SETTODEFAULT):
                         #Check if the device has been see, at least 10 s ago
                         if (current-LUpdate) > 10:
                             Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
