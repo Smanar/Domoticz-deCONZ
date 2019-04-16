@@ -242,7 +242,7 @@ class BasePlugin:
             self.Request.Disconnect()
 
             #traitement
-            if _Data:
+            if not _Data == None: #WARNING None because can be {}
                 self.NormalConnexion(_Data)
 
             #Next command ?
