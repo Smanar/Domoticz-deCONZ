@@ -586,7 +586,7 @@ class BasePlugin:
             elif 'websocketnotifyall' in _Data:
                 Domoticz.Status("Firmware version : " + _Data['fwversion'] )
                 Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
-                if not Data['websocketnotifyall'] == True:
+                if not _Data['websocketnotifyall'] == True:
                     Domoticz.Error("Websocketnotifyall is not set to True")
 
                 #Web socket connexion
