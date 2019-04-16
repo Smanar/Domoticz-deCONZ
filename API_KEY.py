@@ -54,7 +54,7 @@ elif action == 'clean':
         j2 = j['whitelist']
         for i in j2:
             print ('KEY : ' + i + ' Name : ' + j2[i]['name'] + ' Last used : ' + j2[i]['last use date'] )
-            if 'WebApp' in j2[i]['name'] or 'Phoscon#' in j2[i]['name']:
+            if 'deCONZ WebApp' in j2[i]['name'] or 'Phoscon#' in j2[i]['name']:
                 req = request.Request('http://' + ip + '/api/' + data[0] + '/config/whitelist/' + i , method='DELETE')
                 response = request.urlopen(req).read()
                 print ('Deleted : '  + str(response) )
@@ -93,3 +93,4 @@ else:
     print('python3 API_KEY.py 127.0.0.1:80 info B4B018AA61')
     print('python3 API_KEY.py 127.0.0.1:80 list B4B018AA61')
     print('python3 API_KEY.py 127.0.0.1:80 delete B4B018AA61 CA606DA036')
+    print('python3 API_KEY.py 127.0.0.1:80 clean B4B018AA61')
