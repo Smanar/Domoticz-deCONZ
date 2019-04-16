@@ -78,7 +78,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.8 (On beta branch) > continuing new devices implementation.
+- xx/xx/xx : 1.0.8 (On beta branch) > continuing new devices implementation. Adding a tool to delete all useless key created everytime launching Phoscon. Setting Websocket port is now useless. 
 - 14/04/19 : 1.0.7 > Special version, because of a problem in a feature I have make and a deconz version >= 2.05.62, bulb will be set to off just after set to on.
 - 07/04/19 : 1.0.6 > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock. Trying to correct bad JSON data on normal connexion. Enable timeout display for no rechables devices. Devices Units correction (thx @fswmlu). Corrections for initialisation device on plugin start and bug on banning groups (Thx @dobber81).
 - 04/03/19 : 1.0.5 > improve the case deCONZ is not on same machine than Domoticz. Groups reparation, now you can send for exemple a color level to a complete group with only 1 device. Device update modification, for fast event, like if you press a switch too fast.
