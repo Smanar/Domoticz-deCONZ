@@ -107,9 +107,9 @@ class BasePlugin:
         myPluginConfFile.close()
 
         #Read and Set config
-        json = '{"websocketnotifyall":true}'
-        url = '/api/' + Parameters["Mode2"] + '/config/'
-        self.SendCommand(url,json)
+        #json = '{"websocketnotifyall":true}'
+        #url = '/api/' + Parameters["Mode2"] + '/config/'
+        #self.SendCommand(url,json)
 
         # Disabled, not working for selector ...
         #check for new icons
@@ -586,10 +586,10 @@ class BasePlugin:
             elif 'websocketnotifyall' in _Data:
                 Domoticz.Status("Firmware version : " + _Data['fwversion'] )
                 Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
-                #Domoticz.Log("websocketport : " + str(_Data['websocketport']) )
+                if not Data['websocketnotifyall'] == True:
+                    Domoticz.Error("Websocketnotifyall is not set to True")
 
                 #Web socket connexion
-                #Domoticz.Log('Name="deCONZ_WebSocket", Transport="TCP/IP", Address=' + str(Parameters["Address"]) + ', Port=' + str(_Data['websocketport'] ))
                 self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
                 self.WebSocket.Connect()
 
@@ -632,7 +632,7 @@ class BasePlugin:
                             _id = dev[2]
                             _type = dev[1]
 
-                        if _type == 'config':
+                        if dev[1] == 'config':
                             Domoticz.Status("Editing configuration : " + str(data) )
 
                         #Disabled, because not reliable, better to use websocket return
