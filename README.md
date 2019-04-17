@@ -7,19 +7,15 @@ It's a python plugin for Domoticz (home automation application).
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
 
 ## Description
-To resume, you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....
-
+To resume:
+- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
-You need too deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
+- You need too deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
 
-Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
+- You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
-![alt text](https://www.dresden-elektronik.de/typo3temp/pics/f0afa1a806.png)
-
-You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
-
-And use this plugin to make bridge beetween their webserver and domoticz.
+- And use this plugin to make bridge beetween their webserver and domoticz.
 
 ## Requirement.
 deCONZ 2.05.44, ATM, But there a new version every week, so I can't be sure the plugin don't use a special feature you don't have on your version if you use an older one.
