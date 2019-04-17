@@ -931,8 +931,10 @@ def UpdateDevice(_id,_type,kwarg):
 
     NeedUpdate = False
 
-    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event, But only for switch
-    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ('LevelNames' in Devices[Unit].Options):
+    #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event
+    # Only for switch > 'LevelNames' in Devices[Unit].Options
+    # Only sensors >  _type == 'sensors'
+    if (('nValue' in kwarg) or ('sValue' in kwarg)) and (_type == 'sensors'):
         NeedUpdate = True
 
     if 'nValue' not in kwarg:
