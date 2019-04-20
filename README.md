@@ -36,7 +36,7 @@ You can later update the plugin
 - Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
 ## Configuration.
-- The plugin works better with websocketnotifyall option set to true.   
+- The plugin works better with websocketnotifyall option set to true (it's the configuration by default).   
 ```curl -H 'Content-Type: application/json' -X PUT -d '{"websocketnotifyall": true}' http://IP_DECONZ:80/api/API_KEY/config```
 - The plugin don't use special configuration file, except the banned.txt file.   
 - At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
