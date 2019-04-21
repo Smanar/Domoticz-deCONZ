@@ -61,7 +61,7 @@ SETTODEFAULT = False #To set device in default state after a rejoin
 
 class BasePlugin:
 
-    enabled = False
+    #enabled = False
 
     def __init__(self):
         self.Devices = {} # id, type, banned , model
@@ -81,7 +81,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','sensors','ZHAConsumption')
+        #CreateDevice('1111','sensors','Switch_Generic')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -137,18 +137,18 @@ class BasePlugin:
             Domoticz.Status("Launching websocket on port " + str(Connection.Port) )
             #Need to Add Sec-Websocket-Protocol : domoticz ????
             #Boring error > Socket Shutdown Error: 9, Bad file descriptor
-            #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
             wsHeader = "GET / HTTP/1.1\r\n" \
                         "Host: "+ Parameters["Address"] + ':' + str(Connection.Port) + "\r\n" \
                         "User-Agent: Domoticz/1.0\r\n" \
-                        "Accept: Content-Type: text/html; charset=UTF-8\r\n" \
                         "Sec-WebSocket-Version: 13\r\n" \
                         "Origin: http://" + DOMOTICZ_IP + "\r\n" \
                         "Sec-WebSocket-Key: qqMLBxyyjz9Tog1bll7K6A==\r\n" \
                         "Connection: keep-alive, Upgrade\r\n" \
-                        "Pragma: no-cache\r\n" \
-                        "Cache-Control: no-cache\r\n" \
                         "Upgrade: websocket\r\n\r\n"
+                        #"Accept: Content-Type: text/html; charset=UTF-8\r\n" \
+                        #"Pragma: no-cache\r\n" \
+                        #"Cache-Control: no-cache\r\n" \
+                        #"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
             self.WebSocket.Send(wsHeader)
 
         elif Connection.Name == 'deCONZ_Com':
@@ -403,7 +403,7 @@ class BasePlugin:
                 Domoticz.Debug("### Initialisation > " + str(self.INIT_STEP[0]))
                 self.ManageInit()
 
-                #Stop all
+                #Stop all here
                 return
             else:
                self.Ready = True
@@ -517,7 +517,7 @@ class BasePlugin:
                             elif IEEE.endswith('-02-0012'):
                                 Type = 'XCube_C'
                             else:
-                                #Useless
+                                # Useless device
                                 self.Devices[IEEE]['Banned'] = True
                                 continue
                         elif 'TRADFRI remote control' in Model:
@@ -929,30 +929,27 @@ def UpdateDevice(_id,_type,kwarg):
         kwarg['nValue'] = 0
         kwarg['nValue'] = str(v)
 
+    #Do we need to update the sensor ?
+
     NeedUpdate = False
+
+    for a in kwarg:
+        if kwarg[a] != getattr(Devices[Unit], a ):
+            NeedUpdate = True
+            break
 
     #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event
     # Only for switch > 'LevelNames' in Devices[Unit].Options
     # Only sensors >  _type == 'sensors'
-    if (('nValue' in kwarg) or ('sValue' in kwarg)) and (_type == 'sensors'):
+    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ( ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0) ):
         NeedUpdate = True
-
-    if 'nValue' not in kwarg:
-        kwarg['nValue'] = Devices[Unit].nValue
-    if 'sValue' not in kwarg:
-        kwarg['sValue'] = Devices[Unit].sValue
-    if Devices[Unit].TimedOut != 0:
-        kwarg['TimedOut'] = 0
 
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
 
-    for a in kwarg:
-        if kwarg[a] != getattr(Devices[Unit], a ):
-            NeedUpdate = True
-            break
+    #Alaways update for Color Bulb
     if 'Color' in kwarg:
         NeedUpdate = True
 
@@ -963,6 +960,14 @@ def UpdateDevice(_id,_type,kwarg):
         current = time.time()
         if (current-LUpdate) > 86400:
             NeedUpdate = True
+
+    #Theses value are needed for Domoticz
+    if 'nValue' not in kwarg:
+        kwarg['nValue'] = Devices[Unit].nValue
+    if 'sValue' not in kwarg:
+        kwarg['sValue'] = Devices[Unit].sValue
+    if Devices[Unit].TimedOut != 0:
+        kwarg['TimedOut'] = 0
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
@@ -1024,7 +1029,7 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHAHumidity' or _Type == 'CLIPHumidity':
         kwarg['TypeName'] = 'Humidity'
 
-    elif _Type == 'ZHAPressure':
+    elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose':
@@ -1037,7 +1042,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 8
 
-    elif _Type == 'ZHALightLevel':
+    elif _Type == 'ZHALightLevel' or _Type == 'CLIPLightLevel':
         kwarg['TypeName'] = 'Illumination'
 
     elif _Type == 'ZHAConsumption':# in kWh
@@ -1052,7 +1057,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
-    elif _Type == 'ZHAThermostat':
+    elif _Type == 'ZHAThermostat' or _Type == 'CLIPThermostat':
         kwarg['Type'] = 242
         kwarg['Subtype'] = 1
 
@@ -1085,18 +1090,21 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_C':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_R':
