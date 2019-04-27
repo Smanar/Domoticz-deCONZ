@@ -667,7 +667,7 @@ class BasePlugin:
         if IEEE == 'banned':
             Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
             return
-        if not IEEE:
+        if not IEEE or (IEEE not in self.Devices):
             Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
             return
         model = self.Devices[IEEE].get('model','')
@@ -742,7 +742,7 @@ class BasePlugin:
 
     def SendCommand(self,url,data=None):
 
-        Domoticz.Debug("Send Command " + url + " with " + str(data))
+        Domoticz.Debug("Send Command " + url + " with " + str(data) + ' (' + str(len(self.Buffer_Command)) + ' in buffer)')
 
         if data == None:
             sendData = "GET " + url + " HTTP/1.1\r\n" \
