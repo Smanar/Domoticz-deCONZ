@@ -227,12 +227,12 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
         kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
-    if 'xy' in data:
-        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
     if 'x' in data:
         kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
     if 'y' in data:
         kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
+    if 'xy' in data:
+        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
     if 'bri' in data:
@@ -331,7 +331,7 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'x' or command == 'y':
         buffercommand[command] = val
         if buffercommand.get('x') and buffercommand.get('y'):
-            rgb = xy_to_rgb(int(buffercommand['x']),int(buffercommand['y']),1)
+            rgb = xy_to_rgb(int(buffercommand['x'])/65536.0,int(buffercommand['y'])/65536.0,1)
             kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
             buffercommand.clear()
 
