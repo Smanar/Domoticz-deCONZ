@@ -52,7 +52,6 @@ from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, Buttonconv
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
 
-ANTIFLOOD = False
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
 
@@ -72,7 +71,6 @@ class BasePlugin:
         self.Request = None
         self.WebSocket = None
         self.Banned_Devices = []
-        self.NeedWaitForCon = False
         self.BufferReceive = ''
         self.BufferLenght = 0
 
@@ -153,8 +151,6 @@ class BasePlugin:
             self.WebSocket.Send(wsHeader)
 
         elif Connection.Name == 'deCONZ_Com':
-
-            self.NeedWaitForCon = False
 
             if (Status != 0):
                 Domoticz.Error("deCONZ connexion error : " + str(Connection))
@@ -389,8 +385,9 @@ class BasePlugin:
         Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
-        #Domoticz.Debug("onDisconnect called for " + str(Connection) )
+        Domoticz.Debug("onDisconnect called for " + str(Connection.Name) )
         if Connection.Name == 'deCONZ_Com':
+            self.Request = None
             self.UpdateBuffer()
         else:
             Domoticz.Status("onDisconnect called for " + str(Connection) )
@@ -779,18 +776,15 @@ class BasePlugin:
         if len(self.Buffer_Command) == 0:
             return
 
-        if ANTIFLOOD == False:
-            self.NeedWaitForCon = False
-
-        if (self.NeedWaitForCon == False) and (self.Request == None or not (self.Request.Connecting() or self.Request.Connected())):
+        if self.Request == None: # or not (self.Request.Connecting() or self.Request.Connected())):
+            Domoticz.Debug("Autorising connection")
             self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
             self.Request.Connect()
-            self.NeedWaitForCon = True
             self.Buffer_Time = time.time()
         else:
             #Ok, we can't send new command, check if the system is freezed
             if (time.time() - self.Buffer_Time) > 5:
-                Domoticz.Error("More than 5s timeout, Your system seem frezzed, Forcing disconnect")
+                Domoticz.Error("More than 5s timeout, Your system seem frezzed, Forcing disconnect for : " + str(self.Buffer_Command[0]))
                 self.Request.Disconnect()
 
     def GetDeviceIEEE(self,_id,_type):
