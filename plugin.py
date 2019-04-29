@@ -68,6 +68,7 @@ class BasePlugin:
         self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
+        self.Buffer_Time = ''
         self.Request = None
         self.WebSocket = None
         self.Banned_Devices = []
@@ -346,7 +347,7 @@ class BasePlugin:
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 IEEE = Devices[Unit].DeviceID
-                if self.Devices[IEEE]['colormode'] == 'hs':
+                if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
                     h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
                     saturation = int(s * 254)
@@ -413,6 +414,10 @@ class BasePlugin:
             if not self.WebSocket.Connected():
                 Domoticz.Error("WebSocket Disconnected, reconnexion !")
                 self.WebSocket.Connect()
+
+        #Check for freeze
+        if len(self.Buffer_Command) > 0:
+            self.UpdateBuffer()
 
         #reset switchs
         if len(self.NeedToReset) > 0 :
@@ -781,6 +786,12 @@ class BasePlugin:
             self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
             self.Request.Connect()
             self.NeedWaitForCon = True
+            self.Buffer_Time = time.time()
+        else:
+            #Ok, we can't send new command, check if the system is freezed
+            if (time.time() - self.Buffer_Time) > 5:
+                Domoticz.Error("More than 5s timeout, Your system seem frezzed, Forcing disconnect")
+                self.Request.Disconnect()
 
     def GetDeviceIEEE(self,_id,_type):
         for IEEE in self.Devices:
