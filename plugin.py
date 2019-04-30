@@ -46,7 +46,7 @@
 import Domoticz
 import json,urllib, time
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
-from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair
+from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric, VibrationSensorConvertion
 
 #Better to use 'localhost' ?
@@ -80,7 +80,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','sensors','Switch_Generic')
+        #CreateDevice('1111','sensors','On/Off light')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -181,11 +181,18 @@ class BasePlugin:
         #Websocket data ?
         if (Connection.Name == 'deCONZ_WebSocket'):
             if Data.startswith(b'\x81'):
-                Data = Data.decode("utf-8", "ignore")
-                p = Data.find('{')
-                _Data = Data[p:]
+                if (False):
+                    while len(Data) > 0:
+                        payload, extra_data = get_JSON_payload(Data)
+                        _Data.append(payload)
+                        Data = extra_data
+                    Domoticz.Log(">>>>>>>>>" + str(_Data) )
+                else:
+                    Data = Data.decode("utf-8", "ignore")
+                    p = Data.find('{')
+                    _Data = Data[p:]
             else:
-                Domoticz.Debug("Websocket Http data : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
+                Domoticz.Debug("Websocket Handshake : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
         #Normal connexion
         elif Connection.Name == 'deCONZ_Com':
             #New frame
@@ -193,11 +200,12 @@ class BasePlugin:
                 self.BufferLenght = len(Data)
                 self.BufferReceive = ''
                 Data = Data.decode("utf-8", "ignore")
-                if Data[-1] == ']':
-                    p = Data.find('[')
-                else:
-                    p = Data.find('{')
-                _Data = Data[p:]
+                _Data = Data.split('\r\n\r\n', 1)[1]
+                #if Data[-1] == ']':
+                #    p = Data.find('[')
+                #else:
+                #    p = Data.find('{')
+                #_Data = Data[p:]
             else:
                 self.BufferLenght += len(Data)
                 _Data = Data.decode("utf-8", "ignore")
@@ -605,7 +613,7 @@ class BasePlugin:
                 if not _Data['websocketnotifyall'] == True:
                     Domoticz.Error("Websocketnotifyall is not set to True")
 
-                #Web socket connexion
+                #Launch Web socket connexion
                 self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
                 self.WebSocket.Connect()
 
@@ -618,7 +626,6 @@ class BasePlugin:
             kwarg = {}
             _id = False
             _type = False
-            _FakeJson = {}
 
             for _Data2 in _Data:
 
@@ -651,15 +658,9 @@ class BasePlugin:
                         if dev[1] == 'config':
                             Domoticz.Status("Editing configuration : " + str(data) )
 
-                        #Disabled, because not reliable, better to use websocket return
-                        if (False):
-                            _FakeJson.update( { dev[4] : val } )
-
                 else:
                     Domoticz.Error("Not managed JSON : " + str(_Data2) )
 
-            if _FakeJson:
-                kwarg.update(ProcessAllState( _FakeJson , ''))
             if kwarg:
                 UpdateDevice(_id,_type,kwarg)
 
@@ -1027,6 +1028,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
         kwarg['Image'] = 1
+        
+    elif _Type == 'On/Off light':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
 
     elif _Type == 'Window covering device':
         kwarg['Type'] = 244
