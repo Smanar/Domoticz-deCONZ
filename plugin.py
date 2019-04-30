@@ -376,6 +376,9 @@ class BasePlugin:
             url = url + '/state'
         elif _type == 'config':
             url = url + '/config'
+        elif _type == 'scenes':
+            url = '/api/' + Parameters["Mode2"] + '/groups/' + deCONZ_ID.split('/')[0] + '/scenes/' + deCONZ_ID.split('/')[1] + '/recall'
+            _json = '{}' # to force PUT
         else:
             url = url + '/action'
 
@@ -559,6 +562,17 @@ class BasePlugin:
                         Domoticz.Log("Skipping Group (Banned) : " + str(Dev_name) )
                         self.Devices[Dev_name]['Banned'] = True
 
+                    #Check for scene
+                    scenes = _Data[i].get('scenes',[])
+                    if len(scenes) > 0:
+                        for j in scenes:
+                            Domoticz.Log("### Scenes associated with group " + str(i) + " > ID:" + str(j['id']) + " Name:" + str(j['name']) )
+                            Scene_name = 'SCENE_' + str(j['name']).replace(' ','_')
+                            self.Devices[Scene_name] = {'id' : str(i) + '/' + str(j['id']) , 'type' : 'scenes' , 'model' : 'scenes'}
+                            #Not exist > create
+                            if GetDomoDeviceInfo(Scene_name) == False:
+                                CreateDevice(Scene_name,str(j['name']),'Scenes')
+
                     else:
                         #Not exist > create
                         if GetDomoDeviceInfo(Dev_name) == False:
@@ -628,7 +642,7 @@ class BasePlugin:
                     val = data[list(data.keys())[0]]
 
                     if len(dev) < 3:
-                        Domoticz.Error("Not managed JSON : " + str(_Data2) )
+                        pass
                     else:
                         if not _id:
                             _id = dev[2]
@@ -658,10 +672,12 @@ class BasePlugin:
             return
 
         if 'e' in _Data:
-            #Device just deleted ?
             if _Data['e'] == 'deleted':
                 return
             if _Data['e'] == 'added':
+                return
+            if _Data['e'] == 'scene-called':
+                Domoticz.Log("Playing scene > group:" + str(_Data['gid']) + " Scene:" + str(_Data['scid']) )
                 return
 
         #Take care, no uniqueid for groups
@@ -1123,6 +1139,13 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 7
         #if 'bulbs_group' in Images:
         #    kwarg['Image'] = Images['bulbs_group'].ID
+
+    #Scenes
+    elif _Type == 'Scenes':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 9
+        kwarg['Image'] = 9
 
     else:
         Domoticz.Error("Unknow device type " + _Type )
