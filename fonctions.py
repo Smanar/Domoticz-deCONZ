@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
 # coding: utf-8 -*-
 
+from struct import unpack
+import json
+
 import Domoticz
 buffercommand = {}
 
 #****************************************************************************************************
 # Global fonctions
+
+
+def get_JSON_payload(data):
+    """Parse length of payload and return it."""
+    start = 2
+    length = ord(data[1:2])
+    if length == 126:
+        # Payload information are an extra 2 bytes.
+        start = 4
+        length, = unpack(">H", data[2:4])
+    elif length == 127:
+        # Payload information are an extra 6 bytes.
+        start = 8
+        length, = unpack(">I", data[2:6])
+    end = start + length
+    payload = json.loads(data[start:end].decode())
+    extra_data = data[end:]
+
+    return payload, extra_data
+
 
 def DecodeByteArray(stringStreamIn):
     # Turn string values into opererable numeric byte values
