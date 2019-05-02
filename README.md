@@ -1,7 +1,3 @@
-# Warning
-If you have some problem with ikea bulb (turn off immediatly after turn on) instal the version 1.0.7.
-In fact the current deconz version V 2.05.62 is not compatible with a feature I have made in the plugin, I will make a correction in the future days, but for the moment, if you want to instal the last version, take care you have the last version from github.
-
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
