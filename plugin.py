@@ -161,7 +161,8 @@ class BasePlugin:
                 c = self.Buffer_Command.pop(0)
                 #Domoticz.Log("### Send" + str(c))
                 self.Request.Send(c)
-                self.BufferReceive = ''
+            else:
+                self.Request.Disconnect()
 
         else:
             Domoticz.Error("Unknow connexion : " + str(Connection))
@@ -501,18 +502,6 @@ class BasePlugin:
                     if 'config' in _Data[i]:
                         config = _Data[i]['config']
                         kwarg.update(ProcessAllConfig(config))
-
-                    #hack
-                    if Type == 'ZHAPower':
-                        try:
-                            if _Data[i]['manufacturername'] == 'OSRAM':
-                                #This device not working
-                                dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
-                                if deCONZ_ID:
-                                    self.DeleteDeviceFromdeCONZ(deCONZ_ID)
-                                continue
-                        except:
-                            Domoticz.Log("### Can't disable unworking device : Osram plug")
 
                     #It's a switch ? Need special process
                     if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
@@ -1028,7 +1017,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
         kwarg['Image'] = 1
-        
+
     elif _Type == 'On/Off light':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
