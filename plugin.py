@@ -992,7 +992,7 @@ def CreateDevice(IEEE,_Name,_Type):
     TypeName = ''
 
     #Operator
-    if _Type == 'Color light':
+    if _Type == 'Color light' or _Type == 'Color dimmable light':
         kwarg['Type'] = 241
         kwarg['Subtype'] = 2
         kwarg['Switchtype'] = 7
@@ -1007,7 +1007,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 8
         kwarg['Switchtype'] = 7
 
-    elif _Type == 'Dimmable light':
+    elif _Type == 'Dimmable light' or _Type == 'Dimmable plug-in unit' or _Type == 'Dimmer switch':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 7
@@ -1018,7 +1018,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 0
         kwarg['Image'] = 1
 
-    elif _Type == 'On/Off light':
+    elif _Type == 'On/Off light' or _Type == 'On/Off output' or _Type == 'On/Off light switch':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
@@ -1032,6 +1032,8 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
+
+    #elif _Type == 'Fan':
 
     #Sensors
     elif _Type == 'Daylight':
