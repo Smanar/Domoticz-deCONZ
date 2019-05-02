@@ -4,10 +4,10 @@
 import sys
 import urllib,json
 try:
-	from urllib import request, parse
+    from urllib import request, parse
 except:
-	print('This tool is for python 3, use instead "python3 API_KEY.py" !')
-	sys.exit(0)
+    print('This tool is for python 3, use instead "python3 API_KEY.py" !')
+    sys.exit(0)
 
 try:
     ip = sys.argv[1]
@@ -43,6 +43,22 @@ elif action == 'list':
         for i in j2:
             print ('KEY : ' + i + ' Name : ' + j2[i]['name'] + ' Last used : ' + j2[i]['last use date'] )
 
+elif action == 'clean':
+    if len(data) < 1:
+        print('Missing params !')
+    else:
+        req = request.Request('http://' + ip + '/api/' + data[0] + '/config')
+        response = request.urlopen(req).read()
+        response = response.decode("utf-8", "ignore")
+        j = json.loads(response)
+        j2 = j['whitelist']
+        for i in j2:
+            print ('KEY : ' + i + ' Name : ' + j2[i]['name'] + ' Last used : ' + j2[i]['last use date'] )
+            if 'deCONZ WebApp' in j2[i]['name'] or 'Phoscon#' in j2[i]['name']:
+                req = request.Request('http://' + ip + '/api/' + data[0] + '/config/whitelist/' + i , method='DELETE')
+                response = request.urlopen(req).read()
+                print ('Deleted : '  + str(response) )
+
 elif action == 'delete':
     if len(data) < 2:
         print('Missing params !')
@@ -77,3 +93,4 @@ else:
     print('python3 API_KEY.py 127.0.0.1:80 info B4B018AA61')
     print('python3 API_KEY.py 127.0.0.1:80 list B4B018AA61')
     print('python3 API_KEY.py 127.0.0.1:80 delete B4B018AA61 CA606DA036')
+    print('python3 API_KEY.py 127.0.0.1:80 clean B4B018AA61')

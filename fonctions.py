@@ -1,11 +1,35 @@
 #!/usr/bin/env python3
 # coding: utf-8 -*-
 
+from struct import unpack
+import json
+
 import Domoticz
 buffercommand = {}
 
+BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight']
+
 #****************************************************************************************************
 # Global fonctions
+
+
+def get_JSON_payload(data):
+    """Parse length of payload and return it."""
+    start = 2
+    length = ord(data[1:2])
+    if length == 126:
+        # Payload information are an extra 2 bytes.
+        start = 4
+        length, = unpack(">H", data[2:4])
+    elif length == 127:
+        # Payload information are an extra 6 bytes.
+        start = 8
+        length, = unpack(">I", data[2:6])
+    end = start + length
+    payload = json.loads(data[start:end].decode())
+    extra_data = data[end:]
+
+    return payload, extra_data
 
 def DecodeByteArray(stringStreamIn):
     # Turn string values into opererable numeric byte values
@@ -227,12 +251,12 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
         kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
-    if 'xy' in data:
-        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
     if 'x' in data:
         kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
     if 'y' in data:
         kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
+    if 'xy' in data:
+        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
     if 'bri' in data:
@@ -331,7 +355,7 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'x' or command == 'y':
         buffercommand[command] = val
         if buffercommand.get('x') and buffercommand.get('y'):
-            rgb = xy_to_rgb(int(buffercommand['x']),int(buffercommand['y']),1)
+            rgb = xy_to_rgb(int(buffercommand['x'])/65536.0,int(buffercommand['y'])/65536.0,1)
             kwarg['Color'] = '{"b":' + str(rgb['b']) + ',"cw":0,"g":' + str(rgb['g']) + ',"m":3,"r":' + str(rgb['r']) + ',"t":0,"ww":0}'
             buffercommand.clear()
 
@@ -374,7 +398,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
 
-    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'carbonmonoxide':
+    if command in BOOLEAN_SENSOR:
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
@@ -446,13 +470,6 @@ def ReturnUpdateValue(command,val,model = None):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
-    if command == 'daylight':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
 
     #switch
     if command == 'buttonevent':
