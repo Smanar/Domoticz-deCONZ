@@ -7,6 +7,8 @@ import json
 import Domoticz
 buffercommand = {}
 
+BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight']
+
 #****************************************************************************************************
 # Global fonctions
 
@@ -28,7 +30,6 @@ def get_JSON_payload(data):
     extra_data = data[end:]
 
     return payload, extra_data
-
 
 def DecodeByteArray(stringStreamIn):
     # Turn string values into opererable numeric byte values
@@ -397,7 +398,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
 
-    if command == 'flag' or command == 'water' or command == 'fire' or command == 'presence' or command == 'carbonmonoxide':
+    if command in BOOLEAN_SENSOR:
         if val == 'True':
             kwarg['nValue'] = 1
             kwarg['sValue'] = 'On'
@@ -469,13 +470,6 @@ def ReturnUpdateValue(command,val,model = None):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
-    if command == 'daylight':
-        if val == 'True':
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
 
     #switch
     if command == 'buttonevent':
