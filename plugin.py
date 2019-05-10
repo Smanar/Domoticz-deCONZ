@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.8" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.9" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -172,7 +172,7 @@ class BasePlugin:
     def onMessage(self, Connection, Data):
         Domoticz.Debug("onMessage called")
 
-        _Data = ''
+        _Data = []
 
         #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
@@ -182,36 +182,35 @@ class BasePlugin:
         #Websocket data ?
         if (Connection.Name == 'deCONZ_WebSocket'):
             if Data.startswith(b'\x81'):
-                if (False):
-                    while len(Data) > 0:
+                while len(Data) > 0:
+                    try:
                         payload, extra_data = get_JSON_payload(Data)
-                        _Data.append(payload)
-                        Data = extra_data
-                    Domoticz.Log(">>>>>>>>>" + str(_Data) )
-                else:
-                    Data = Data.decode("utf-8", "ignore")
-                    p = Data.find('{')
-                    _Data = Data[p:]
+                    except:
+                        Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
+                        return
+                    _Data.append(payload)
+                    Data = extra_data
+
+                for js in _Data:
+                    self.WebSocketConnexion(js)
             else:
                 Domoticz.Debug("Websocket Handshake : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
+
         #Normal connexion
         elif Connection.Name == 'deCONZ_Com':
+            _DataTmp = ''
             #New frame
             if Data.startswith(b'HTTP'):
                 self.BufferLenght = len(Data)
                 self.BufferReceive = ''
                 Data = Data.decode("utf-8", "ignore")
-                _Data = Data.split('\r\n\r\n', 1)[1]
-                #if Data[-1] == ']':
-                #    p = Data.find('[')
-                #else:
-                #    p = Data.find('{')
-                #_Data = Data[p:]
+                _DataTmp = Data.split('\r\n\r\n', 1)[1]
+
             else:
                 self.BufferLenght += len(Data)
-                _Data = Data.decode("utf-8", "ignore")
+                _DataTmp = Data.decode("utf-8", "ignore")
 
-            self.BufferReceive = self.BufferReceive + _Data
+            self.BufferReceive = self.BufferReceive + _DataTmp
 
             #Frame is completed ?
             l = Connection.BytesTransferred() - self.BufferLenght
@@ -221,35 +220,28 @@ class BasePlugin:
                 return
 
             _Data = self.BufferReceive
-        else:
-            Domoticz.Log("Unknow Connection" + str(Connection))
-            Domoticz.Log("Data : " + str(Data))
-            return
 
-        #Clean data
-        _Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','***').replace('\00','')
-        #Domoticz.Debug("Data Cleaned : " + _Data)
-
-        if not _Data:
-            if Connection.Name == 'deCONZ_Com':
+            #If not data usefull
+            if len(_Data) == 0:
                 self.Request.Disconnect()
-            return
+                return
 
-        if Connection.Name == 'deCONZ_Com':
+            #Clean data
+            #_Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','***').replace('\00','')
             try:
-                _Data = eval(_Data)
+                _Data = json.loads(_Data)
             except:
                 #Sometime the connexion bug, trying to repair
                 Domoticz.Error("Malformed JSON response, Trying to repair : " + str(_Data) )
                 _Data = JSON_Repair(_Data)
                 try:
-                    _Data = eval(_Data)
+                    _Data = json.loads(_Data)
                     Domoticz.Error("New Data repaired : " + str(_Data))
                 except:
                     Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
                     _Data = None
 
-            #Complete frame, force disconnexion
+            #Completed frame, force disconnexion
             self.Request.Disconnect()
 
             #traitement
@@ -259,36 +251,10 @@ class BasePlugin:
             #Next command ?
             self.UpdateBuffer()
 
-        elif Connection.Name == 'deCONZ_WebSocket':
-            try:
-                _Data = eval(_Data)
-            except:
-                #Sometime the socket bug, trying to repair
-                Domoticz.Log("Malformed JSON response, Trying to repair : " + str(_Data) )
-                try:
-                    last = ''
-                    p = _Data.find('{')
-                    while p != -1:
-                        b = First_Json(_Data[p:])
-                        if b:
-                            _Data = _Data[len(b):]
-                            p = _Data.find('{')
-                            if last != b:
-                                _Data2 = eval(b)
-                                Domoticz.Log("New Data repaired : " + str(_Data2))
-                                self.WebSocketConnexion(_Data2)
-                                last = b
-                        else:
-                            break
-                    return
-                except:
-                    Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
-                    return
-
-            self.WebSocketConnexion(_Data)
         else:
             Domoticz.Log("Unknow Connection" + str(Connection))
             Domoticz.Log("Data : " + str(Data))
+            return
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
@@ -299,37 +265,41 @@ class BasePlugin:
 
         _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
 
+        if not deCONZ_ID:
+            Domoticz.Error("Device not ready : " + str(Unit) )
+
         if _type == 'sensors':
             Domoticz.Error("This device don't support action")
             return
 
-        #Homemade json
-        _json = '{'
+        _json = {}
 
         #on/off
         if Command == 'On':
-            _json += '"on":true,'
+            _json['on'] = True
             if Level:
-                _json += '"bri":' + str(round(Level*254/100)) + ','
+                _json['bri'] = round(Level*254/100)
         if Command == 'Off':
-            _json += '"on":false,'
+            _json['on'] = False
 
         #level
         if Command == 'Set Level':
             #To prevent bug
-            _json += '"on":true,'
+            _json['on'] = True
 
-            _json += '"bri":' + str(round(Level*254/100)) + ','
+            _json['bri'] = round(Level*254/100)
 
             #thermostat situation
-            if True == False:
-                _json = '{"mode": "auto","heatsetpoint":' + Level
+            if _type == 'config':
+                _json.clear()
+                _json['mode'] = "auto"
+                _json['heatsetpoint'] = Level
 
         #color
         if Command == 'Set Color':
 
             #To prevent bug
-            _json += '"on":true,'
+            _json['on'] = True
 
             Hue_List = json.loads(Hue)
 
@@ -348,7 +318,7 @@ class BasePlugin:
                 TempMired = 1000000 // TempKelvin
                 #if previous not working
                 #TempMired = round(float(Hue_List['t'])*(500.0f - 153.0f) / 255.0f + 153.0f)
-                _json = _json + '"ct":' + str(TempMired) + ','
+                _json['ct'] = TempMired
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 IEEE = Devices[Unit].DeviceID
@@ -357,12 +327,15 @@ class BasePlugin:
                     hue = int(h * 65535)
                     saturation = int(s * 254)
                     value = int(l * 254/100)
-                    _json = _json + '"hue":' + str(hue) + ',"sat":' + str(saturation) + ',"bri":' + str(value) + ',"transitiontime":0,'
+                    _json['hue'] = hue
+                    _json['sat'] = saturation
+                    _json['bri'] = value
+                    _json['transitiontime'] = 0
                 else:
                     x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     x = round(x,6)
                     y = round(y,6)
-                    _json = _json + '"xy":[' + str(x) + ','+ str(y) + '],'
+                    _json['xy'] = [x,y]
             #ColorModeCustom = 4, // Custom (color + white). Valid fields: r, g, b, cw, ww, depending on device capabilities
             elif Hue_List['m'] == 4:
                 ww = int(Hue_List['ww'])
@@ -373,12 +346,9 @@ class BasePlugin:
 
             #To prevent bug
             if '"bri":' not in _json:
-                _json += '"bri":' + str(round(Level*254/100)) + ',"transitiontime":0,'
+                _json['bri'] = round(Level*254/100)
+                _json['transitiontime'] = 0
 
-        if _json[-1] == ',':
-            _json = _json[:-1]
-
-        _json += '}'
 
         url = '/api/' + Parameters["Mode2"] + '/' + _type + '/' + str(deCONZ_ID)
         if _type == 'lights':
@@ -387,11 +357,11 @@ class BasePlugin:
             url = url + '/config'
         elif _type == 'scenes':
             url = '/api/' + Parameters["Mode2"] + '/groups/' + deCONZ_ID.split('/')[0] + '/scenes/' + deCONZ_ID.split('/')[1] + '/recall'
-            _json = '{}' # to force PUT
+            _json = {} # to force PUT
         else:
             url = url + '/action'
 
-        self.SendCommand(url,_json)
+        self.SendCommand(url,json.dumps(_json))
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
         Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
@@ -582,76 +552,83 @@ class BasePlugin:
 
         Domoticz.Debug("Classic Data : " + str(_Data) )
 
-        try:
-            First_item = next(iter(_Data))
-        except:
-            #Special case, if the user don't have this kind of device >> _Data = {}
-            if (self.Ready != True) and ( len(_Data) == 0) :
-                self.InitDeconz(_Data,None)
-            else:
-                Domoticz.Error("Bad JSON response (or empty): " + str(_Data) )
-            return
-
-        # JSON with device list >  {'1': {'data:1}}
-        if isinstance(First_item, str):
-            if First_item.isnumeric():
-                self.InitDeconz(_Data,First_item)
-            elif 'websocketnotifyall' in _Data:
-                Domoticz.Status("Firmware version : " + _Data['fwversion'] )
-                Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
-                if not _Data['websocketnotifyall'] == True:
-                    Domoticz.Error("Websocketnotifyall is not set to True")
-
-                #Launch Web socket connexion
-                self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
-                self.WebSocket.Connect()
-
-                self.ManageInit(True)
-            else:
-                Domoticz.Error("Not managed JSON : " + str(_Data) )
-
-        else:
         #JSON with data returned >> _Data = [{'success': {'/lights/2/state/on': True}}, {'success': {'/lights/2/state/bri': 251}}]
-            kwarg = {}
-            _id = False
-            _type = False
+        if isinstance(_Data, list):
+            self.ReadReturn(_Data)
+        else:
 
-            for _Data2 in _Data:
+            try:
+                First_item = next(iter(_Data))
+            except:
+                #Special case, if the user don't have this kind of device >> _Data = {}
+                if (self.Ready != True) and ( len(_Data) == 0) :
+                    self.InitDeconz(_Data,None)
+                else:
+                    Domoticz.Error("Bad JSON response (or empty): " + str(_Data) )
+                return
 
-                First_item = next(iter(_Data2))
+            # JSON with device list >  {'1': {'data:1}}
+            if isinstance(First_item, str):
+                if First_item.isnumeric():
+                    self.InitDeconz(_Data,First_item)
+                elif 'websocketnotifyall' in _Data:
+                    self.ReadConfig(_Data)
+                else:
+                    Domoticz.Error("Not managed JSON : " + str(_Data) )
 
-                #Command Error
-                if First_item == 'error':
-                    Domoticz.Error("deCONZ error :" + str(_Data2))
-                    if _Data2['error']['type'] == 3:
-                        dev = _Data2['error']['address'].split('/')
+    def ReadReturn(self,_Data):
+        kwarg = {}
+        _id = False
+        _type = False
+
+        for _Data2 in _Data:
+
+            First_item = next(iter(_Data2))
+
+            #Command Error
+            if First_item == 'error':
+                Domoticz.Error("deCONZ error :" + str(_Data2))
+                if _Data2['error']['type'] == 3:
+                    dev = _Data2['error']['address'].split('/')
+                    _id = dev[2]
+                    _type = dev[1]
+                    #Set red header
+                    kwarg.update({'TimedOut':1})
+
+            #Command sucess
+            elif First_item == 'success':
+
+                data = _Data2['success']
+                dev = (list(data.keys())[0] ).split('/')
+                val = data[list(data.keys())[0]]
+
+                if len(dev) < 3:
+                    pass
+                else:
+                    if not _id:
                         _id = dev[2]
                         _type = dev[1]
-                        #Set red header
-                        kwarg.update({'TimedOut':1})
 
-                #Command sucess
-                elif First_item == 'success':
+                    if dev[1] == 'config':
+                        Domoticz.Status("Editing configuration : " + str(data) )
 
-                    data = _Data2['success']
-                    dev = (list(data.keys())[0] ).split('/')
-                    val = data[list(data.keys())[0]]
+            else:
+                Domoticz.Error("Not managed return JSON : " + str(_Data2) )
 
-                    if len(dev) < 3:
-                        pass
-                    else:
-                        if not _id:
-                            _id = dev[2]
-                            _type = dev[1]
+        if kwarg:
+            UpdateDevice(_id,_type,kwarg)
 
-                        if dev[1] == 'config':
-                            Domoticz.Status("Editing configuration : " + str(data) )
+    def ReadConfig(self,_Data):
+        Domoticz.Status("Firmware version : " + _Data['fwversion'] )
+        Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
+        if not _Data['websocketnotifyall'] == True:
+            Domoticz.Error("Websocketnotifyall is not set to True")
 
-                else:
-                    Domoticz.Error("Not managed JSON : " + str(_Data2) )
+        #Launch Web socket connexion
+        self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
+        self.WebSocket.Connect()
 
-            if kwarg:
-                UpdateDevice(_id,_type,kwarg)
+        self.ManageInit(True)
 
     def WebSocketConnexion(self,_Data):
 
@@ -677,6 +654,8 @@ class BasePlugin:
             return
         if not IEEE or (IEEE not in self.Devices):
             Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+            #Try getting informations
+            #self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
             return
         model = self.Devices[IEEE].get('model','')
 
@@ -941,7 +920,6 @@ def UpdateDevice(_id,_type,kwarg):
         kwarg['nValue'] = str(v)
 
     #Do we need to update the sensor ?
-
     NeedUpdate = False
 
     for a in kwarg:
@@ -978,6 +956,7 @@ def UpdateDevice(_id,_type,kwarg):
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
     if Devices[Unit].TimedOut != 0:
+        NeedUpdate = True
         kwarg['TimedOut'] = 0
 
     if NeedUpdate or not LIGHTLOG:
