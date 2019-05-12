@@ -14,7 +14,7 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 - And use this plugin to make bridge beetween their webserver and domoticz.
 
 ## Requirement.
-deCONZ : Last version
+deCONZ : Last version.   
 Domoticz : current stable version.
 
 ## Installation.
