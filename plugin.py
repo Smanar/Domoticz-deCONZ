@@ -426,6 +426,11 @@ class BasePlugin:
             l,s,g,b,o = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups and " + str(o) + " others, with " + str(b) + " Ignored")
 
+            # Compare devices bases
+            for i in Devices:
+                if Devices[i].DeviceID not in self.Devices:
+                    Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+
             return
 
         Domoticz.Log("### Request " + self.INIT_STEP[0])
@@ -955,7 +960,7 @@ def UpdateDevice(_id,_type,kwarg):
         kwarg['nValue'] = Devices[Unit].nValue
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
-    if Devices[Unit].TimedOut != 0:
+    if Devices[Unit].TimedOut != 0 and kwarg.get('TimedOut',0) == 0:
         NeedUpdate = True
         kwarg['TimedOut'] = 0
 
