@@ -67,7 +67,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.9 (On beta branch) > continuing new devices implementation.   
+- xx/xx/xx : 1.0.9 (On beta branch) > Compare database to check deleted devices. Code clean up.   
 - 03/05/19 : 1.0.8 > Adding a tool to delete all useless key created everytime launching Phoscon. Setting Websocket port is now useless. Change switches icon for button instead of bulb. Prevent the system be freezed if the gateway don't answer at a request and using queue list for request to prevent collision. Adding scenes control.Adding some missing bulbs.   
 - 14/04/19 : 1.0.7 > Special version, because of a problem in a feature I have make and a deconz version >= 2.05.62, bulb will be set to off just after set to on.
 - 07/04/19 : 1.0.6 > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock. Trying to correct bad JSON data on normal connexion. Enable timeout display for no rechables devices. Devices Units correction (thx @fswmlu). Corrections for initialisation device on plugin start and bug on banning groups (Thx @dobber81).
