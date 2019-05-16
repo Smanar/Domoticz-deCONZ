@@ -646,24 +646,24 @@ class BasePlugin:
                 Domoticz.Log("Playing scene > group:" + str(_Data['gid']) + " Scene:" + str(_Data['scid']) )
                 return
 
-        #TODO never banned or missing
         #Take care, no uniqueid for groups
-        IEEE = str(_Data.get('uniqueid',self.GetDeviceIEEE(_Data['id'],_Data['r'])))
+        IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
+
         if not IEEE:
-            Domoticz.Error("Websocket error, unknow device (NO IEEE) > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+            if 'uniqueid' in _Data:
+                Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ') Asking for information')
+                IEEE = str(_Data['uniqueid'])
+                #Try getting informations
+                self.Devices[IEEE] = {'id' : str(_Data['id']) , 'type' : str(_Data['r']) , 'state' : 'missing'}
+                self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
+            else:
+                Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
             return
-        if (IEEE in self.Banned_Devices) or (IEEE == 'banned'):
+        if state == 'banned':
             Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
             return
-        if IEEE == 'missing':
+        if state == 'missing':
             Domoticz.Error("Missing device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
-            return
-        if IEEE not in self.Devices:
-            Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ') Asking for information')
-            #Try getting informations
-            self.Devices[IEEE] = {'id' : str(_Data['id']) , 'type' : str(_Data['r']) , 'state' : 'missing'}
-            self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
-
             return
 
         model = self.Devices[IEEE].get('model','')
@@ -760,10 +760,8 @@ class BasePlugin:
         self.UpdateBuffer()
 
     def GetDevicedeCONZ(self,IEEE):
-        #TODO : stupid code to optimze
-        for i in self.Devices:
-            if i == IEEE:
-                return self.Devices[IEEE]['type'],self.Devices[IEEE]['id']
+        if IEEE in self.Devices:
+            return self.Devices[IEEE]['type'],self.Devices[IEEE]['id']
 
         return False,False
 
@@ -784,13 +782,10 @@ class BasePlugin:
 
     def GetDeviceIEEE(self,_id,_type):
         for IEEE in self.Devices:
-            #Domoticz.Log("#################" + str(IEEE) + ' ' + str( self.Devices[IEEE]['id']) + ' ' + str(self.Devices[IEEE]['type'] ) )
             if (self.Devices[IEEE]['type'] == _type) and (self.Devices[IEEE]['id'] == _id):
-                if self.Devices[IEEE].get('state','') == 'working':
-                    return IEEE
-                return self.Devices[IEEE].get('state','')
+                return IEEE,self.Devices[IEEE].get('state','unknow')
 
-        return False
+        return False,'unknow'
 
     def SetDeviceDefautState(self,IEEE,_type):
         # Set bulb on same state than in domoticz
@@ -895,16 +890,16 @@ def FreeUnit() :
 
 def GetDomoUnit(_id,_type):
     try:
-        IEEE = GetDeviceIEEE(_id,_type)
+        IEEE,state = GetDeviceIEEE(_id,_type)
 
-        if IEEE == 'banned':
+        if IEEE == False:
+            Domoticz.Log("Device not in base, need resynchronisation ? > " + str(_id) + ' (' + str(_type) + ')')
+            return False
+        elif state == 'banned':
             Domoticz.Log("Banned device > " + str(_id) + ' (' + str(_type) + ')')
             return False
-        elif IEEE == 'missing':
+        elif state == 'missing':
             Domoticz.Log("missing device > " + str(_id) + ' (' + str(_type) + ')')
-            return False
-        elif IEEE == False:
-            Domoticz.Log("Device not in base, need resynchronisation ? > " + str(_id) + ' (' + str(_type) + ')')
             return False
 
         return GetDomoDeviceInfo(IEEE)
@@ -924,7 +919,7 @@ def UpdateDevice(_id,_type,kwarg):
     #Check for special device.
     if 'heatsetpoint' in kwarg:
         v = kwarg.pop('heatsetpoint')
-        IEEE = GetDeviceIEEE(_id,_type)
+        IEEE,dummy = GetDeviceIEEE(_id,_type)
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
         kwarg['nValue'] = 0
         kwarg['nValue'] = str(v)
