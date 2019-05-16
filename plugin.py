@@ -267,6 +267,7 @@ class BasePlugin:
 
         if not deCONZ_ID:
             Domoticz.Error("Device not ready : " + str(Unit) )
+            return
 
         if _type == 'sensors':
             Domoticz.Error("This device don't support action")
@@ -618,6 +619,12 @@ class BasePlugin:
             UpdateDevice(_id,_type,kwarg)
 
     def ReadConfig(self,_Data):
+        #trick to test is deconz is ready
+        fw = _Data['fwversion']
+        if fw == '0x00000000':
+            Domoticz.Error("Wrong startup, retrying !!")
+            #Cancel this part to restart it after 1 heartbeat (10s)
+            return
         Domoticz.Status("Firmware version : " + _Data['fwversion'] )
         Domoticz.Status("Websocketnotifyall : " + str(_Data['websocketnotifyall']))
         if not _Data['websocketnotifyall'] == True:
