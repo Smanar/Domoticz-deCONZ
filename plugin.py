@@ -501,20 +501,20 @@ class BasePlugin:
 
                 self.Devices[IEEE]['model'] = Type
 
-            #Special device
-            if Type == 'ZHAPressure':#ZHAThermostat
-                self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config'}
-
             if self.Ready == True:
                 Domoticz.Status("Adding missing device :" + str(key) + ' Type:' + str(Type))
 
             #Not exist > create
             if GetDomoDeviceInfo(IEEE) == False:
+                #Special devices
                 if Type == 'ZHAThermostat':
-                    CreateDevice(IEEE,Name,'ZHATemperature') #Temperature device
-                    CreateDevice(IEEE + "_heatsetpoint" ,Name,'ZHAThermostat') #Setpoint device
-                else:
-                    CreateDevice(IEEE,Name,Type)
+                    #Create a setpoint device
+                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                    CreateDevice(IEEE + "_heatsetpoint" ,Name,'ZHAThermostat')
+                    #Transform the current device in tmeperature device
+                    Type = 'ZHATemperature'
+
+                CreateDevice(IEEE,Name,Type)
 
             #update
             if kwarg:
