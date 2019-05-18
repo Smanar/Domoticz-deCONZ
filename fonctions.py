@@ -181,7 +181,7 @@ def Count_Type(d):
         else:
             o += 1
 
-        if d[i].get('Banned',False) == True:
+        if d[i].get('state','unknow') == 'banned':
             b += 1
     return l,s,g,b,o
 
