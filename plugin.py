@@ -355,7 +355,7 @@ class BasePlugin:
         if _type == 'lights':
             url = url + '/state'
         elif _type == 'config':
-            url = url + '/config'
+            url = '/api/' + Parameters["Mode2"] + '/sensors/' + str(deCONZ_ID) + '/config'
         elif _type == 'scenes':
             url = '/api/' + Parameters["Mode2"] + '/groups/' + deCONZ_ID.split('/')[0] + '/scenes/' + deCONZ_ID.split('/')[1] + '/recall'
             _json = {} # to force PUT
@@ -424,8 +424,8 @@ class BasePlugin:
             self.Ready = True
 
             Domoticz.Status("### deCONZ ready")
-            l,s,g,b,o = Count_Type(self.Devices)
-            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups and " + str(o) + " others, with " + str(b) + " Ignored")
+            l,s,g,b,o,c = Count_Type(self.Devices)
+            Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
 
             # Compare devices bases
             for i in Devices:
