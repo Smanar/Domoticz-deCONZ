@@ -1051,7 +1051,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 8
 
-    elif _Type == 'ZHALightLevel' or _Type == 'CLIPLightLevel':
+    elif _Type == 'ZHALightLevel' or _Type == 'CLIPLightLevel' or _Type == 'ZHALight':
         kwarg['TypeName'] = 'Illumination'
 
     elif _Type == 'ZHAConsumption':# in kWh
