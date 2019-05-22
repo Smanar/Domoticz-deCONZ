@@ -561,8 +561,11 @@ class BasePlugin:
         else:
             if (self.Ready != True):
                 #JSON with config
-                if 'websocketnotifyall' in _Data:
-                    self.ReadConfig(_Data)
+                if 'bridgeid' in _Data:
+                    if 'websocketnotifyall' in _Data:
+                        self.ReadConfig(_Data)
+                    else:
+                        Domoticz.Error("Bad API KEY !")
                 else:
                     #JSON with device info like {'1': {'data:1}}
                     for i in _Data:
