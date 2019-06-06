@@ -181,12 +181,18 @@ class BasePlugin:
 
         #Websocket data ?
         if (Connection.Name == 'deCONZ_WebSocket'):
+            #Data = b'\x81W{"e":"changed","id":"7","r":"groups","state":{"all_on":true,"any_on":true}}'
+            #Data = b'\x81W{"e":"changed","id":"5","r":"groups","state":{"all_on":true,"any_on"'
+
+            DataMemo = Data
             if Data.startswith(b'\x81'):
                 while len(Data) > 0:
                     try:
                         payload, extra_data = get_JSON_payload(Data)
                     except:
                         Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
+                        Domoticz.Error("More info : " + str(DataMemo) )
+                        Domoticz.Error("More info : " + str(len(DataMemo)) )
                         return
                     _Data.append(payload)
                     Data = extra_data
