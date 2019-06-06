@@ -200,7 +200,7 @@ class BasePlugin:
                 for js in _Data:
                     self.WebSocketConnexion(js)
             else:
-                Domoticz.Debug("Websocket Handshake : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
+                Domoticz.Status("Websocket Handshake : " + str(Data.decode("utf-8", "ignore").replace('\n','***')) )
 
         #Normal connexion
         elif Connection.Name == 'deCONZ_Com':
