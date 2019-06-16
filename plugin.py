@@ -49,6 +49,8 @@ from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric, VibrationSensorConvertion
 
+import requests
+
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
 
@@ -152,17 +154,7 @@ class BasePlugin:
 
         elif Connection.Name == 'deCONZ_Com':
 
-            if (Status != 0):
-                Domoticz.Error("deCONZ connexion error : " + str(Connection))
-                Domoticz.Error("Status : " + str(Status) + " Description : " + str(Description) )
-                return
-
-            if len(self.Buffer_Command) > 0:
-                c = self.Buffer_Command.pop(0)
-                #Domoticz.Log("### Send" + str(c))
-                self.Request.Send(c)
-            else:
-                self.Request.Disconnect()
+            pass
 
         else:
             Domoticz.Error("Unknow connexion : " + str(Connection))
@@ -368,7 +360,7 @@ class BasePlugin:
         else:
             url = url + '/action'
 
-        self.SendCommand(url,json.dumps(_json))
+        self.SendCommand(url,_json)
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
         Domoticz.Log("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
@@ -424,6 +416,7 @@ class BasePlugin:
 #---------------------------------------------------------------------------------------
 
     def ManageInit(self,pop = False):
+
         if pop:
             self.INIT_STEP.pop(0)
         if len(self.INIT_STEP) < 1:
@@ -741,6 +734,8 @@ class BasePlugin:
             UpdateDevice(_Data['id'],_Data['r'],kwarg)
 
     def DeleteDeviceFromdeCONZ(self,_id):
+        return
+        #TO DO
         url = '/api/' + Parameters["Mode2"] + '/sensors/' + str(_id)
 
         sendData = "DELETE " + url + " HTTP/1.1\r\n" \
@@ -755,22 +750,8 @@ class BasePlugin:
     def SendCommand(self,url,data=None):
 
         Domoticz.Debug("Send Command " + url + " with " + str(data) + ' (' + str(len(self.Buffer_Command)) + ' in buffer)')
-
-        if data == None:
-            sendData = "GET " + url + " HTTP/1.1\r\n" \
-                        "Host: " + Parameters["Address"] + ':' + Parameters["Port"] + "\r\n" \
-                        "User-Agent: Domoticz/1.0\r\n" \
-                        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
-                        "Connection: keep-alive\r\n\r\n"
-        else:
-            sendData = "PUT " + url + " HTTP/1.1\r\n" \
-                        "Host: " + Parameters["Address"] + ':' + Parameters["Port"] + "\r\n" \
-                        "User-Agent: Domoticz/1.0\r\n" \
-                        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n" \
-                        "Content-Type: application/x-www-form-urlencoded\r\n" \
-                        "Content-Length: " + str(len(data)) + "\r\n" \
-                        "Connection: keep-alive\r\n\r\n"
-            sendData = sendData + data + "\r\n"
+        
+        sendData = (url , data)
 
         self.Buffer_Command.append(sendData)
         self.UpdateBuffer()
@@ -784,17 +765,38 @@ class BasePlugin:
     def UpdateBuffer(self):
         if len(self.Buffer_Command) == 0:
             return
+            
+        if len(self.Buffer_Command) > 0:
+            u , c = self.Buffer_Command.pop(0)
 
-        if self.Request == None: # or not (self.Request.Connecting() or self.Request.Connected())):
-            Domoticz.Debug("Autorising connection")
-            self.Request = Domoticz.Connection(Name="deCONZ_Com", Transport="TCP/IP", Address=Parameters["Address"] , Port=Parameters["Port"])
-            self.Request.Connect()
-            self.Buffer_Time = time.time()
-        else:
-            #Ok, we can't send new command, check if the system is freezed
-            if (time.time() - self.Buffer_Time) > 5:
-                Domoticz.Error("More than 5s timeout, Your system seem frezzed, Forcing disconnect for : " + str(self.Buffer_Command[0]))
-                self.Request.Disconnect()
+        _Data = MakeRequest('http://' + Parameters["Address"] + ':' + Parameters["Port"] + str(u) , c)
+
+        #If not data usefull
+        if len(_Data) == 0:
+            return
+
+        #Clean data
+        #_Data = _Data.replace('true','True').replace('false','False').replace('null','None').replace('\n','***').replace('\00','')
+        try:
+            _Data = json.loads(_Data)
+        except:
+            #Sometime the connexion bug, trying to repair
+            Domoticz.Error("Malformed JSON response, Trying to repair : " + str(_Data) )
+            _Data = JSON_Repair(_Data)
+            try:
+                _Data = json.loads(_Data)
+                Domoticz.Error("New Data repaired : " + str(_Data))
+            except:
+                Domoticz.Error("Can't repair malformed JSON: " + str(_Data) )
+                _Data = None
+
+        #traitement
+        if not _Data == None: #WARNING None because can be {}
+            self.NormalConnexion(_Data)
+
+        #Next command ?
+        #self.UpdateBuffer()
+
 
     def GetDeviceIEEE(self,_id,_type):
         for IEEE in self.Devices:
@@ -874,6 +876,28 @@ def GetDeviceIEEE(id,type):
     return _plugin.GetDeviceIEEE(id,type)
 
 #*****************************************************************************************************
+
+def MakeRequest(url,param=None):
+
+    data = ''
+    
+    if param:
+        headers={'Content-Type': 'application/json' }
+        Domoticz.Debug("Send Command : " + url  + ' with params ' + str(param) )
+        result=requests.put(url , headers=headers, json = param)
+        
+    else :
+        Domoticz.Debug("Send Command : " + url )
+        result=requests.get(url, headers={'Content-Type': 'application/json' })
+        
+    if result.status_code  == 200 :
+        data = result.content
+    else:
+        Domoticz.Error( "Connexion problem with Gateway : " + str(result.status_code) )
+        
+    #Domoticz.Log('+++++++++' + str(data.decode("utf-8", "ignore")) ) 
+        
+    return data.decode("utf-8", "ignore")
 
 def get_ip():
     import socket
