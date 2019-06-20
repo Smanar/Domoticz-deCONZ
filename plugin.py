@@ -169,7 +169,7 @@ class BasePlugin:
             Data = self.WebsoketBuffer + Data
             self.WebsoketBuffer = ''
 
-        Domoticz.Log("Data : " + str(Data))
+        #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
         #Domoticz.Log("Byte needed : " + str(Connection.BytesTransferred()) +  "ATM : " + str(len(Data)))
         #The max is 4096 so if the data size excess 4096 byte it will be cut
