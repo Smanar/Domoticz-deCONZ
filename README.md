@@ -1,3 +1,6 @@
+## Warning
+Due to a problem with Domoticz connection framework, this version use a synchronous mode for request, not a big difference for local request, but it can be visible on usage.
+
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
@@ -67,7 +70,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.9 (On beta branch) > Compare database to check deleted devices. Code clean up. The plugin can now add itself missing devices after the starting. Trying to synchronise at start only if the gateway seem ready.   
+- 20/06/19 : 1.0.9 > Compare database to check deleted devices. Code clean up. The plugin can now add itself missing devices after the starting. Trying to synchronise at start only if the gateway seem ready. Change request code (cf remark).   
 - 03/05/19 : 1.0.8 > Adding a tool to delete all useless key created everytime launching Phoscon. Setting Websocket port is now useless. Change switches icon for button instead of bulb. Prevent the system be freezed if the gateway don't answer at a request and using queue list for request to prevent collision. Adding scenes control.Adding some missing bulbs.   
 - 14/04/19 : 1.0.7 > Special version, because of a problem in a feature I have make and a deconz version >= 2.05.62, bulb will be set to off just after set to on.
 - 07/04/19 : 1.0.6 > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock. Trying to correct bad JSON data on normal connexion. Enable timeout display for no rechables devices. Devices Units correction (thx @fswmlu). Corrections for initialisation device on plugin start and bug on banning groups (Thx @dobber81).
