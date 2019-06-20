@@ -74,6 +74,7 @@ class BasePlugin:
         self.Buffer_Command = []
         self.Buffer_Time = ''
         self.WebSocket = None
+        self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
         self.BufferLenght = 0
@@ -164,7 +165,11 @@ class BasePlugin:
 
         _Data = []
 
-        #Domoticz.Log("Data : " + str(Data))
+        if self.WebsoketBuffer:
+            Data = self.WebsoketBuffer + Data
+            self.WebsoketBuffer = ''
+
+        Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
         #Domoticz.Log("Byte needed : " + str(Connection.BytesTransferred()) +  "ATM : " + str(len(Data)))
         #The max is 4096 so if the data size excess 4096 byte it will be cut
@@ -174,16 +179,17 @@ class BasePlugin:
             #Data = b'\x81W{"e":"changed","id":"7","r":"groups","state":{"all_on":true,"any_on":true}}'
             #Data = b'\x81W{"e":"changed","id":"5","r":"groups","state":{"all_on":true,"any_on"'
 
-            DataMemo = Data
             if Data.startswith(b'\x81'):
                 while len(Data) > 0:
                     try:
                         payload, extra_data = get_JSON_payload(Data)
                     except:
-                        Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
-                        Domoticz.Error("More info : " + str(DataMemo) )
-                        Domoticz.Error("More info : " + str(len(DataMemo)) )
-                        return
+                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 300) :
+                            self.WebsoketBuffer = Data
+                            Domoticz.Error("Incomplete Json keep it for later : " + str(self.WebsoketBuffer) )
+                        else:
+                            Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
+                        break
                     _Data.append(payload)
                     Data = extra_data
 
