@@ -186,7 +186,7 @@ class BasePlugin:
                     except:
                         if (Data[0:1] == b'\x81') and (len(str(Data)) < 300) :
                             self.WebsoketBuffer = Data
-                            Domoticz.Error("Incomplete Json keep it for later : " + str(self.WebsoketBuffer) )
+                            Domoticz.Log("Incomplete Json keep it for later : " + str(self.WebsoketBuffer) )
                         else:
                             Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
                         break
