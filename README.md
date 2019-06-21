@@ -24,6 +24,8 @@ Domoticz : current stable version.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
 - Run:
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
+- (Optionnal) Make the plugin.py file executable:
+```chmod +x Domoticz-deCONZ/plugin.py```
 - Restart Domoticz.   
 - Enable the plugin in hardware page (hardware page, select deconz plugin, clic "update").   
 
