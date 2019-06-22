@@ -831,7 +831,7 @@ def MakeRequest(url,param=None):
     data = ''
 
     try:
-        if param:
+        if not param == None:
             if param == 'delete':
                 result=requests.delete(url, headers={'Content-Type': 'application/json' }, timeout=1)
             else:
