@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.9" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.10" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -74,6 +74,7 @@ class BasePlugin:
         self.Buffer_Command = []
         self.Buffer_Time = ''
         self.WebSocket = None
+        self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
         self.BufferLenght = 0
@@ -164,6 +165,10 @@ class BasePlugin:
 
         _Data = []
 
+        if self.WebsoketBuffer:
+            Data = self.WebsoketBuffer + Data
+            self.WebsoketBuffer = ''
+
         #Domoticz.Log("Data : " + str(Data))
         #Domoticz.Log("Connexion : " + str(Connection))
         #Domoticz.Log("Byte needed : " + str(Connection.BytesTransferred()) +  "ATM : " + str(len(Data)))
@@ -174,16 +179,17 @@ class BasePlugin:
             #Data = b'\x81W{"e":"changed","id":"7","r":"groups","state":{"all_on":true,"any_on":true}}'
             #Data = b'\x81W{"e":"changed","id":"5","r":"groups","state":{"all_on":true,"any_on"'
 
-            DataMemo = Data
             if Data.startswith(b'\x81'):
                 while len(Data) > 0:
                     try:
                         payload, extra_data = get_JSON_payload(Data)
                     except:
-                        Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
-                        Domoticz.Error("More info : " + str(DataMemo) )
-                        Domoticz.Error("More info : " + str(len(DataMemo)) )
-                        return
+                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 300) :
+                            self.WebsoketBuffer = Data
+                            Domoticz.Log("Incomplete Json keep it for later : " + str(self.WebsoketBuffer) )
+                        else:
+                            Domoticz.Error("Malformed JSON response, can't repair : " + str(Data) )
+                        break
                     _Data.append(payload)
                     Data = extra_data
 
@@ -314,6 +320,10 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
 
+        #Check for freeze
+        if len(self.Buffer_Command) > 0:
+            self.UpdateBuffer()
+
         #Initialisation
         if self.Ready != True:
             if len(self.INIT_STEP) > 0:
@@ -330,10 +340,6 @@ class BasePlugin:
             if not self.WebSocket.Connected():
                 Domoticz.Error("WebSocket Disconnected, reconnexion !")
                 self.WebSocket.Connect()
-
-        #Check for freeze
-        if len(self.Buffer_Command) > 0:
-            self.UpdateBuffer()
 
         #reset switchs
         if len(self.NeedToReset) > 0 :
@@ -370,6 +376,13 @@ class BasePlugin:
                     Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
+
+        #No flood during initialisation
+        if len(self.Buffer_Command) > 0:
+            u,d = self.Buffer_Command[-1]
+            if "/" + self.INIT_STEP[0] + "/" in u:
+                Domoticz.Log("### Still waiting")
+                return
 
         Domoticz.Log("### Request " + self.INIT_STEP[0])
         self.SendCommand("/api/" + Parameters["Mode2"] + "/" + self.INIT_STEP[0] + "/")
@@ -432,6 +445,8 @@ class BasePlugin:
                         self.Devices[IEEE]['state'] = 'banned'
                         return
                 elif 'TRADFRI remote control' in Model:
+                    Type = 'Tradfri_remote'
+                elif 'RWL021' in Model:
                     Type = 'Tradfri_remote'
                 else:
                     Type = 'Switch_Generic'
@@ -685,7 +700,6 @@ class BasePlugin:
         Domoticz.Debug("Send Command " + url + " with " + str(data) + ' (' + str(len(self.Buffer_Command)) + ' in buffer)')
 
         sendData = (url , data)
-
         self.Buffer_Command.append(sendData)
         self.UpdateBuffer()
 
@@ -825,7 +839,7 @@ def MakeRequest(url,param=None):
     data = ''
 
     try:
-        if param:
+        if not param == None:
             if param == 'delete':
                 result=requests.delete(url, headers={'Content-Type': 'application/json' }, timeout=1)
             else:
@@ -843,7 +857,7 @@ def MakeRequest(url,param=None):
         Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
         return ''
 
-    #Domoticz.Log('+++++++++' + str(data.decode("utf-8", "ignore")) )
+    Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
 
     return data.decode("utf-8", "ignore")
 
