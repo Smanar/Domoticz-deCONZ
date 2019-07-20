@@ -46,7 +46,13 @@
 # All imports
 import Domoticz
 
-import json,urllib, time ,requests
+import json,urllib, time
+
+REQUESTPRESENT = True
+try:
+    import requests
+except:
+    REQUESTPRESENT = False
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
@@ -854,7 +860,11 @@ def MakeRequest(url,param=None):
             Domoticz.Error( "Connexion problem (1) with Gateway : " + str(result.status_code) )
             return ''
     except:
-        Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+        if not REQUESTPRESENT:
+            Domoticz.Error("Your pyton version miss requests library")
+            Domoticz.Error("To install it, type : sudo -H pip3 install requests | sudo -H pip install requests")
+        else:
+            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
