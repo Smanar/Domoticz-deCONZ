@@ -19,6 +19,11 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 ## Requirement.
 deCONZ : Last version.   
 Domoticz : current stable version.
+Python : You need the requests library, if you have error message like "Module Import failed: ' Name: requests'", you probably miss it, to install it just type:
+```
+sudo -H pip3 install requests
+sudo -H pip install requests
+```
 
 ## Installation.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
