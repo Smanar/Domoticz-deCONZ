@@ -50,7 +50,7 @@ import json,urllib, time ,requests
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric, VibrationSensorConvertion
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion
 
 #from requests import async
 
@@ -439,6 +439,8 @@ class BasePlugin:
                         return
                 elif 'TRADFRI remote control' in Model:
                     Type = 'Tradfri_remote'
+                elif 'TRADFRI on/off switch' in Model:
+                    Type = 'Tradfri_on/off_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -635,6 +637,8 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                elif model == 'Tradfri_on/off_switch':
+                    kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
                 else:
                     kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -646,17 +650,19 @@ class BasePlugin:
             if 'reachable' in state:
                 if state['reachable'] == True:
                     Unit = GetDomoDeviceInfo(IEEE)
-                    LUpdate = Devices[Unit].LastUpdate
-                    LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
-                    current = time.time()
+                    #Jump following action if Unit content is not valid
+                    if Unit != False:                    
+                        LUpdate = Devices[Unit].LastUpdate
+                        LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+                        current = time.time()
 
-                    if (SETTODEFAULT):
-                        #Check if the device has been see, at least 10 s ago
-                        if (current-LUpdate) > 10:
-                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
-                            self.SetDeviceDefautState(IEEE,_Data['r'])
-                        else:
-                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+                        if (SETTODEFAULT):
+                            #Check if the device has been see, at least 10 s ago
+                            if (current-LUpdate) > 10:
+                                Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
+                                self.SetDeviceDefautState(IEEE,_Data['r'])
+                            else:
+                                Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
 
             if ('tampered' in state) or ('lowbattery' in state):
                 tampered = state.get('tampered',False)
@@ -1096,6 +1102,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
+    elif _Type == 'Tradfri_on/off_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|B1C|B1L|B2C|B2L", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        
     elif _Type == 'XCube_C':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
