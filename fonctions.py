@@ -557,6 +557,34 @@ def ButtonconvertionTradfriRemote(val):
 
     return kwarg
 
+def ButtonconvertionTradfriSwitch(val):
+    kwarg = {}
+    val = str(val)
+
+    if val == '1002':
+        kwarg['nValue'] = 10
+    elif val == '1003':
+        kwarg['nValue'] = 20
+    elif val == '2002':
+        kwarg['nValue'] = 30
+    elif val == '2003':
+        kwarg['nValue'] = 40
+    elif val == '3002':
+        kwarg['nValue'] = 50
+    elif val == '4002':
+        kwarg['nValue'] = 60
+    elif val == '5002':
+        kwarg['nValue'] = 70
+    else:
+        kwarg['nValue'] = 0
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+
 def ButtonconvertionGeneric(val):
     kwarg = {}
     val = "%04d" % val
