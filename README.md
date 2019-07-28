@@ -62,7 +62,7 @@ And for theses ones who don't know where to find the API key and don't wana use 
 - You have some others exemples here :
 >[Some LUA exemples for sensors](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-various-sensors).   
 [Using LUA to change setting on the fly](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-to-change-setting-on-the-fly.).   
-
+[Create a color loop effect with zigbee bulb](https://github.com/Smanar/Domoticz-deCONZ/wiki/Example-to-make-a-color-loop-effect).
 
 ## Known issues.
 - Don't take care about the error message   
