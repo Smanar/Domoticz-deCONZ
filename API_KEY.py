@@ -22,21 +22,25 @@ if action == 'create':
     req = request.Request('http://' + ip + '/api',data)
     #request.add_header('Referer', 'http://www.python.org/')
     try:
-        response = request.urlopen(req).read()
+        response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
         j = eval(response)
         print ("Your new API key is : " + j[0]["success"]['username'])
 
     except urllib.error.URLError as e:
-        if e.code == 403:
+        if str(e.reason) == 'timed out':
+            print('Timeout, are you sure for url and port ?')
+        elif e.code == 403:
             print('Please unlock the gateway first and retry !')
+        else:
+            print('Connection error : ' + str(e.reason) )
 
 elif action == 'list':
     if len(data) < 1:
         print('Missing params !')
     else:
         req = request.Request('http://' + ip + '/api/' + data[0] + '/config')
-        response = request.urlopen(req).read()
+        response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
         j = json.loads(response)
         j2 = j['whitelist']
@@ -48,7 +52,7 @@ elif action == 'clean':
         print('Missing params !')
     else:
         req = request.Request('http://' + ip + '/api/' + data[0] + '/config')
-        response = request.urlopen(req).read()
+        response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
         j = json.loads(response)
         j2 = j['whitelist']
@@ -65,7 +69,7 @@ elif action == 'delete':
     else:
         req = request.Request('http://' + ip + '/api/' + data[0] + '/config/whitelist/' + data[1] , method='DELETE')
         try:
-            response = request.urlopen(req).read()
+            response = request.urlopen(req,timeout=3).read()
             print ('Key deleted')
 
         except urllib.error.URLError as e:
@@ -77,7 +81,7 @@ elif action == 'info':
         print('Missing params!')
     else:
         req = request.Request('http://' + ip + '/api/' + data[0] + '/config')
-        response = request.urlopen(req).read()
+        response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
         j = json.loads(response)
         print ("Webscoket Port : " + str(j['websocketport']) )
