@@ -135,6 +135,10 @@ def xy_to_rgb(x, y, brightness = 1):
     x = float(x)
     y = float(y)
     z = 1.0 - x - y;
+    
+    #Bad values
+    if x == 0 or y == 0:
+        return {'r': 0, 'g': 0, 'b': 0}
 
     Y = brightness
     X = (Y / y) * x
