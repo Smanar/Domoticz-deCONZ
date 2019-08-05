@@ -863,7 +863,7 @@ def MakeRequest(url,param=None):
         if result.status_code  == 200 :
             data = result.content
         else:
-            Domoticz.Error( "Connexion problem (1) with Gateway : " + str(result.status_code) )
+            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             return ''
     except:
         if not REQUESTPRESENT:
