@@ -78,7 +78,7 @@ To solve them, no need to reboot, just restart the plugin, it ynchronise at ever
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 
 ## Changelog.
-- xx/xx/xx : 1.0.10 (Beta) > Add message information for missing requests lib, make special device for "Tradfri on/off_switch" (thx @erwan2345).   
+- xx/xx/xx : 1.0.10 (Beta) > Add message information for missing requests lib, make special device for "Tradfri on/off_switch" (thx @erwan2345). The plugin can now add itself missing groups after the starting. 
 - 20/06/19 : 1.0.9 > Compare database to check deleted devices. Code clean up. The plugin can now add itself missing devices after the starting. Trying to synchronise at start only if the gateway seem ready. Change request code (cf remark). Change Websocket code (thx @salopette).      
 - 03/05/19 : 1.0.8 > Adding a tool to delete all useless key created everytime launching Phoscon. Setting Websocket port is now useless. Change switches icon for button instead of bulb. Prevent the system be freezed if the gateway don't answer at a request and using queue list for request to prevent collision. Adding scenes control.Adding some missing bulbs.   
 - 14/04/19 : 1.0.7 > Special version, because of a problem in a feature I have make and a deconz version >= 2.05.62, bulb will be set to off just after set to on.
