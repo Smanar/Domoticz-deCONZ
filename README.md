@@ -27,16 +27,16 @@ sudo -H pip install requests
 
 ## Installation.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
-- Run:
+- Run:   
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
-- (If needed) Make the plugin.py file executable:
+- (If needed) Make the plugin.py file executable:   
 ```chmod +x Domoticz-deCONZ/plugin.py```
 - Restart Domoticz.   
 - Enable the plugin in hardware page (hardware page, select deconz plugin, clic "update").   
 
 You can later update the plugin
 - With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
-- Run:
+- Run:   
 ```git pull```
 - Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
