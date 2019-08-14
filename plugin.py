@@ -538,6 +538,11 @@ class BasePlugin:
                 typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
                 if _id:
                     self.InitDomoticzDB(_id,_Data,typ)
+                #Check for groups
+                else:
+                    _id = _Data.get('id','')
+                    if _id:
+                        self.InitDomoticzDB(_id,_Data,'groups')
 
     def ReadReturn(self,_Data):
         kwarg = {}
@@ -628,6 +633,13 @@ class BasePlugin:
                 self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
             else:
                 Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+                #Try getting informations
+                if str(_Data['r']) == 'groups':
+                    #Name = str(_Data['name'])
+                    #Dev_name = 'GROUP_' + Name.replace(' ','_')
+                    #self.Devices[Dev_name] = {'id' : str(_Data['id']) , 'type' : 'groups' , 'model' : 'groups', 'state' : 'missing'}
+                    self.SendCommand('/api/' + Parameters["Mode2"] + '/groups/' + str(_Data['id']) )
+
             return
         if state == 'banned':
             Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
@@ -666,7 +678,7 @@ class BasePlugin:
                 if state['reachable'] == True:
                     Unit = GetDomoDeviceInfo(IEEE)
                     #Jump following action if Unit content is not valid
-                    if Unit != False:     
+                    if Unit != False:
                         LUpdate = Devices[Unit].LastUpdate
                         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                         current = time.time()
@@ -863,7 +875,7 @@ def MakeRequest(url,param=None):
         if result.status_code  == 200 :
             data = result.content
         else:
-            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+            Domoticz.Error( "Connexion problem (1) with Gateway : " + str(result.status_code) )
             return ''
     except:
         if not REQUESTPRESENT:
