@@ -1115,7 +1115,8 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'CLIPGenericFlag':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 2
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 9
 
     #Switch
     elif _Type == 'Switch_Generic':
