@@ -624,8 +624,17 @@ class BasePlugin:
         #Take care, no uniqueid for groups
         IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
 
+        #Patch for device with double UniqueID
+        if (not IEEE) and ('uniqueid' in _Data):
+            typ,_id = self.GetDevicedeCONZ(_Data['uniqueid'] )
+            if _id:
+                Domoticz.Log("Double UniqueID correction : " + _Data['id'] + ' > ' + str(_id) )
+                _Data['id'] = _id
+                IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
+
         if not IEEE:
             if 'uniqueid' in _Data:
+
                 Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ') Asking for information')
                 IEEE = str(_Data['uniqueid'])
                 #Try getting informations
