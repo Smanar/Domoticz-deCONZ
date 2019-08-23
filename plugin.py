@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.9" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.10" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -46,11 +46,17 @@
 # All imports
 import Domoticz
 
-import json,urllib, time ,requests
+import json,urllib, time
+
+REQUESTPRESENT = True
+try:
+    import requests
+except:
+    REQUESTPRESENT = False
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionGeneric, VibrationSensorConvertion
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion
 
 #from requests import async
 
@@ -320,6 +326,10 @@ class BasePlugin:
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
 
+        #Check for freeze
+        if len(self.Buffer_Command) > 0:
+            self.UpdateBuffer()
+
         #Initialisation
         if self.Ready != True:
             if len(self.INIT_STEP) > 0:
@@ -336,10 +346,6 @@ class BasePlugin:
             if not self.WebSocket.Connected():
                 Domoticz.Error("WebSocket Disconnected, reconnexion !")
                 self.WebSocket.Connect()
-
-        #Check for freeze
-        if len(self.Buffer_Command) > 0:
-            self.UpdateBuffer()
 
         #reset switchs
         if len(self.NeedToReset) > 0 :
@@ -376,6 +382,13 @@ class BasePlugin:
                     Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
+
+        #No flood during initialisation
+        if len(self.Buffer_Command) > 0:
+            u,d = self.Buffer_Command[-1]
+            if "/" + self.INIT_STEP[0] + "/" in u:
+                Domoticz.Log("### Still waiting")
+                return
 
         Domoticz.Log("### Request " + self.INIT_STEP[0])
         self.SendCommand("/api/" + Parameters["Mode2"] + "/" + self.INIT_STEP[0] + "/")
@@ -439,6 +452,10 @@ class BasePlugin:
                         return
                 elif 'TRADFRI remote control' in Model:
                     Type = 'Tradfri_remote'
+                #elif 'RWL021' in Model:
+                #    Type = 'Tradfri_remote'
+                elif 'TRADFRI on/off switch' in Model:
+                    Type = 'Tradfri_on/off_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -521,6 +538,11 @@ class BasePlugin:
                 typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
                 if _id:
                     self.InitDomoticzDB(_id,_Data,typ)
+                #Check for groups
+                else:
+                    _id = _Data.get('id','')
+                    if _id:
+                        self.InitDomoticzDB(_id,_Data,'groups')
 
     def ReadReturn(self,_Data):
         kwarg = {}
@@ -602,8 +624,17 @@ class BasePlugin:
         #Take care, no uniqueid for groups
         IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
 
+        #Patch for device with double UniqueID
+        if (not IEEE) and ('uniqueid' in _Data):
+            typ,_id = self.GetDevicedeCONZ(_Data['uniqueid'] )
+            if _id:
+                Domoticz.Log("Double UniqueID correction : " + _Data['id'] + ' > ' + str(_id) )
+                _Data['id'] = _id
+                IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
+
         if not IEEE:
             if 'uniqueid' in _Data:
+
                 Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ') Asking for information')
                 IEEE = str(_Data['uniqueid'])
                 #Try getting informations
@@ -611,6 +642,13 @@ class BasePlugin:
                 self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
             else:
                 Domoticz.Error("Websocket error, unknow device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+                #Try getting informations
+                if str(_Data['r']) == 'groups':
+                    #Name = str(_Data['name'])
+                    #Dev_name = 'GROUP_' + Name.replace(' ','_')
+                    #self.Devices[Dev_name] = {'id' : str(_Data['id']) , 'type' : 'groups' , 'model' : 'groups', 'state' : 'missing'}
+                    self.SendCommand('/api/' + Parameters["Mode2"] + '/groups/' + str(_Data['id']) )
+
             return
         if state == 'banned':
             Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
@@ -635,6 +673,8 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                elif model == 'Tradfri_on/off_switch':
+                    kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
                 else:
                     kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -646,17 +686,19 @@ class BasePlugin:
             if 'reachable' in state:
                 if state['reachable'] == True:
                     Unit = GetDomoDeviceInfo(IEEE)
-                    LUpdate = Devices[Unit].LastUpdate
-                    LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
-                    current = time.time()
+                    #Jump following action if Unit content is not valid
+                    if Unit != False:
+                        LUpdate = Devices[Unit].LastUpdate
+                        LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+                        current = time.time()
 
-                    if (SETTODEFAULT):
-                        #Check if the device has been see, at least 10 s ago
-                        if (current-LUpdate) > 10:
-                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
-                            self.SetDeviceDefautState(IEEE,_Data['r'])
-                        else:
-                            Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
+                        if (SETTODEFAULT):
+                            #Check if the device has been see, at least 10 s ago
+                            if (current-LUpdate) > 10:
+                                Domoticz.Status("###### Device just re-connected : " + str(_Data) + "Set to defaut state")
+                                self.SetDeviceDefautState(IEEE,_Data['r'])
+                            else:
+                                Domoticz.Status("###### Device just re-connected : " + str(_Data) + "But ignored")
 
             if ('tampered' in state) or ('lowbattery' in state):
                 tampered = state.get('tampered',False)
@@ -691,7 +733,6 @@ class BasePlugin:
         Domoticz.Debug("Send Command " + url + " with " + str(data) + ' (' + str(len(self.Buffer_Command)) + ' in buffer)')
 
         sendData = (url , data)
-
         self.Buffer_Command.append(sendData)
         self.UpdateBuffer()
 
@@ -846,10 +887,14 @@ def MakeRequest(url,param=None):
             Domoticz.Error( "Connexion problem (1) with Gateway : " + str(result.status_code) )
             return ''
     except:
-        Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+        if not REQUESTPRESENT:
+            Domoticz.Error("Your pyton version miss requests library")
+            Domoticz.Error("To install it, type : sudo -H pip3 install requests | sudo -H pip install requests")
+        else:
+            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
         return ''
 
-    #Domoticz.Log('+++++++++' + str(data.decode("utf-8", "ignore")) )
+    Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
 
     return data.decode("utf-8", "ignore")
 
@@ -1079,7 +1124,8 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'CLIPGenericFlag':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 2
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 9
 
     #Switch
     elif _Type == 'Switch_Generic':
@@ -1095,6 +1141,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
+
+    elif _Type == 'Tradfri_on/off_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|B1C|B1L|B2C|B2L", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_C':
         kwarg['Type'] = 244
