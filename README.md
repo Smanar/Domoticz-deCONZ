@@ -1,5 +1,4 @@
-## Warning
-Due to a problem with Domoticz connection framework, this version use a synchronous mode for request, not a big difference for local request, but it can be visible on usage.
+Sorry for issue, but I m ATM, on holidays for somes week.
 
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
