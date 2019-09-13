@@ -1,4 +1,4 @@
-Sorry for issue, but I m ATM, on holidays for somes week.
+Sorry for issue, but I m ATM on holidays for somes weeks.
 
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
