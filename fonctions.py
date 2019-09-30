@@ -7,7 +7,7 @@ import json
 import Domoticz
 buffercommand = {}
 
-BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight']
+BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight', 'alarm']
 
 #****************************************************************************************************
 # Global fonctions
@@ -135,7 +135,7 @@ def xy_to_rgb(x, y, brightness = 1):
     x = float(x)
     y = float(y)
     z = 1.0 - x - y;
-    
+
     #Bad values
     if x == 0 or y == 0:
         return {'r': 0, 'g': 0, 'b': 0}
@@ -297,8 +297,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
-    #if 'alert' in data:
-    #    kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    if 'alert' in data:
+        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    if 'alarm' in data:
+        kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
     if 'carbonmonoxide' in data:
         kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
@@ -411,6 +413,15 @@ def ReturnUpdateValue(command,val,model = None):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
+
+    if command == 'alert':
+        #Can be none, lselect, select, strobe
+        if val == 'none':
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
 
     if command == 'temperature':
         kwarg['nValue'] = 0
