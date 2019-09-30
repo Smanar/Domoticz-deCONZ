@@ -1075,6 +1075,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 0
         kwarg['Image'] = 17
 
+    elif _Type == 'Warning device':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 13
+
     #Sensors
     elif _Type == 'Daylight':
         kwarg['Type'] = 244
