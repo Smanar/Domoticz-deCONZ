@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.11" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.12" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -1046,6 +1046,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
+    #Some device have unknow as type, but are full working.
     elif _Type == 'Unknown':
         Domoticz.Error("Unknow device : assume a light " + IEEE + " > " + _Name + ' (' + _Type +')' )
         kwarg['Type'] = 244
@@ -1062,7 +1063,17 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
-    #elif _Type == 'Fan':
+    elif _Type == 'Fan':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 7
+
+    elif _Type == 'Range extender':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 17
 
     #Sensors
     elif _Type == 'Daylight':
