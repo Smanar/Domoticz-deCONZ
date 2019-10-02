@@ -250,9 +250,12 @@ def ProcessAllState(data,model):
     # xy > ct > bri > on/off
     # consumption > power
     # status > daylight > all
+    # alert need to be first, bcause less important than other
 
     kwarg = {}
 
+    if 'alert' in data:
+        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
     if 'status' in data:
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
@@ -297,8 +300,6 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
-    if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
     if 'alarm' in data:
         kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
     if 'carbonmonoxide' in data:
@@ -416,7 +417,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'alert':
         #Can be none, lselect, select, strobe
-        if val == 'none':
+        if val == None:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
         else:
