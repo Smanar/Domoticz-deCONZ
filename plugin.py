@@ -409,7 +409,7 @@ class BasePlugin:
             #if not 'hascolor' in _Data[i]:
             #    Type_device = 'sensors'
 
-            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']))
+            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
@@ -961,7 +961,7 @@ def UpdateDevice(_id,_type,kwarg):
         IEEE,dummy = GetDeviceIEEE(_id,_type)
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
         kwarg['nValue'] = 0
-        kwarg['nValue'] = str(v)
+        kwarg['sValue'] = str(v)
 
     #Do we need to update the sensor ?
     NeedUpdate = False
