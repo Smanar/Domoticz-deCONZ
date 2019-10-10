@@ -91,7 +91,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','sensors','On/Off light')
+        #CreateDevice('1111','sensors','ZHAThermostat')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -405,10 +405,6 @@ class BasePlugin:
             if not Model:
                 Model = ''
 
-            #Type_device = 'lights'
-            #if not 'hascolor' in _Data[i]:
-            #    Type_device = 'sensors'
-
             Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
@@ -464,17 +460,15 @@ class BasePlugin:
             if self.Ready == True:
                 Domoticz.Status("Adding missing device :" + str(key) + ' Type:' + str(Type))
 
-            #Not exist > create
-            if GetDomoDeviceInfo(IEEE) == False:
-                #Special devices
-                if Type == 'ZHAThermostat':
-                    #Create a setpoint device
-                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                    CreateDevice(IEEE + "_heatsetpoint" ,Name,'ZHAThermostat')
-                    #Transform the current device in tmeperature device
-                    Type = 'ZHATemperature'
-
-                CreateDevice(IEEE,Name,Type)
+            #Special devices
+            if Type == 'ZHAThermostat':
+                #Create a setpoint device
+                self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                #Transform the current device in temperature device
+                self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            else:
+                self.CreateIfnotExist(IEEE,Type,Name)
 
             #update
             if kwarg:
@@ -510,6 +504,9 @@ class BasePlugin:
                 if GetDomoDeviceInfo(Dev_name) == False:
                     CreateDevice(Dev_name,Name,Type)
 
+    def CreateIfnotExist(self,__IEEE,__Type,Name):
+        if GetDomoDeviceInfo(__IEEE) == False:
+            CreateDevice(__IEEE,Name,__Type)
 
     def NormalConnexion(self,_Data):
 
@@ -958,11 +955,19 @@ def UpdateDevice(_id,_type,kwarg):
     #Check for special device.
     if 'heatsetpoint' in kwarg:
         v = kwarg.pop('heatsetpoint')
+
+        #update temperature sensor
+        UpdateDeviceProc(kwarg,Unit)
+
+        #select termostat device
         IEEE,dummy = GetDeviceIEEE(_id,_type)
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(v)
 
+    UpdateDeviceProc(kwarg,Unit)
+
+def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
 
