@@ -246,8 +246,16 @@ class BasePlugin:
             #thermostat situation
             if _type == 'config':
                 _json.clear()
-                _json['mode'] = "auto"
-                _json['heatsetpoint'] = Level * 100
+                if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                    _json['mode'] = "auto"
+                    _json['heatsetpoint'] = Level * 100
+                elif Devices[Unit].DeviceID.endswith('_mode'):
+                    if Level == 0:
+                        _json['mode'] = "off"
+                    if Level == 10:
+                        _json['mode'] = "heat"
+                    if Level == 20:
+                        _json['mode'] = "auto"
 
         #color
         if Command == 'Set Color':
@@ -465,6 +473,9 @@ class BasePlugin:
                 #Create a setpoint device
                 self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
                 self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                #Create a mode device
+                self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
                 #Create the current device but as temperature device
                 self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             else:
@@ -962,8 +973,30 @@ def UpdateDevice(_id,_type,kwarg):
         #select termostat device
         IEEE,dummy = GetDeviceIEEE(_id,_type)
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
+
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(v)
+
+        if not Unit :
+            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+            return
+
+        if 'mode' in kwarg:
+            v = kwarg.pop('mode')
+
+            #Update heatpoint
+            UpdateDeviceProc(kwarg,Unit)
+
+            #select termostat mode device
+            IEEE,dummy = GetDeviceIEEE(_id,_type)
+            Unit = GetDomoDeviceInfo(IEEE + '_mode')
+
+            kwarg['nValue'] = v
+            kwarg['sValue'] = str(v)
+
+            if not Unit :
+                Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+                return
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1187,6 +1220,12 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'XCube_R':
         kwarg['TypeName'] = 'Custom'
         kwarg['Options'] = {"Custom": ("1;degree")}
+
+    elif _Type == 'Thermostat_Mode':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     #groups
     elif _Type == 'LightGroup' or _Type == 'groups':
