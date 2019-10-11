@@ -235,6 +235,9 @@ class BasePlugin:
                 _json['bri'] = round(Level*254/100)
         if Command == 'Off':
             _json['on'] = False
+            if _type == 'config':
+                _json.clear()
+                _json['mode'] = "off"
 
         #level
         if Command == 'Set Level':
