@@ -247,7 +247,7 @@ class BasePlugin:
             if _type == 'config':
                 _json.clear()
                 _json['mode'] = "auto"
-                _json['heatsetpoint'] = Level
+                _json['heatsetpoint'] = Level * 100
 
         #color
         if Command == 'Set Color':
@@ -465,7 +465,7 @@ class BasePlugin:
                 #Create a setpoint device
                 self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
                 self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
-                #Transform the current device in temperature device
+                #Create the current device but as temperature device
                 self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
@@ -952,7 +952,7 @@ def UpdateDevice(_id,_type,kwarg):
         Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ')' )
         return
 
-    #Check for special device.
+    #Check for special device, and remove special kwarg
     if 'heatsetpoint' in kwarg:
         v = kwarg.pop('heatsetpoint')
 
@@ -965,6 +965,7 @@ def UpdateDevice(_id,_type,kwarg):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(v)
 
+    #Update the device
     UpdateDeviceProc(kwarg,Unit)
 
 def UpdateDeviceProc(kwarg,Unit):
