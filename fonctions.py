@@ -239,6 +239,8 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
+        if 'mode' in data:
+            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -432,6 +434,14 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'heatsetpoint':
         val = round( int(val) / 100 , 2  )
         kwarg['heatsetpoint'] = str(val)
+
+    if command == 'mode':
+        if val == 'off':
+            kwarg['mode'] = 0
+        if val == 'heat':
+            kwarg['mode'] = 10
+        if val == 'auto':
+            kwarg['mode'] = 20
 
     if command == 'status':
         if int(val) == 0:
