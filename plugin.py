@@ -1005,6 +1005,11 @@ def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
 
+    if 'mode' in kwarg:
+        kwarg.remove('mode')
+    if 'heatsetpoint' in kwarg:
+        kwarg.remove('heatsetpoint')
+
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
