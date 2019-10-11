@@ -965,13 +965,16 @@ def UpdateDevice(_id,_type,kwarg):
 
     #Check for special device, and remove special kwarg
     if 'heatsetpoint' in kwarg:
-        v = kwarg.pop('heatsetpoint')
 
-        #update temperature sensor
+        thermostat_Htpt = kwarg.pop('heatsetpoint',False)
+        thermostat_Mode = kwarg.pop('mode',False)
+
+        IEEE,dummy = GetDeviceIEEE(_id,_type)
+
+        #update basic sensor without special field
         UpdateDeviceProc(kwarg,Unit)
 
-        #select termostat device
-        IEEE,dummy = GetDeviceIEEE(_id,_type)
+        #select termostat heatpoint
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
 
         kwarg['nValue'] = 0
@@ -981,22 +984,18 @@ def UpdateDevice(_id,_type,kwarg):
             Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
             return
 
-        if 'mode' in kwarg:
-            v = kwarg.pop('mode')
+        #Update it
+        UpdateDeviceProc(kwarg,Unit)
 
-            #Update heatpoint
-            UpdateDeviceProc(kwarg,Unit)
+        #select termostat mode
+        Unit = GetDomoDeviceInfo(IEEE + '_mode')
 
-            #select termostat mode device
-            IEEE,dummy = GetDeviceIEEE(_id,_type)
-            Unit = GetDomoDeviceInfo(IEEE + '_mode')
+        kwarg['nValue'] = v
+        kwarg['sValue'] = str(v)
 
-            kwarg['nValue'] = v
-            kwarg['sValue'] = str(v)
-
-            if not Unit :
-                Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
-                return
+        if not Unit :
+            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+            return
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1006,9 +1005,9 @@ def UpdateDeviceProc(kwarg,Unit):
     NeedUpdate = False
 
     if 'mode' in kwarg:
-        kwarg.remove('mode')
+        kwarg.pop('mode')
     if 'heatsetpoint' in kwarg:
-        kwarg.remove('heatsetpoint')
+        kwarg.pop('heatsetpoint')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
