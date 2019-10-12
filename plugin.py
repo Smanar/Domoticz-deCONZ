@@ -236,8 +236,7 @@ class BasePlugin:
         if Command == 'Off':
             _json['on'] = False
             if _type == 'config':
-                _json.clear()
-                _json['mode'] = "off"
+                _json = {'mode':'off'}
 
         #level
         if Command == 'Set Level':
@@ -981,7 +980,7 @@ def UpdateDevice(_id,_type,kwarg):
         Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
 
         kwarg['nValue'] = 0
-        kwarg['sValue'] = str(v)
+        kwarg['sValue'] = str(thermostat_Htpt)
 
         if not Unit :
             Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
@@ -993,8 +992,8 @@ def UpdateDevice(_id,_type,kwarg):
         #select termostat mode
         Unit = GetDomoDeviceInfo(IEEE + '_mode')
 
-        kwarg['nValue'] = v
-        kwarg['sValue'] = str(v)
+        kwarg['nValue'] = thermostat_Mode
+        kwarg['sValue'] = str(thermostat_Mode)
 
         if not Unit :
             Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
