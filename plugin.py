@@ -891,7 +891,10 @@ def MakeRequest(url,param=None):
             Domoticz.Error("Your pyton version miss requests library")
             Domoticz.Error("To install it, type : sudo -H pip3 install requests | sudo -H pip install requests")
         else:
-            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+            try:
+                Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+            except:
+                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key")
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
