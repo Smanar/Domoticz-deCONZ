@@ -91,7 +91,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','sensors','ZHAThermostat')
+        #CreateDevice('1111','lights','Window covering device')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -226,6 +226,8 @@ class BasePlugin:
             Domoticz.Error("This device don't support action")
             return
 
+        IEEE = Devices[Unit].DeviceID
+
         _json = {}
 
         #on/off
@@ -259,6 +261,18 @@ class BasePlugin:
                     if Level == 20:
                         _json['mode'] = "auto"
 
+        #Stop for shutter
+        if Command == 'Stop':
+            _json = {'bri_inc':0}
+
+        #Special part for shutter
+        #if self.Devices[IEEE]['model'] == 'Window covering device':
+        #    previous_sate = Devices[Unit].nValue
+        #    if _json['on'] == False and previous_sate == 0:
+        #        _json = {'bri_inc':0}
+        #    elif _json['on'] == True and previous_sate == 1:
+        #        _json = {'bri_inc':0}
+
         #color
         if Command == 'Set Color':
 
@@ -285,7 +299,6 @@ class BasePlugin:
                 _json['ct'] = TempMired
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
-                IEEE = Devices[Unit].DeviceID
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
                     h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
@@ -901,7 +914,10 @@ def MakeRequest(url,param=None):
             Domoticz.Error("Your pyton version miss requests library")
             Domoticz.Error("To install it, type : sudo -H pip3 install requests | sudo -H pip install requests")
         else:
-            Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+            try:
+                Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
+            except:
+                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key")
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
@@ -1101,7 +1117,7 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'Window covering device':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 16
+        kwarg['Switchtype'] = 15
 
     elif _Type == 'Door Lock':
         kwarg['Type'] = 244
