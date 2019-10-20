@@ -235,10 +235,14 @@ class BasePlugin:
             _json['on'] = True
             if Level:
                 _json['bri'] = round(Level*254/100)
+            else:
+                _json['transitiontime'] = 0 #To force on command instead of move to level 0
         if Command == 'Off':
             _json['on'] = False
             if _type == 'config':
                 _json = {'mode':'off'}
+            if not Level:
+                _json['transitiontime'] = 0 #To force on command instead of move to level 0
 
         #level
         if Command == 'Set Level':
@@ -322,7 +326,7 @@ class BasePlugin:
                 Domoticz.Debug("Not implemented device color 2")
 
             #To prevent bug
-            if '"bri":' not in _json:
+            if 'bri' not in _json:
                 _json['bri'] = round(Level*254/100)
                 _json['transitiontime'] = 0
 
