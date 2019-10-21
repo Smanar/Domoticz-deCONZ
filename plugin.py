@@ -265,6 +265,12 @@ class BasePlugin:
                     if Level == 20:
                         _json['mode'] = "auto"
 
+        #Pach for special device
+        if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
+            _json.pop('bri')
+            _json['transitiontime'] = 0
+
+
         #Stop for shutter
         if Command == 'Stop':
             _json = {'bri_inc':0}
