@@ -351,15 +351,19 @@ def ReturnUpdateValue(command,val,model = None):
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
         if model == 'Window covering device':
-            if val < 2:
-                kwarg['sValue'] = '0'
-                kwarg['nValue'] = 0
-            elif val > 99:
-                kwarg['sValue'] = '100'
-                kwarg['nValue'] = 1
+            #Disabled for the moment, so just using on/off field
+            if (False):
+                if val < 2:
+                    kwarg['sValue'] = '0'
+                    kwarg['nValue'] = 0
+                elif val > 99:
+                    kwarg['sValue'] = '100'
+                    kwarg['nValue'] = 1
+                else:
+                    kwarg['sValue'] = str(val)
+                    kwarg['nValue'] = 2
             else:
-                kwarg['sValue'] = str(val)
-                kwarg['nValue'] = 2
+                kwarg['sValue'] = '0'
         else:
             kwarg['sValue'] = str(val)
 
