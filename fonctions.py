@@ -359,7 +359,7 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['nValue'] = 1
             else:
                 kwarg['sValue'] = str(val)
-                kwarg['nValue'] = val
+                kwarg['nValue'] = 17
         else:
             kwarg['sValue'] = str(val)
 
