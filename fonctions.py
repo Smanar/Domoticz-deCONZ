@@ -559,11 +559,12 @@ def ButtonconvertionXCUBE(val):
 
     return kwarg
 
+# <=4002 >=5002 +=2002 -=3002 4001/5001/2001/3001
 def ButtonconvertionTradfriRemote(val):
     kwarg = {}
     val = str(val)
 
-    if val == '1002':
+    if val == '1002' or val == 1001:
         kwarg['nValue'] = 10
     elif val == '2002':
         kwarg['nValue'] = 20
@@ -573,6 +574,15 @@ def ButtonconvertionTradfriRemote(val):
         kwarg['nValue'] = 40
     elif val == '5002':
         kwarg['nValue'] = 50
+    elif val == '2001':
+        kwarg['nValue'] = 60
+    elif val == '3001':
+        kwarg['nValue'] = 70
+    elif val == '4001':
+        kwarg['nValue'] = 80
+    elif val == '5001':
+        kwarg['nValue'] = 90
+
     else:
         kwarg['nValue'] = 0
 
