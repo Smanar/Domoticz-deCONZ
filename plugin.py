@@ -911,6 +911,7 @@ def MakeRequest(url,param=None):
             else:
                 headers={'Content-Type': 'application/json' }
                 result=requests.put(url , headers=headers, json = param, timeout=1)
+                #result=requests.put(url , headers=headers, data = json.dumps(param), timeout=1)
         else :
             result=requests.get(url, headers={'Content-Type': 'application/json' }, timeout=1)
 
@@ -927,7 +928,7 @@ def MakeRequest(url,param=None):
             try:
                 Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             except:
-                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key")
+                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key, or Use Request lib > V2.4.2")
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
@@ -1117,6 +1118,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
+    elif _Type == 'Level control switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+
     #Some device have unknow as type, but are full working.
     elif _Type == 'Unknown':
         Domoticz.Error("Unknow device : assume a light " + IEEE + " > " + _Name + ' (' + _Type +')' )
@@ -1234,7 +1240,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|On|+|-|<|>|L +|L -|L <|L >", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_on/off_switch':
         kwarg['Type'] = 244
