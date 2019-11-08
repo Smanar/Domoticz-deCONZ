@@ -262,7 +262,7 @@ class BasePlugin:
                         _json['mode'] = "auto"
                         #retreive previous value from domoticz
                         IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                        Hp = int(float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                        Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
                         _json['heatsetpoint'] = Hp
 
         #Pach for special device
