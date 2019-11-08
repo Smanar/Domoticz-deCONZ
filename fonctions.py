@@ -433,7 +433,9 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'heatsetpoint':
         val = round( int(val) / 100 , 2  )
-        kwarg['heatsetpoint'] = str(val)
+        #ignore boost and off value
+        if val != 5 and val != 30:
+            kwarg['heatsetpoint'] = str(val)
 
     if command == 'mode':
         if val == 'off':
