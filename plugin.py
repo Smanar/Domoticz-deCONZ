@@ -235,14 +235,10 @@ class BasePlugin:
             _json['on'] = True
             if Level:
                 _json['bri'] = round(Level*254/100)
-            else:
-                _json['transitiontime'] = 0 #To force on command instead of move to level 0
         if Command == 'Off':
             _json['on'] = False
             if _type == 'config':
                 _json = {'mode':'off'}
-            if not Level:
-                _json['transitiontime'] = 0 #To force on command instead of move to level 0
 
         #level
         if Command == 'Set Level':
@@ -264,12 +260,15 @@ class BasePlugin:
                         _json['mode'] = "heat"
                     if Level == 20:
                         _json['mode'] = "auto"
+                        #retreive previous value from domoticz
+                        IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                        Hp = int(float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                        _json['heatsetpoint'] = Hp
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
             _json.pop('bri')
             _json['transitiontime'] = 0
-
 
         #Stop for shutter
         if Command == 'Stop':
@@ -336,7 +335,6 @@ class BasePlugin:
                 _json['bri'] = round(Level*254/100)
                 _json['transitiontime'] = 0
 
-
         url = '/api/' + Parameters["Mode2"] + '/' + _type + '/' + str(deCONZ_ID)
         if _type == 'lights':
             url = url + '/state'
@@ -347,6 +345,9 @@ class BasePlugin:
             _json = {} # to force PUT
         else:
             url = url + '/action'
+
+        #if 'Thermostat' in self.Devices[IEEE]['model']:
+        #    Domoticz.Status("Thermostat debug : " + url + ' with ' + str(_json))
 
         self.SendCommand(url,_json)
 
@@ -691,6 +692,9 @@ class BasePlugin:
             return
 
         model = self.Devices[IEEE].get('model','')
+
+        #if 'Thermostat' in model:
+        #    Domoticz.Status("Thermostat debug : " + str(_Data))
 
         kwarg = {}
 
