@@ -240,7 +240,8 @@ def ProcessAllConfig(data):
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
         if 'mode' in data:
-            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+            if not (data['mode'] == 'off' and data['on'] == True):
+                kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
