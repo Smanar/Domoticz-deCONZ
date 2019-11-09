@@ -1,6 +1,3 @@
-## Warning
-Due to a problem with Domoticz connection framework, this version use a synchronous mode for request, not a big difference for local request, but it can be visible on usage.
-
 # Domoticz-deCONZ
 It's a python plugin for Domoticz (home automation application).   
 It use the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
@@ -18,20 +15,25 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 
 ## Requirement.
 deCONZ : Last version.   
-Domoticz : current stable version.
+Domoticz : current stable version.   
+Python : You need the requests library, if you have error message like "Module Import failed: ' Name: requests'", you probably miss it, to install it just type:
+```
+sudo -H pip3 install requests
+sudo -H pip install requests
+```
 
 ## Installation.
 - Wtih command line, go to your plugins directory (domoticz/plugin).   
-- Run:
+- Run:   
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
-- (If needed) Make the plugin.py file executable:
+- (If needed) Make the plugin.py file executable:   
 ```chmod +x Domoticz-deCONZ/plugin.py```
 - Restart Domoticz.   
 - Enable the plugin in hardware page (hardware page, select deconz plugin, clic "update").   
 
 You can later update the plugin
 - With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
-- Run:
+- Run:   
 ```git pull```
 - Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
@@ -57,7 +59,8 @@ And for theses ones who don't know where to find the API key and don't wana use 
 - You have some others exemples here :
 >[Some LUA exemples for sensors](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-various-sensors).   
 [Using LUA to change setting on the fly](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-to-change-setting-on-the-fly.).   
-
+[Create a color loop effect with zigbee bulb](https://github.com/Smanar/Domoticz-deCONZ/wiki/Example-to-make-a-color-loop-effect).   
+[Mix temperature/humidity/barometer on the same sensor](https://github.com/Smanar/Domoticz-deCONZ/wiki/Example-to-make-a-LUA-script-to-mix-temperature-humidity-barometer-on-the-same-sensor).   
 
 ## Known issues.
 - Don't take care about the error message   
@@ -70,9 +73,12 @@ or
 ```2018-12-29 20:54:04.979 (deConz) Banned device > 2 (sensors)```   
 To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
+- If your system don't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
-- 20/06/19 : 1.0.9 > Compare database to check deleted devices. Code clean up. The plugin can now add itself missing devices after the starting. Trying to synchronise at start only if the gateway seem ready. Change request code (cf remark).   
+- xx/xx/xx : 1.0.11 (Beta) > All unknows devices will be reconized as on/off controler, because some working device have "Unknow" as type. Improving detection for fan and range extender. Adding Thermostat support (thx to @salopette). Adding support for long press on ikea remote. Reparation for Shutter control.   
+- 23/08/19 : 1.0.10 > Add message information for missing requests lib, make special device for "Tradfri on/off_switch" (thx @erwan2345). The plugin can now add itself missing groups after the starting. Another division by zero correction. Patch for virtual devices with same UniqueId.  
+- 20/06/19 : 1.0.9 > Compare database to check deleted devices. Code clean up. The plugin can now add itself missing devices after the starting. Trying to synchronise at start only if the gateway seem ready. Change request code (cf remark). Change Websocket code (thx @salopette).      
 - 03/05/19 : 1.0.8 > Adding a tool to delete all useless key created everytime launching Phoscon. Setting Websocket port is now useless. Change switches icon for button instead of bulb. Prevent the system be freezed if the gateway don't answer at a request and using queue list for request to prevent collision. Adding scenes control.Adding some missing bulbs.   
 - 14/04/19 : 1.0.7 > Special version, because of a problem in a feature I have make and a deconz version >= 2.05.62, bulb will be set to off just after set to on.
 - 07/04/19 : 1.0.6 > starting to implement vibration sensor/Carbonmonoxide sensor/Window covering/thermostat/door lock. Trying to correct bad JSON data on normal connexion. Enable timeout display for no rechables devices. Devices Units correction (thx @fswmlu). Corrections for initialisation device on plugin start and bug on banning groups (Thx @dobber81).

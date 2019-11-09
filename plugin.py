@@ -933,6 +933,7 @@ def MakeRequest(url,param=None):
                 Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             except:
                 Domoticz.Error( "Connexion problem (3) with Gateway, check your API key, or Use Request lib > V2.4.2")
+
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
