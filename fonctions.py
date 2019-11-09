@@ -7,7 +7,7 @@ import json
 import Domoticz
 buffercommand = {}
 
-BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight']
+BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight', 'alarm']
 
 #****************************************************************************************************
 # Global fonctions
@@ -135,7 +135,7 @@ def xy_to_rgb(x, y, brightness = 1):
     x = float(x)
     y = float(y)
     z = 1.0 - x - y;
-    
+
     #Bad values
     if x == 0 or y == 0:
         return {'r': 0, 'g': 0, 'b': 0}
@@ -239,6 +239,8 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
+        if 'mode' in data:
+            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -250,9 +252,12 @@ def ProcessAllState(data,model):
     # xy > ct > bri > on/off
     # consumption > power
     # status > daylight > all
+    # alert need to be first, bcause less important than other
 
     kwarg = {}
 
+    if 'alert' in data:
+        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
     if 'status' in data:
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
@@ -297,8 +302,8 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
     if 'fire' in data:
         kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
-    #if 'alert' in data:
-    #    kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+    if 'alarm' in data:
+        kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
     if 'carbonmonoxide' in data:
         kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
     #if 'lastupdated' in data:
@@ -354,7 +359,7 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['nValue'] = 1
             else:
                 kwarg['sValue'] = str(val)
-                kwarg['nValue'] = 2
+                kwarg['nValue'] = 17
         else:
             kwarg['sValue'] = str(val)
 
@@ -412,6 +417,15 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
+    if command == 'alert':
+        #Can be none, lselect, select, strobe
+        if val == None:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+
     if command == 'temperature':
         kwarg['nValue'] = 0
         val = round( int(val) / 100 , 2  )
@@ -419,7 +433,17 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'heatsetpoint':
         val = round( int(val) / 100 , 2  )
-        kwarg['heatsetpoint'] = str(val)
+        #ignore boost and off value
+        if val != 5 and val != 30:
+            kwarg['heatsetpoint'] = str(val)
+
+    if command == 'mode':
+        if val == 'off':
+            kwarg['mode'] = 0
+        if val == 'heat':
+            kwarg['mode'] = 10
+        if val == 'auto':
+            kwarg['mode'] = 20
 
     if command == 'status':
         if int(val) == 0:
@@ -537,11 +561,12 @@ def ButtonconvertionXCUBE(val):
 
     return kwarg
 
+# <=4002 >=5002 +=2002 -=3002 4001/5001/2001/3001
 def ButtonconvertionTradfriRemote(val):
     kwarg = {}
     val = str(val)
 
-    if val == '1002':
+    if val == '1002' or val == 1001:
         kwarg['nValue'] = 10
     elif val == '2002':
         kwarg['nValue'] = 20
@@ -551,6 +576,15 @@ def ButtonconvertionTradfriRemote(val):
         kwarg['nValue'] = 40
     elif val == '5002':
         kwarg['nValue'] = 50
+    elif val == '2001':
+        kwarg['nValue'] = 60
+    elif val == '3001':
+        kwarg['nValue'] = 70
+    elif val == '4001':
+        kwarg['nValue'] = 80
+    elif val == '5001':
+        kwarg['nValue'] = 90
+
     else:
         kwarg['nValue'] = 0
 

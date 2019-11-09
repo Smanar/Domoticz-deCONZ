@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.10" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.11" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -91,7 +91,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','sensors','On/Off light')
+        #CreateDevice('1111','lights','Window covering device')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -226,6 +226,8 @@ class BasePlugin:
             Domoticz.Error("This device don't support action")
             return
 
+        IEEE = Devices[Unit].DeviceID
+
         _json = {}
 
         #on/off
@@ -235,6 +237,8 @@ class BasePlugin:
                 _json['bri'] = round(Level*254/100)
         if Command == 'Off':
             _json['on'] = False
+            if _type == 'config':
+                _json = {'mode':'off'}
 
         #level
         if Command == 'Set Level':
@@ -246,8 +250,37 @@ class BasePlugin:
             #thermostat situation
             if _type == 'config':
                 _json.clear()
-                _json['mode'] = "auto"
-                _json['heatsetpoint'] = Level
+                if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                    _json['mode'] = "auto"
+                    _json['heatsetpoint'] = Level * 100
+                elif Devices[Unit].DeviceID.endswith('_mode'):
+                    if Level == 0:
+                        _json['mode'] = "off"
+                    if Level == 10:
+                        _json['mode'] = "heat"
+                    if Level == 20:
+                        _json['mode'] = "auto"
+                        #retreive previous value from domoticz
+                        IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                        Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                        _json['heatsetpoint'] = Hp
+
+        #Pach for special device
+        if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
+            _json.pop('bri')
+            _json['transitiontime'] = 0
+
+        #Stop for shutter
+        if Command == 'Stop':
+            _json = {'bri_inc':0}
+
+        #Special part for shutter
+        #if self.Devices[IEEE]['model'] == 'Window covering device':
+        #    previous_sate = Devices[Unit].nValue
+        #    if _json['on'] == False and previous_sate == 0:
+        #        _json = {'bri_inc':0}
+        #    elif _json['on'] == True and previous_sate == 1:
+        #        _json = {'bri_inc':0}
 
         #color
         if Command == 'Set Color':
@@ -275,7 +308,6 @@ class BasePlugin:
                 _json['ct'] = TempMired
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
-                IEEE = Devices[Unit].DeviceID
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
                     h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
@@ -299,10 +331,9 @@ class BasePlugin:
                 Domoticz.Debug("Not implemented device color 2")
 
             #To prevent bug
-            if '"bri":' not in _json:
+            if 'bri' not in _json:
                 _json['bri'] = round(Level*254/100)
                 _json['transitiontime'] = 0
-
 
         url = '/api/' + Parameters["Mode2"] + '/' + _type + '/' + str(deCONZ_ID)
         if _type == 'lights':
@@ -314,6 +345,9 @@ class BasePlugin:
             _json = {} # to force PUT
         else:
             url = url + '/action'
+
+        #if 'Thermostat' in self.Devices[IEEE]['model']:
+        #    Domoticz.Status("Thermostat debug : " + url + ' with ' + str(_json))
 
         self.SendCommand(url,_json)
 
@@ -405,11 +439,7 @@ class BasePlugin:
             if not Model:
                 Model = ''
 
-            #Type_device = 'lights'
-            #if not 'hascolor' in _Data[i]:
-            #    Type_device = 'sensors'
-
-            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']))
+            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
@@ -464,17 +494,18 @@ class BasePlugin:
             if self.Ready == True:
                 Domoticz.Status("Adding missing device :" + str(key) + ' Type:' + str(Type))
 
-            #Not exist > create
-            if GetDomoDeviceInfo(IEEE) == False:
-                #Special devices
-                if Type == 'ZHAThermostat':
-                    #Create a setpoint device
-                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                    CreateDevice(IEEE + "_heatsetpoint" ,Name,'ZHAThermostat')
-                    #Transform the current device in tmeperature device
-                    Type = 'ZHATemperature'
-
-                CreateDevice(IEEE,Name,Type)
+            #Special devices
+            if Type == 'ZHAThermostat':
+                #Create a setpoint device
+                self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                #Create a mode device
+                self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                #Create the current device but as temperature device
+                self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            else:
+                self.CreateIfnotExist(IEEE,Type,Name)
 
             #update
             if kwarg:
@@ -510,6 +541,9 @@ class BasePlugin:
                 if GetDomoDeviceInfo(Dev_name) == False:
                     CreateDevice(Dev_name,Name,Type)
 
+    def CreateIfnotExist(self,__IEEE,__Type,Name):
+        if GetDomoDeviceInfo(__IEEE) == False:
+            CreateDevice(__IEEE,Name,__Type)
 
     def NormalConnexion(self,_Data):
 
@@ -658,6 +692,9 @@ class BasePlugin:
             return
 
         model = self.Devices[IEEE].get('model','')
+
+        #if 'Thermostat' in model:
+        #    Domoticz.Status("Thermostat debug : " + str(_Data))
 
         kwarg = {}
 
@@ -878,6 +915,7 @@ def MakeRequest(url,param=None):
             else:
                 headers={'Content-Type': 'application/json' }
                 result=requests.put(url , headers=headers, json = param, timeout=1)
+                #result=requests.put(url , headers=headers, data = json.dumps(param), timeout=1)
         else :
             result=requests.get(url, headers={'Content-Type': 'application/json' }, timeout=1)
 
@@ -894,7 +932,8 @@ def MakeRequest(url,param=None):
             try:
                 Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             except:
-                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key")
+                Domoticz.Error( "Connexion problem (3) with Gateway, check your API key, or Use Request lib > V2.4.2")
+
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
@@ -958,16 +997,51 @@ def UpdateDevice(_id,_type,kwarg):
         Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ')' )
         return
 
-    #Check for special device.
+    #Check for special device, and remove special kwarg
     if 'heatsetpoint' in kwarg:
-        v = kwarg.pop('heatsetpoint')
-        IEEE,dummy = GetDeviceIEEE(_id,_type)
-        Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
-        kwarg['nValue'] = 0
-        kwarg['nValue'] = str(v)
 
+        thermostat_Htpt = kwarg.pop('heatsetpoint',False)
+        thermostat_Mode = kwarg.pop('mode',False)
+
+        IEEE,dummy = GetDeviceIEEE(_id,_type)
+
+        #update basic sensor without special field
+        UpdateDeviceProc(kwarg,Unit)
+
+        #select termostat heatpoint
+        Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
+
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(thermostat_Htpt)
+
+        if not Unit :
+            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+            return
+
+        #Update it
+        UpdateDeviceProc(kwarg,Unit)
+
+        #select termostat mode
+        Unit = GetDomoDeviceInfo(IEEE + '_mode')
+
+        kwarg['nValue'] = thermostat_Mode
+        kwarg['sValue'] = str(thermostat_Mode)
+
+        if not Unit :
+            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+            return
+
+    #Update the device
+    UpdateDeviceProc(kwarg,Unit)
+
+def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
+
+    if 'mode' in kwarg:
+        kwarg.pop('mode')
+    if 'heatsetpoint' in kwarg:
+        kwarg.pop('heatsetpoint')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
@@ -1049,17 +1123,45 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
+    elif _Type == 'Level control switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+
+    #Some device have unknow as type, but are full working.
+    elif _Type == 'Unknown':
+        Domoticz.Error("Unknow device : assume a light " + IEEE + " > " + _Name + ' (' + _Type +')' )
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+
     elif _Type == 'Window covering device':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 16
+        kwarg['Switchtype'] = 15
 
     elif _Type == 'Door Lock':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
-    #elif _Type == 'Fan':
+    elif _Type == 'Fan':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 7
+
+    elif _Type == 'Range extender':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 17
+
+    elif _Type == 'Warning device':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 73
+        kwarg['Switchtype'] = 0
+        kwarg['Image'] = 13
 
     #Sensors
     elif _Type == 'Daylight':
@@ -1143,7 +1245,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|On|More|Less|Right|Left", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|On|+|-|<|>|L +|L -|L <|L >", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_on/off_switch':
         kwarg['Type'] = 244
@@ -1161,6 +1263,12 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'XCube_R':
         kwarg['TypeName'] = 'Custom'
         kwarg['Options'] = {"Custom": ("1;degree")}
+
+    elif _Type == 'Thermostat_Mode':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
     #groups
     elif _Type == 'LightGroup' or _Type == 'groups':
