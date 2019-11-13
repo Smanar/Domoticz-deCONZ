@@ -4,14 +4,14 @@ It use the deCONZ REST API to make a bridge beetween your zigbee network and Dom
 
 ## Description
 To resume:
-- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
+- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
-- You need too deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
+- You also need deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
 
 - You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
-- And use this plugin to make bridge beetween their webserver and domoticz.
+- And use this plugin to make bridge between their webserver and domoticz.
 
 ## Requirement.
 deCONZ : Last version.   
@@ -29,7 +29,7 @@ sudo -H pip install requests
 - (If needed) Make the plugin.py file executable:   
 ```chmod +x Domoticz-deCONZ/plugin.py```
 - Restart Domoticz.   
-- Enable the plugin in hardware page (hardware page, select deconz plugin, clic "update").   
+- Enable the plugin in hardware page (hardware page, select deconz plugin, click "update").   
 
 You can later update the plugin
 - With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
@@ -43,18 +43,18 @@ You can later update the plugin
 - The plugin don't use special configuration file, except the banned.txt file.   
 - At every start, it synchronise the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
 - Don't worry for name, the plugin never update name even you change it in deCONZ to prevent problems with scripts.
-- For theses ones who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
+- For those who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can too give somes informations like your used websocket port. To have all commands or parameters just use:   
 ```python3 API_KEY.py```   
-And for theses ones who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
+And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
 
 ## Remark.
-- Take care if you have too much devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except these one in banned file).
+- Take care if you have too many devices, at startup, the plugin add ALL your devices from deCONZ in domoticz (except those who are in banned file).
 
 - At final, you can have more devices you have in reality, it's normal, deCONZ can create more than 1 device for 1 real, and it can create for exemple 1 bulb + 2 switches just for 1 physical switch.
 
 - If you haven't github acount, the support in domoticz forum is here https://www.domoticz.com/forum/viewtopic.php?f=68&t=25631
 
-- You can't use the native fonction in domoticz for switch (activation devices), because this plugin trigger device event for useless information, like battery level. So instead of using trigger event, you need to use button detected. You have some LUA exemples here : [Use LUA for switch](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-switch).   
+- You can't use the native function in domoticz for switch (activation devices), because this plugin trigger device event for useless information, like battery level. So instead of using trigger event, you need to use button detected. You have some LUA exemples here : [Use LUA for switch](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-switch).   
 
 - You have some others exemples here :
 >[Some LUA exemples for sensors](https://github.com/Smanar/Domoticz-deCONZ/wiki/Examples-to-use-LUA-script-for-various-sensors).   
@@ -71,7 +71,7 @@ I know where is the problem the problem, but I haven't find a way to avoid it, B
 ```2018-12-29 20:49:32.807 Error: (deConz) Unknow MAJ{'name': 'TRÅDFRI Motion sensor', 'uniqueid': '00:0b:57:ff:xx:xx:xx:xx', 'id': '2', 'r': 'sensors', 't': 'event', 'e': 'changed'}```   
 or   
 ```2018-12-29 20:54:04.979 (deConz) Banned device > 2 (sensors)```   
-To solve them, no need to reboot, just restart the plugin, it ynchronise at every start.
+To solve them, no need to reboot, just restart the plugin, it synchronise at every start.
 To restart plugin : Tab "Harware" > select the hardware "deCONZ" then clic "Update"   
 - If your system don't support python "Request" lib, you can try older version < 1.0.9.    
 
