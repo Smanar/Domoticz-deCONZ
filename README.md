@@ -23,7 +23,7 @@ sudo -H pip install requests
 ```
 
 ## Installation.
-- Wtih command line, go to your plugins directory (domoticz/plugin).   
+- With command line, go to your plugins directory (domoticz/plugins).   
 - Run:   
 ```git clone https://github.com/Smanar/Domoticz-deCONZ.git```
 - (If needed) Make the plugin.py file executable:   
