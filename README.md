@@ -44,9 +44,13 @@ You can later update the plugin
 - At every start, it synchronises the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
 - Don't worry about the name, the plugin never updates name even you change it in deCONZ to prevent problems with scripts.
 - For those who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can also give some information like your used websocket port. To show all commands or parameters just use:   
-```python3 API_KEY.py``` 
+```
+python3 API_KEY.py
+``` 
 If using default settings you might be able to obtain the API key using:
-```python3 API.py 127.0.0.1:80 create```
+```
+python3 API.py 127.0.0.1:80 create
+```
 And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
 
 ## Remark.
