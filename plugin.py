@@ -312,10 +312,10 @@ class BasePlugin:
                     h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
                     saturation = int(s * 254)
-                    value = int(l * 254/100)
+                    lightness = int(l * 254)
                     _json['hue'] = hue
                     _json['sat'] = saturation
-                    _json['bri'] = value
+                    _json['bri'] = lightness
                     _json['transitiontime'] = 0
                 else:
                     x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
