@@ -430,7 +430,7 @@ class BasePlugin:
     def InitDomoticzDB(self,key,_Data,Type_device):
 
         #Lights or sensors ?
-        if 'uniqueid' in _Data:
+        if not 'devicemembership' in _Data:
 
             IEEE = str(_Data['uniqueid'])
             Name = str(_Data['name'])
@@ -496,14 +496,16 @@ class BasePlugin:
 
             #Special devices
             if Type == 'ZHAThermostat':
-                #Create a setpoint device
-                self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
-                #Create a mode device
-                self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
-                self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
-                #Create the current device but as temperature device
-                self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+                # Not working for cable outlet yet.
+                if not Model == 'Cable outlet':
+                    #Create a setpoint device
+                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                    self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                    #Create a mode device
+                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                    self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    #Create the current device but as temperature device
+                    self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -569,14 +571,17 @@ class BasePlugin:
                     self.ManageInit(True)
             else:
                 #JSON with device info like {'data:1}
-                typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
-                if _id:
-                    self.InitDomoticzDB(_id,_Data,typ)
-                #Check for groups
-                else:
+                # Groups ?
+                if 'devicemembership' in _Data:
                     _id = _Data.get('id','')
                     if _id:
                         self.InitDomoticzDB(_id,_Data,'groups')
+                # simple device ?
+                else:
+                    typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
+                    if _id:
+                        self.InitDomoticzDB(_id,_Data,typ)
+
 
     def ReadReturn(self,_Data):
         kwarg = {}
@@ -654,6 +659,11 @@ class BasePlugin:
             if _Data['e'] == 'scene-called':
                 Domoticz.Log("Playing scene > group:" + str(_Data['gid']) + " Scene:" + str(_Data['scid']) )
                 return
+
+        #Remove all uniqueid that can be have in group
+        if 'r' in _Data:
+            if _Data['r'] == 'groups' and 'uniqueid' in _Data:
+                _Data.pop('uniqueid')
 
         #Take care, no uniqueid for groups
         IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
@@ -933,7 +943,6 @@ def MakeRequest(url,param=None):
                 Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             except:
                 Domoticz.Error( "Connexion problem (3) with Gateway, check your API key, or Use Request lib > V2.4.2")
-
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
