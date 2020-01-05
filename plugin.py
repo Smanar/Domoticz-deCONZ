@@ -91,7 +91,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','lights','Window covering device')
+        #CreateDevice('0:03:42:a7:ab-01-0702','En test','ZHAConsumption')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -1201,7 +1201,14 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['TypeName'] = 'Illumination'
 
     elif _Type == 'ZHAConsumption':# in kWh
-        kwarg['TypeName'] = 'kWh'
+        #Device with only comsumption
+        if IEEE.endswith('0702'):
+            kwarg['Type'] = 243
+            kwarg['Subtype'] = 33
+            kwarg['Switchtype'] = 0
+        #other
+        else:
+            kwarg['TypeName'] = 'kWh'
 
     elif _Type == 'ZHAPower':# in W
         kwarg['TypeName'] = 'Usage'
