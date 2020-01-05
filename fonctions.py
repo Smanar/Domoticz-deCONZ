@@ -235,6 +235,8 @@ def JSON_Repair(data):
 def ProcessAllConfig(data):
     kwarg = {}
 
+    buffercommand.clear()
+
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
@@ -254,6 +256,8 @@ def ProcessAllState(data,model):
     # consumption > power
     # status > daylight > all
     # alert need to be first, bcause less important than other
+
+    buffercommand.clear()
 
     kwarg = {}
 
@@ -490,12 +494,16 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'consumption':
         #Wh to Kwh
         kwh = round( int(val) * 1 ,3)
-        p = 0
+        #Device with power and comsuption
         if buffercommand.get('power'):
             p = buffercommand['power']
             buffercommand.clear()
             kwarg['nValue'] = 0
             kwarg['sValue'] = str(p) + ';' + str(kwh)
+        #device with only consumption
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
