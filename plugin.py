@@ -1217,7 +1217,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|Drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'ZHAThermostat' or _Type == 'CLIPThermostat':
         kwarg['Type'] = 242
