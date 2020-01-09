@@ -1203,8 +1203,8 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHAConsumption':# in kWh
         #Device with only comsumption
         if IEEE.endswith('0702'):
-            kwarg['Type'] = 243
-            kwarg['Subtype'] = 33
+            kwarg['Type'] = 113
+            kwarg['Subtype'] = 0
             kwarg['Switchtype'] = 0
         #other
         else:
