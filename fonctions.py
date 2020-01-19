@@ -518,7 +518,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     # other
     if command == 'battery':
-        if not val.isdigit():
+        if (not val.isdigit()) or (val == '0'):
             kwarg['BatteryLevel'] = 255
         else:
             kwarg['BatteryLevel'] = int(val)
