@@ -235,12 +235,15 @@ def JSON_Repair(data):
 def ProcessAllConfig(data):
     kwarg = {}
 
+    buffercommand.clear()
+
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
         if 'mode' in data:
-            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+            if not (data['mode'] == 'off' and data['on'] == True):
+                kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -253,6 +256,8 @@ def ProcessAllState(data,model):
     # consumption > power
     # status > daylight > all
     # alert need to be first, bcause less important than other
+
+    buffercommand.clear()
 
     kwarg = {}
 
@@ -389,7 +394,8 @@ def ReturnUpdateValue(command,val,model = None):
                 ct = 255
             #kwarg['nValue'] = 1
             #kwarg['sValue'] = str(255)
-            kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
+            if not 'Color' in kwarg:
+                kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
 
     #groups
     if command == 'all_on' or command == 'any_on':
@@ -488,12 +494,16 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'consumption':
         #Wh to Kwh
         kwh = round( int(val) * 1 ,3)
-        p = 0
+        #Device with power and comsuption
         if buffercommand.get('power'):
             p = buffercommand['power']
             buffercommand.clear()
             kwarg['nValue'] = 0
             kwarg['sValue'] = str(p) + ';' + str(kwh)
+        #device with only consumption
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
@@ -508,7 +518,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     # other
     if command == 'battery':
-        if not val.isdigit():
+        if (not val.isdigit()) or (val == '0'):
             kwarg['BatteryLevel'] = 255
         else:
             kwarg['BatteryLevel'] = int(val)

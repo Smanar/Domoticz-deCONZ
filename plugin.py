@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.11" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.12" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -91,7 +91,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('1111','lights','Window covering device')
+        #CreateDevice('0:03:42:a7:ab-01-0702','En test','ZHAConsumption')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -312,10 +312,10 @@ class BasePlugin:
                     h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
                     saturation = int(s * 254)
-                    value = int(l * 254/100)
+                    lightness = int(l * 254)
                     _json['hue'] = hue
                     _json['sat'] = saturation
-                    _json['bri'] = value
+                    _json['bri'] = lightness
                     _json['transitiontime'] = 0
                 else:
                     x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
@@ -430,7 +430,7 @@ class BasePlugin:
     def InitDomoticzDB(self,key,_Data,Type_device):
 
         #Lights or sensors ?
-        if 'uniqueid' in _Data:
+        if not 'devicemembership' in _Data:
 
             IEEE = str(_Data['uniqueid'])
             Name = str(_Data['name'])
@@ -496,14 +496,16 @@ class BasePlugin:
 
             #Special devices
             if Type == 'ZHAThermostat':
-                #Create a setpoint device
-                self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
-                #Create a mode device
-                self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
-                self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
-                #Create the current device but as temperature device
-                self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+                # Not working for cable outlet yet.
+                if not Model == 'Cable outlet':
+                    #Create a setpoint device
+                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                    self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                    #Create a mode device
+                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                    self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    #Create the current device but as temperature device
+                    self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -569,14 +571,17 @@ class BasePlugin:
                     self.ManageInit(True)
             else:
                 #JSON with device info like {'data:1}
-                typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
-                if _id:
-                    self.InitDomoticzDB(_id,_Data,typ)
-                #Check for groups
-                else:
+                # Groups ?
+                if 'devicemembership' in _Data:
                     _id = _Data.get('id','')
                     if _id:
                         self.InitDomoticzDB(_id,_Data,'groups')
+                # simple device ?
+                else:
+                    typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
+                    if _id:
+                        self.InitDomoticzDB(_id,_Data,typ)
+
 
     def ReadReturn(self,_Data):
         kwarg = {}
@@ -654,6 +659,11 @@ class BasePlugin:
             if _Data['e'] == 'scene-called':
                 Domoticz.Log("Playing scene > group:" + str(_Data['gid']) + " Scene:" + str(_Data['scid']) )
                 return
+
+        #Remove all uniqueid that can be have in group
+        if 'r' in _Data:
+            if _Data['r'] == 'groups' and 'uniqueid' in _Data:
+                _Data.pop('uniqueid')
 
         #Take care, no uniqueid for groups
         IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
@@ -933,7 +943,6 @@ def MakeRequest(url,param=None):
                 Domoticz.Error( "Connexion problem (2) with Gateway : " + str(result.status_code) )
             except:
                 Domoticz.Error( "Connexion problem (3) with Gateway, check your API key, or Use Request lib > V2.4.2")
-
         return ''
 
     Domoticz.Debug('Request Return : ' + str(data.decode("utf-8", "ignore")) )
@@ -1192,7 +1201,14 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['TypeName'] = 'Illumination'
 
     elif _Type == 'ZHAConsumption':# in kWh
-        kwarg['TypeName'] = 'kWh'
+        #Device with only comsumption
+        if IEEE.endswith('0702'):
+            kwarg['Type'] = 113
+            kwarg['Subtype'] = 0
+            kwarg['Switchtype'] = 0
+        #other
+        else:
+            kwarg['TypeName'] = 'kWh'
 
     elif _Type == 'ZHAPower':# in W
         kwarg['TypeName'] = 'Usage'
@@ -1201,7 +1217,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|Drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'ZHAThermostat' or _Type == 'CLIPThermostat':
         kwarg['Type'] = 242
