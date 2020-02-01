@@ -14,6 +14,9 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 
 - You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
+![deconz7](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
+
+
 - And use this plugin to bridge between the deCONZ server and domoticz.
 
 ## Requirement.
