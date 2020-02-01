@@ -7,7 +7,10 @@ To resume:
 - you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
-- You also need deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1
+- You also need deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify:
+
+![deconz](https://user-images.githubusercontent.com/20152487/73596164-37766f00-4520-11ea-8101-05a102bd6bdf.jpg)
+
 
 - You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
