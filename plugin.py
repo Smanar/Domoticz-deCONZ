@@ -56,7 +56,7 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion, ButtonconvertionXiaomiOpple6ButtonSwitch
 
 #from requests import async
 
@@ -486,6 +486,10 @@ class BasePlugin:
                 #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
+                #eyal start
+                elif 'lumi.remote.b686opcn01' in Model:
+                    Type = 'Xiaomi_Opple_6_button_switch'
+               #eyal end
                 else:
                     Type = 'Switch_Generic'
 
@@ -722,6 +726,10 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                 elif model == 'Tradfri_on/off_switch':
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                #eyal start
+                elif model == 'Xiaomi_Opple_6_button_switch':
+                    kwarg.update(ButtonconvertionXiaomiOpple6ButtonSwitch( state['buttonevent'] ) )
+                #eyal end
                 else:
                     kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1255,6 +1263,14 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8", "LevelOffHidden": "true", "SelectorStyle": "0"}
+    #eyal start
+    elif _Type == 'Xiaomi_Opple_6_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1D|B2D|B3D|B4D|B5D|B6D", "LevelOffHidden": "true", "SelectorStyle": "0"}
+    #eyal end
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
@@ -1274,7 +1290,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90ֲ°|180ֲ°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_R':
         kwarg['TypeName'] = 'Custom'
