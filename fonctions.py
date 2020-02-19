@@ -605,6 +605,58 @@ def ButtonconvertionTradfriRemote(val):
 
     return kwarg
 
+#eyal start
+#10 - B1 - 1000
+#20 - B2 - 2000
+#30 - B3 - 3000
+#40 - B4 - 4000
+#50 - B5 - 5000
+#60 - B6 - 6000
+#70 - B1L - Not working yet
+#80 - B2L - Not working yet
+#90 - B3L - 3001 press, 3003 release
+#100 - B4L - 4001 press, 4003 release
+#110 - B5L - 5001 press, 5003 release
+#120 - B6L - 6001 press, 5003 release (cannot be distinguished from B5L)
+#130 - B1D - Not working yet
+#140 - B2D - Not working yet
+#150 - B3D - Not working yet
+#160 - B4D - Not working yet
+#170 - B5D - Not working yet
+#180 - B6D - Not working yet
+
+def ButtonconvertionXiaomiOpple6ButtonSwitch(val):
+    kwarg = {}
+    val = str(val)
+
+    if val == '1000' or val == 1000:
+        kwarg['nValue'] = 10
+    elif val == '2000' or val == 2000:
+        kwarg['nValue'] = 20
+    elif val == '3000' or val == 3000:
+        kwarg['nValue'] = 30
+    elif val == '4000' or val == 4000:
+        kwarg['nValue'] = 40
+    elif val == '5000' or val == 5000:
+        kwarg['nValue'] = 50
+    elif val == '6000' or val == 6000:
+        kwarg['nValue'] = 60
+    elif val == '3003' or val == 3003:
+        kwarg['nValue'] = 90
+    elif val == '4003' or val == 4003:
+        kwarg['nValue'] = 100
+    elif val == '5003' or val == 5003:
+        kwarg['nValue'] = 110
+    else:
+        kwarg['nValue'] = 0
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+#eyal end
 def ButtonconvertionTradfriSwitch(val):
     kwarg = {}
     val = str(val)
