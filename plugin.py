@@ -46,7 +46,12 @@
 # All imports
 import Domoticz
 
-import json,urllib, time
+import urllib, time
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 REQUESTPRESENT = True
 try:
@@ -57,8 +62,6 @@ except:
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion, ButtonconvertionXiaomiOpple6ButtonSwitch
-
-#from requests import async
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
