@@ -94,7 +94,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('0:03:42:a7:ab-01-0702','En test','ZHAConsumption')
+        #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -113,10 +113,18 @@ class BasePlugin:
             #DumpConfigToLog()
 
         #Read banned devices
-        with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
-            for line in myPluginConfFile:
-                if not line.startswith('#'):
-                    self.Banned_Devices.append(line.strip())
+        try:
+            with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
+                for line in myPluginConfFile:
+                    if not line.startswith('#'):
+                        Domoticz.Log("Adding banned device : " + line.strip())
+                        self.Banned_Devices.append(line.strip())
+        except (IOError,FileNotFoundError):
+            #File not exist create it with example
+            Domoticz.Status("Creating banned device file")
+            with open(Parameters["HomeFolder"]+"banned_devices.txt", 'w') as myPluginConfFile:
+                myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
+                        
         myPluginConfFile.close()
 
         #Read and Set config
