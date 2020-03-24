@@ -395,7 +395,7 @@ def ReturnUpdateValue(command,val,model = None):
             #kwarg['nValue'] = 1
             #kwarg['sValue'] = str(255)
             if not 'Color' in kwarg:
-                kwarg['Color'] = '{"ct":' + str(ct) + ',"t":0,"ww":0}'
+                kwarg['Color'] = '{"m":2,"r":0,"g":0,"b":0,"t":' + str(ct) + ',"ww":' + str(ct) + ',"cw":' + str(255 - ct) + '}'
 
     #groups
     if command == 'all_on' or command == 'any_on':
