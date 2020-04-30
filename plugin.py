@@ -1220,12 +1220,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['TypeName'] = 'Illumination'
 
     elif _Type == 'ZHAConsumption':# in kWh
-        #Device with only comsumption
-        if IEEE.endswith('0702'):
+        #Device with only comsumption, not exist (yet)
+        if True: # if IEEE.endswith('0702'):
             kwarg['Type'] = 113
             kwarg['Subtype'] = 0
             kwarg['Switchtype'] = 0
-        #other
+        #Device with power and energy
         else:
             kwarg['TypeName'] = 'kWh'
 
