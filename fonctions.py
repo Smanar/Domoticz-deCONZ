@@ -493,7 +493,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'consumption':
         #Wh to Kwh
-        kwh = round( int(val) * 1 ,3)
+        kwh = round( float(val) * 1 ,3)
         #Device with power and comsuption
         if buffercommand.get('power'):
             p = buffercommand['power']
