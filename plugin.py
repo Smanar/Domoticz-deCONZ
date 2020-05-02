@@ -61,7 +61,8 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion, ButtonconvertionXiaomiOpple6ButtonSwitch
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonConvertion, VibrationSensorConvertion
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -124,7 +125,7 @@ class BasePlugin:
             Domoticz.Status("Creating banned device file")
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'w') as myPluginConfFile:
                 myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
-                        
+
         myPluginConfFile.close()
 
         #Read and Set config
@@ -497,6 +498,8 @@ class BasePlugin:
                 #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
+                elif 'lumi.remote.b286acn01' in Model:
+                    Type = 'Xiaomi_double_gang'
                 #eyal start
                 elif 'lumi.remote.b686opcn01' in Model:
                     Type = 'Xiaomi_Opple_6_button_switch'
@@ -737,12 +740,14 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                 elif model == 'Tradfri_on/off_switch':
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                elif model == 'Xiaomi_double_gang':
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
                 #eyal start
                 elif model == 'Xiaomi_Opple_6_button_switch':
-                    kwarg.update(ButtonconvertionXiaomiOpple6ButtonSwitch( state['buttonevent'] ) )
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
                 #eyal end
                 else:
-                    kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
+                    kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
                     self.NeedToReset.append(IEEE)
 
@@ -1268,7 +1273,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Image'] = 9
 
     #Switch
-    elif _Type == 'Switch_Generic':
+    elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
