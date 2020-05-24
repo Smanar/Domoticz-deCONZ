@@ -500,10 +500,9 @@ class BasePlugin:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b286acn01' in Model:
                     Type = 'Xiaomi_double_gang'
-                #eyal start
-                elif 'lumi.remote.b686opcn01' in Model:
+                #Used for all opple switches
+                elif Model.endswith('86opcn01'):
                     Type = 'Xiaomi_Opple_6_button_switch'
-               #eyal end
                 else:
                     Type = 'Switch_Generic'
 
@@ -1285,7 +1284,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1D|B2D|B3D|B4D|B5D|B6D", "LevelOffHidden": "true", "SelectorStyle": "1"}
+        kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1RL|B2RL|B3RL|B4RL|B5RL|B6RL|B1D|B2D|B3D|B4D|B5D|B6D|B1T|B2T|B3T|B4T|B5T|B6T", "LevelOffHidden": "true", "SelectorStyle": "1"}
     #eyal end
 
     elif _Type == 'Tradfri_remote':
