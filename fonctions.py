@@ -236,29 +236,45 @@ def JSON_Repair(data):
 
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
 
-#eyal start
-#10 - B1 - 1000
-#20 - B2 - 2000
-#30 - B3 - 3000
-#40 - B4 - 4000
-#50 - B5 - 5000
-#60 - B6 - 6000
-#70 - B1L - Not working yet
-#80 - B2L - Not working yet
-#90 - B3L - 3001 press, 3003 release
-#100 - B4L - 4001 press, 4003 release
-#110 - B5L - 5001 press, 5003 release
-#120 - B6L - 6001 press, 5003 release (cannot be distinguished from B5L)
-#130 - B1D - Not working yet
-#140 - B2D - Not working yet
-#150 - B3D - Not working yet
-#160 - B4D - Not working yet
-#170 - B5D - Not working yet
-#180 - B6D - Not working yet
-XiaomiOpple6ButtonSwitchTable = ['1000','2000','3000','4000','5000','6000','9999','9999','3003','4003','5003']
-#eyal end
 
-
+#0 - Off
+#single press
+#10 - B1 - 1002
+#20 - B2 - 2002
+#30 - B3 - 3002
+#40 - B4 - 4002
+#50 - B5 - 5002
+#60 - B6 - 6002
+#long press
+#70 - B1L - 1001
+#80 - B2L - 2001
+#90 - B3L - 3001
+#100 - B4L - 4001
+#110 - B5L - 5001
+#120 - B6L - 6001
+#release afer long press (not working for some reason)
+#130 - B1RL - 1003
+#140 - B2RL - 2003
+#150 - B3RL - 3003
+#160 - B4RL - 4003
+#170 - B5RL - 5003
+#180 - B6RL - 6003
+#double press
+#190 - B1D - 1004
+#200 - B2D - 2004
+#210 - B3D - 3004
+#220 - B4D - 4004
+#230 - B5D - 5004
+#240 - B6D - 6004
+#tripple press
+#250 - B1T - 1005
+#260 - B2T - 2005
+#270 - B3T - 3005
+#280 - B4T - 4005
+#290 - B5T - 5005
+#300 - B6T - 6005
+XiaomiOpple6ButtonSwitchTable = ['1002','2002','3002','4002','5002','6002','1001','2001','3001','4001','5001','6001','1003','2003','3003','4003','5003','6003',
+                                 '1004','2004','3004','4004','5004','6004','1005','2005','3005','4005','5005','6005']
 
 
 #**************************************************************************************************
