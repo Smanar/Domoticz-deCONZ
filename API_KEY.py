@@ -30,7 +30,7 @@ if action == 'create':
     except urllib.error.URLError as e:
         if str(e.reason) == 'timed out':
             print('Timeout, are you sure for url and port ?')
-        elif e.code == 403:
+        elif hasattr(e, 'code') and e.code == 403:
             print('Please unlock the gateway first and retry !')
         else:
             print('Connection error : ' + str(e.reason) )

@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.12" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.13" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -46,7 +46,12 @@
 # All imports
 import Domoticz
 
-import json,urllib, time
+import urllib, time
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 REQUESTPRESENT = True
 try:
@@ -56,9 +61,8 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch, ButtonconvertionGeneric, VibrationSensorConvertion
-
-#from requests import async
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonConvertion, VibrationSensorConvertion
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -91,7 +95,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('0:03:42:a7:ab-01-0702','En test','ZHAConsumption')
+        #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
 
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -110,10 +114,18 @@ class BasePlugin:
             #DumpConfigToLog()
 
         #Read banned devices
-        with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
-            for line in myPluginConfFile:
-                if not line.startswith('#'):
-                    self.Banned_Devices.append(line.strip())
+        try:
+            with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
+                for line in myPluginConfFile:
+                    if not line.startswith('#'):
+                        Domoticz.Log("Adding banned device : " + line.strip())
+                        self.Banned_Devices.append(line.strip())
+        except (IOError,FileNotFoundError):
+            #File not exist create it with example
+            Domoticz.Status("Creating banned device file")
+            with open(Parameters["HomeFolder"]+"banned_devices.txt", 'w') as myPluginConfFile:
+                myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
+
         myPluginConfFile.close()
 
         #Read and Set config
@@ -486,6 +498,11 @@ class BasePlugin:
                 #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
+                elif 'lumi.remote.b286acn01' in Model:
+                    Type = 'Xiaomi_double_gang'
+                #Used for all opple switches
+                elif Model.endswith('86opcn01'):
+                    Type = 'Xiaomi_Opple_6_button_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -722,8 +739,14 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                 elif model == 'Tradfri_on/off_switch':
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                elif model == 'Xiaomi_double_gang':
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
+                #eyal start
+                elif model == 'Xiaomi_Opple_6_button_switch':
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
+                #eyal end
                 else:
-                    kwarg.update(ButtonconvertionGeneric( state['buttonevent'] ) )
+                    kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
                     self.NeedToReset.append(IEEE)
 
@@ -1202,11 +1225,11 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'ZHAConsumption':# in kWh
         #Device with only comsumption
-        if IEEE.endswith('0702'):
+        if True: # if IEEE.endswith('0702'):
             kwarg['Type'] = 113
             kwarg['Subtype'] = 0
             kwarg['Switchtype'] = 0
-        #other
+        #Device with power and energy, not exist (yet)
         else:
             kwarg['TypeName'] = 'kWh'
 
@@ -1249,12 +1272,20 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Image'] = 9
 
     #Switch
-    elif _Type == 'Switch_Generic':
+    elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8|B9", "LevelOffHidden": "true", "SelectorStyle": "0"}
+    #eyal start
+    elif _Type == 'Xiaomi_Opple_6_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1RL|B2RL|B3RL|B4RL|B5RL|B6RL|B1D|B2D|B3D|B4D|B5D|B6D|B1T|B2T|B3T|B4T|B5T|B6T", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    #eyal end
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
