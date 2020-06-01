@@ -487,7 +487,7 @@ class BasePlugin:
                 #ignore ZHASwitch if vibration sensor
                 if 'sensitivity' in _Data['config']:
                     return
-
+                Domoticz.Debug("Model: "+ Model)
                 if 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
