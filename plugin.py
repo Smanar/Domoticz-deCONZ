@@ -503,6 +503,8 @@ class BasePlugin:
                 #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
+                elif 'lumi.remote.b186acn01' in Model:
+                    Type = 'Xiaomi_single_gang'
                 elif 'lumi.remote.b286acn01' in Model:
                     Type = 'Xiaomi_double_gang'
                 #Used for all opple switches
@@ -750,6 +752,8 @@ class BasePlugin:
                 elif model == 'Xiaomi_Opple_6_button_switch':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
                 #eyal end
+                elif model == 'Xiaomi_single_gang':
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
                 else:
                     kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1277,7 +1281,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Image'] = 9
 
     #Switch
-    elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
+    elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang' or _Type == 'Xiaomi_single_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
