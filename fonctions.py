@@ -728,7 +728,7 @@ def ButtonConvertion(val,model = 0):
 
         if model == 3:
             if val in XiaomiSingleGangButtonSwitchTable:
-                kwarg[nValue] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
+                kwarg['nValue'] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
         
 
     if kwarg['nValue'] == 0:
