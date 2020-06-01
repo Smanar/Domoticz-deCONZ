@@ -455,10 +455,15 @@ class BasePlugin:
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
-            #Skip banned device
+            #Skip banned devices
             if IEEE in self.Banned_Devices:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
+                return
+                
+            #Skip useless devices
+            if Type == 'Configuration tool':
+                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 return
 
             #Get some infos
