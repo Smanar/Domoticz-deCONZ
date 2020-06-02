@@ -1287,7 +1287,8 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||", "LevelNames": "Off|single press|double press|hold", "LevelOffHidden": "true", "SelectorStyle": "0"}
-        elif _Type == 'Xiaomi_single_gang':
+    
+    elif _Type == 'Xiaomi_single_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
