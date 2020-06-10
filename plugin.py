@@ -39,7 +39,7 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
-        <param field="RefreshRate" label="Refresh rate" width="150px" required="true">
+        <param field="Mode4" label="Refresh rate" width="150px" required="true">
         <options>
                 <option label="1 second" value="1"  />
                 <option label="2 seconds" value="2"/>
@@ -109,8 +109,8 @@ class BasePlugin:
             if Parameters[x] != "":
                 Domoticz.Log( "'" + x + "':'" + str(Parameters[x]) + "'")
 
-        Domoticz.Log("Heartbeat set to: " + Parameters["RefreshRate"])
-        Domoticz.Heartbeat(int(Parameters["RefreshRate"]))
+        Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
+        Domoticz.Heartbeat(int(Parameters["Mode4"]))
         
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
