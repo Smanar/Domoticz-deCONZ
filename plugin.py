@@ -39,7 +39,7 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
-        <param field="RefreshRate" label="RefreshRate" width="150px" required="true">
+        <param field="RefreshRate" label="Refresh rate" width="150px" required="true">
         <options>
                 <option label="1 second" value="1"  />
                 <option label="2 seconds" value="2"/>
@@ -105,9 +105,9 @@ class BasePlugin:
     def onStart(self):
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
-
-        Domoticz.Heartbeat(int(Parameters["RefreshRate"]))
         Domoticz.Log("Heartbeat set to: " + Parameters["RefreshRate"])
+        Domoticz.Heartbeat(int(Parameters["RefreshRate"]))
+        
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
             global DOMOTICZ_IP
