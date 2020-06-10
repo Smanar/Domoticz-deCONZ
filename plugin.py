@@ -105,6 +105,10 @@ class BasePlugin:
     def onStart(self):
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
+        for x in Parameters:
+            if Parameters[x] != "":
+                Domoticz.Log( "'" + x + "':'" + str(Parameters[x]) + "'")
+
         Domoticz.Log("Heartbeat set to: " + Parameters["RefreshRate"])
         Domoticz.Heartbeat(int(Parameters["RefreshRate"]))
         
