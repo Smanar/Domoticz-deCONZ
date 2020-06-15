@@ -234,6 +234,8 @@ def JSON_Repair(data):
 #
 #*********************************
 
+XiaomiSingleGangButtonSwitchTable = ['1002','1004','1001']
+
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
 
 
@@ -724,6 +726,10 @@ def ButtonConvertion(val,model = 0):
             if val in XiaomiOpple6ButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + XiaomiOpple6ButtonSwitchTable.index(val))
 
+        if model == 3:
+            if val in XiaomiSingleGangButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
+        
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'

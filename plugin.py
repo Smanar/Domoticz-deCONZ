@@ -39,6 +39,15 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
+        <param field="Mode4" label="Refresh rate" width="150px" required="true">
+        <options>
+                <option label="1 second" value="1"  />
+                <option label="2 seconds" value="2"/>
+                <option label="5 seconds" value="5"/>
+                <option label="10 seconds" value="10" default="true"/>
+                <option label="20 seconds" value="20"/>
+            </options>
+        </param>
     </params>
 </plugin>
 """
@@ -96,7 +105,9 @@ class BasePlugin:
     def onStart(self):
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
-
+        Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
+        Domoticz.Heartbeat(int(Parameters["Mode4"]))
+        
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
             global DOMOTICZ_IP
@@ -455,10 +466,15 @@ class BasePlugin:
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
-            #Skip banned device
+            #Skip banned devices
             if IEEE in self.Banned_Devices:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
+                return
+                
+            #Skip useless devices
+            if Type == 'Configuration tool':
+                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 return
 
             #Get some infos
@@ -482,7 +498,6 @@ class BasePlugin:
                 #ignore ZHASwitch if vibration sensor
                 if 'sensitivity' in _Data['config']:
                     return
-
                 if 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
@@ -498,6 +513,8 @@ class BasePlugin:
                 #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
+                elif 'lumi.remote.b186acn01' in Model:
+                    Type = 'Xiaomi_single_gang'
                 elif 'lumi.remote.b286acn01' in Model:
                     Type = 'Xiaomi_double_gang'
                 #Used for all opple switches
@@ -745,6 +762,8 @@ class BasePlugin:
                 elif model == 'Xiaomi_Opple_6_button_switch':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
                 #eyal end
+                elif model == 'Xiaomi_single_gang':
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
                 else:
                     kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1272,6 +1291,13 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Image'] = 9
 
     #Switch
+    elif _Type == 'Xiaomi_single_gang':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "||||", "LevelNames": "Off|single press|double press|hold", "LevelOffHidden": "true", "SelectorStyle": "0"}
+    
     elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
