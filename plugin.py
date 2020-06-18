@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.13" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.14" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -105,8 +105,12 @@ class BasePlugin:
     def onStart(self):
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
-        Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
-        Domoticz.Heartbeat(int(Parameters["Mode4"]))
+        
+        try:
+            Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
+            Domoticz.Heartbeat(int(Parameters["Mode4"]))
+        except:
+            pass
         
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
@@ -796,14 +800,17 @@ class BasePlugin:
                     kwarg.update({'TimedOut':1})
                     Domoticz.Error("###### Device with hardware defaut : " + str(_Data))
 
-
         #MAJ config
         elif 'config' in _Data:
             config = _Data['config']
             kwarg.update(ProcessAllConfig(config))
 
+        #MAJ attr, not used yet
+        elif 'attr' in _Data:
+            attr = _Data['attr']
+
         else:
-            Domoticz.Error("Unknow MAJ" + str(_Data) )
+            Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
         if kwarg:
             UpdateDevice(_Data['id'],_Data['r'],kwarg)
