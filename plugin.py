@@ -94,7 +94,7 @@ class BasePlugin:
         self.Buffer_Time = ''
         self.WebSocket = None
         self.WebsoketBuffer = ''
-        self.Banned_Devices = {}
+        self.Banned_Devices = []
         self.BufferReceive = ''
         self.BufferLenght = 0
 
@@ -134,15 +134,12 @@ class BasePlugin:
                 for line in myPluginConfFile:
                     if not line.startswith('#'):
                         Domoticz.Log("Adding banned device : " + line.strip())
-                        b = line.strip().split(',')
-                        if len(b) <= 2:
-                            b.append('lights')
-                        self.Banned_Devices[b[0]] = b[1]
+                        self.Banned_Devices.append(line.strip())
         except (IOError,FileNotFoundError):
             #File not exist create it with example
             Domoticz.Status("Creating banned device file")
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'w') as myPluginConfFile:
-                myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500,sensors")
+                myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
 
         myPluginConfFile.close()
 
@@ -474,7 +471,7 @@ class BasePlugin:
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
             #Skip banned devices
-            if IEEE in self.Banned_Devices and self.Banned_Devices(IEEE) == Type_device:
+            if IEEE in self.Banned_Devices:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
                 return
@@ -482,7 +479,6 @@ class BasePlugin:
             #Skip useless devices
             if Type == 'Configuration tool':
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
-                #self.Banned_Devices[IEEE] = Type_device
                 self.Devices[IEEE]['state'] = 'banned'
                 return
 
