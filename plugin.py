@@ -39,18 +39,22 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
-        <param field="Mode4" label="Refresh rate" width="150px" required="true">
-        <options>
-                <option label="1 second" value="1"  />
-                <option label="2 seconds" value="2"/>
-                <option label="5 seconds" value="5"/>
-                <option label="10 seconds" value="10" default="true"/>
-                <option label="20 seconds" value="20"/>
-            </options>
-        </param>
     </params>
 </plugin>
 """
+
+
+# Combo for Heartbeat, disabled for the moment
+#        <param field="Mode4" label="Refresh rate" width="150px" required="true">
+#        <options>
+#                <option label="1 second" value="1"  />
+#                <option label="2 seconds" value="2"/>
+#                <option label="5 seconds" value="5"/>
+#                <option label="10 seconds" value="10" default="true"/>
+#                <option label="20 seconds" value="20"/>
+#            </options>
+#        </param>
+
 
 # All imports
 import Domoticz
@@ -106,11 +110,11 @@ class BasePlugin:
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
         
-        try:
-            Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
-            Domoticz.Heartbeat(int(Parameters["Mode4"]))
-        except:
-            pass
+        #try:
+        #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
+        #    Domoticz.Heartbeat(int(Parameters["Mode4"]))
+        #except:
+        #    pass
         
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
