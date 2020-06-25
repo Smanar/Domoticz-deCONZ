@@ -88,6 +88,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 25/06/20 : 1.0.14 > Handle the new websocket "attr", special widget for Xiaomi Aqara single gang (thx to @markiboy2all)
 - 28/05/20 : 1.0.13 > Delete banned_devices.txt from github, it will be created by the plugin, create specific widget for Aquara Opple and Xiaomi double gang (thx to @eserero), critic bug correction for Xiaomi plug (thx to @xxLeoxx93).
 - 27/01/20 : 1.0.12 > Correction for some Philips hue, correction for thermostat devices, change consumption widget for some devices, remove domoticz batterie alert if device have bad return for battery level, patch for group with UniqueId
 - 09/11/19 : 1.0.11 > All unknows devices will be recognized as on/off controler, because some working device have "Unknow" as type. Improving detection for fan and range extender. Adding Thermostat support (thx to @salopette). Adding support for long press on ikea remote. Reparation for Shutter control.   
