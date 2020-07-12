@@ -60,6 +60,8 @@ python3 API_KEY.py 127.0.0.1:80 create
 And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
 
 ## Remark.
+- There is a deconz Discord channel https://discord.gg/QFhTxqN
+
 - Take care if you have too many devices, at startup, the plugin adds ALL your devices from deCONZ in domoticz (except those who are in banned file).
 
 - Finally, you can see more devices than you have in reality. This is normal, deCONZ can create more than 1 device for 1 real, and it can create for example 1 bulb + 2 switches just for 1 physical switch.
