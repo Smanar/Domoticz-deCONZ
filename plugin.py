@@ -716,7 +716,7 @@ class BasePlugin:
         #Patch for device with double UniqueID, can't be light
         if (not IEEE) and ('uniqueid' in _Data) and _Data['r'] != 'lights':
             typ,_id = self.GetDevicedeCONZ(_Data['uniqueid'] )
-            if _id:
+            if _id and (typ == _Data['r']):
                 Domoticz.Log("Double UniqueID correction : " + _Data['id'] + ' > ' + str(_id) )
                 _Data['id'] = _id
                 IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
