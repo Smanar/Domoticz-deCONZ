@@ -479,6 +479,11 @@ class BasePlugin:
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 self.IDGateway = key
                 return
+            if (Type == 'Unknown') and (len(_Data['state']) == 1) and ('reachable' in _Data['state']):
+                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
+                if self.IDGateway == -1:
+                    self.IDGateway = key
+                return
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
