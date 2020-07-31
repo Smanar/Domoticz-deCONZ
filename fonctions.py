@@ -702,7 +702,7 @@ def ButtonConvertion(val,model = 0):
             t = [(1,16),(2,17),(3,18),(4,34),(5,98),(6,99),(7,100),(8,101)]
             for i in range(len(t)):
                 if e in t[i]:
-                    v = i
+                    v = i + 1
                     break
 
         #Normal switch
