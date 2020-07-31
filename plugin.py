@@ -774,10 +774,8 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
                 elif model == 'Xiaomi_double_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
-                #eyal start
                 elif model == 'Xiaomi_Opple_6_button_switch':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
-                #eyal end
                 elif model == 'Xiaomi_single_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
                 else:
