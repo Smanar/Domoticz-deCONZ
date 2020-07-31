@@ -693,24 +693,36 @@ def ButtonConvertion(val,model = 0):
     #Generic procedure
     if model == 0:
 
-        val = "%04d" % val
-        Button_Number = val[0]
-        Button_Action = val[3]
-
         v = 0
+        Button_Number = 1
+        e = int(val)
 
-        if Button_Action == '2': #  Release (after press)
-            v = 10
-        if Button_Action == '3': # Release (after hold)
-            v = 20
-        if Button_Action == '4': # Double press
-            v = 30
-        if Button_Action == '5': # Triple press
-            v = 40
-        if Button_Action == '6': # Quadruple press
-            v = 50
-        if Button_Action == '7': # shake
-            v = 60
+        #Green power device
+        if e < 1000:
+            t = [(1,16),(2,17),(3,18),(4,34),(5,98),(6,99),(7,100),(8,101)]
+            for i in range(len(t)):
+                if e in t[i]:
+                    v = i
+                    break
+
+        #Normal switch
+        else:
+            val = "%04d" % val
+            Button_Number = val[0]
+            Button_Action = val[3]
+
+            if Button_Action == '2': #  Release (after press)
+                v = 10
+            if Button_Action == '3': # Release (after hold)
+                v = 20
+            if Button_Action == '4': # Double press
+                v = 30
+            if Button_Action == '5': # Triple press
+                v = 40
+            if Button_Action == '6': # Quadruple press
+                v = 50
+            if Button_Action == '7': # shake
+                v = 60
 
         kwarg['nValue'] = v * int(Button_Number)
 
@@ -729,7 +741,7 @@ def ButtonConvertion(val,model = 0):
         if model == 3:
             if val in XiaomiSingleGangButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
-        
+
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
