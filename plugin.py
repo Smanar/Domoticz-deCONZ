@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.14" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.15" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -102,6 +102,8 @@ class BasePlugin:
         self.BufferReceive = ''
         self.BufferLenght = 0
 
+        self.IDGateway = -1
+
         self.INIT_STEP = ['config','lights','sensors','groups']
 
         return
@@ -109,13 +111,13 @@ class BasePlugin:
     def onStart(self):
         Domoticz.Debug("onStart called")
         #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
-        
+
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
         #    Domoticz.Heartbeat(int(Parameters["Mode4"]))
         #except:
         #    pass
-        
+
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
             global DOMOTICZ_IP
@@ -472,17 +474,22 @@ class BasePlugin:
 
             Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
 
+            #Skip useless devices
+            if Type == 'Configuration tool':
+                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
+                self.IDGateway = key
+                return
+            if (Type == 'Unknown') and (len(_Data['state']) == 1) and ('reachable' in _Data['state']):
+                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
+                if self.IDGateway == -1:
+                    self.IDGateway = key
+                return
+
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
             #Skip banned devices
             if IEEE in self.Banned_Devices:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
-                self.Devices[IEEE]['state'] = 'banned'
-                return
-                
-            #Skip useless devices
-            if Type == 'Configuration tool':
-                Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
                 return
 
@@ -714,7 +721,7 @@ class BasePlugin:
         #Patch for device with double UniqueID, can't be light
         if (not IEEE) and ('uniqueid' in _Data) and _Data['r'] != 'lights':
             typ,_id = self.GetDevicedeCONZ(_Data['uniqueid'] )
-            if _id:
+            if _id and (typ == _Data['r']):
                 Domoticz.Log("Double UniqueID correction : " + _Data['id'] + ' > ' + str(_id) )
                 _Data['id'] = _id
                 IEEE,state = self.GetDeviceIEEE(_Data['id'],_Data['r'])
@@ -738,7 +745,7 @@ class BasePlugin:
 
             return
         if state == 'banned':
-            Domoticz.Debug("Banned device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+            Domoticz.Debug("Banned/Ignored device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
             return
         if state == 'missing':
             Domoticz.Error("Missing device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
@@ -767,10 +774,8 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
                 elif model == 'Xiaomi_double_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
-                #eyal start
                 elif model == 'Xiaomi_Opple_6_button_switch':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
-                #eyal end
                 elif model == 'Xiaomi_single_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
                 else:
@@ -888,6 +893,9 @@ class BasePlugin:
         return
 
     def GetDeviceIEEE(self,_id,_type):
+        if _id == self.IDGateway and _type == 'lights':
+            return True, "banned"
+
         for IEEE in self.Devices:
             if (self.Devices[IEEE]['type'] == _type) and (self.Devices[IEEE]['id'] == _id):
                 return IEEE,self.Devices[IEEE].get('state','unknow')
@@ -1057,7 +1065,7 @@ def UpdateDevice(_id,_type,kwarg):
     Unit = GetDomoUnit(_id,_type)
 
     if not Unit or not kwarg:
-        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ')' )
+        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') : ' + str(kwarg) )
         return
 
     #Check for special device, and remove special kwarg
@@ -1309,7 +1317,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||", "LevelNames": "Off|single press|double press|hold", "LevelOffHidden": "true", "SelectorStyle": "0"}
-    
+
     elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
