@@ -599,27 +599,29 @@ def ButtonconvertionXCUBE_R(val):
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
-    if val == '0':# off
-        kwarg['nValue'] = 0
-    elif val == '7007':# shake
-        kwarg['nValue'] = 10
-    elif val == '7000': # wake
-        kwarg['nValue'] = 20
-    elif val == '7008':# drop
-        kwarg['nValue'] = 30
-    elif int(val[3]) == (7 - int(val[0])) :# 180 flip
-        kwarg['nValue'] = 50
-    elif val[1:] == '000':# push
-        kwarg['nValue'] = 60
-    elif val[0] == val[3]:# double tap
-        kwarg['nValue'] = 70
-    else:# 90 flip
-        kwarg['nValue'] = 40
+    v = 0
 
-    if kwarg['nValue'] == 0:
+    if val == '7007':# shake
+        v = 10
+    elif val == '7000': # wake
+        v = 20
+    elif val == '7008':# drop
+        v = 30
+    elif int(val[3]) == (7 - int(val[0])) :# 180 flip
+        v = 50
+    elif val[1:] == '000':# push
+        v = 60
+    elif val[0] == val[3]:# double tap
+        v = 70
+    else:# 90 flip
+        v = 40
+
+    if v == 0:
         kwarg['sValue'] = 'Off'
     else:
-        kwarg['sValue'] = str( kwarg['nValue'] )
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = int(val)
 
     return kwarg
 
