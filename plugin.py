@@ -1301,6 +1301,9 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
 
+    elif _Type == 'ZHABattery':
+        kwarg['TypeName'] = 'Percentage'
+
     elif _Type == 'CLIPGenericStatus':
         kwarg['TypeName'] = 'Text'
 
