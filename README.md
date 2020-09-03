@@ -48,6 +48,7 @@ You can later update the plugin
 ```curl -H 'Content-Type: application/json' -X PUT -d '{"websocketnotifyall": true}' http://IP_DECONZ:80/api/API_KEY/config```
 - The plugin doesn't use a special configuration file, except the banned.txt file.   
 - At every start, it synchronises the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
+- If you have problem to find your IP or the used port, take a look at https://phoscon.de/discover (Remember better to use 127.0.0.1 if domoticz and deconz are on the same machine).   
 - Don't worry about the name, the plugin never updates name even you change it in deCONZ to prevent problems with scripts.
 - For those who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can also give some information like your used websocket port. To show all commands or parameters just use:   
 ```
