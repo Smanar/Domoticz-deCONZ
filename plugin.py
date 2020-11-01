@@ -76,6 +76,7 @@ from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
 from fonctions import ButtonConvertion, VibrationSensorConvertion
+from fonctions import installFE, uninstallFE
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -148,6 +149,9 @@ class BasePlugin:
                 myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
 
         myPluginConfFile.close()
+        
+        #check and load Front end
+        installFE()
 
         #Read and Set config
         #json = '{"websocketnotifyall":true}'
