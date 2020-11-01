@@ -1,0 +1,221 @@
+<div id="plugin-view"></div>
+
+<script type="text/ng-template" id="app/deCONZ/index.html">
+    <div class="container">
+        <h2 class="page-header">deCONZ</h2>
+
+        <div class="deCONZ-body">
+            <section class="top-panel">
+                <device-filter-by-type class="btn-group ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty">
+                    <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'lights'}" ng-click="$ctrl.refreshDeCONZ('lights')">{{:: 'Lights' | translate}}</button>
+                    <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'sensors'}" ng-click="$ctrl.refreshDeCONZ('sensors')">{{:: 'Sensors' | translate}}</button>
+                    <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'groups'}" ng-click="$ctrl.refreshDeCONZ('groups')">{{:: 'Groups' | translate}}</button>
+                </device-filter-by-type>
+
+                <button class="btn btn-default pull-right ng-binding" ng-click="$ctrl.refreshDeCONZ($ctrl.value)">Refresh</button>
+            </section>
+        </div>
+        <p></p>
+        <div class="deCONZ-body">
+            <page-loading-indicator ng-hide="::$ctrl.zigdevs"></page-loading-indicator>
+
+            <zz-deconz-plugins-table
+                    class="filters"
+                    ng-if="::$ctrl.zigdevs"
+                    zigdevs="$ctrl.zigdevs"
+            ></zz-deconz-plugins-table>
+
+            <section class="bottom-panel">
+                <button class="btn btn-default pull-left ng-binding"
+                 ng-click="$ctrl.autoConfPlugin()">
+                 {{:: 'Configure Plugin' | translate }}
+                </button>
+                <button class="btn btn-default pull-right ng-binding"
+                 ng-click="$ctrl.permitJoins()"
+                 ng-disabled="$ctrl.isJoining">
+                 {{:: 'Permit Joins' | translate }}
+                </button>
+            </section>            
+        </div>
+
+    </div>
+</script>
+
+<script>
+    require(['../templates/deCONZ'], function() {
+        angular.element(document).injector().invoke(function($compile) {
+            var $div = angular.element('<zz-deconz-plugin></zz-deconz-plugin>');
+            angular.element('#plugin-view').append($div);
+
+            var scope = angular.element($div).scope();
+            $compile($div)(scope);
+        });
+    });
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/RenameModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Rename Device' | translate }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" name="modalForm">
+            <div class="control-group">
+                <label class="control-label" for="device-name">{{:: 'Name' | translate }}:</label>
+                <div class="controls">
+                    <input type="text"
+                        id="device-name"
+                        class="form-control"
+                        minlength="1"
+                        maxlength="100"
+                        ng-model="$ctrl.myname"
+                        ng-disabled="$ctrl.isSaving"
+                        ng-change="$ctrl.isUnchanged = false"
+                        name="deviceName"
+                    />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button"
+                class="btn btn-primary"
+                ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
+                ng-click="$ctrl.renameDevice()">
+            {{:: 'Rename' | translate }}
+        </button>
+
+        <button type="button"
+                class="btn btn-default"
+                ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/ConfigModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Configuring Device' | translate }}</h3>
+    </div>
+    <div class="modal-body" style="text-align: left;">
+        <table style="border-spacing: 5px; margin-left: auto; margin-right: auto;" width="66%">
+            <tbody>
+                <tr ng-repeat="(key, value) in $ctrl.deviceconfig">
+                    <td>{{key}}</td>
+                    <td>
+                        <div>
+                            <input type = "text"
+                            ng-model = "$ctrl.deviceconfig[key]"
+                            ng-disabled = "['duration','sensitivity','mode','offset','delay','windowopen_set','locked','preset'].indexOf(key) < 0"
+                            ng-change = "$ctrl.isUnchanged = false">
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+          </table>
+
+        <hr>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button"
+                class="btn btn-cancel"
+                ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>        
+        <button type="button"
+                class="btn btn-primary"
+                ng-disabled="modalForm.$invalid || $ctrl.isUnchanged"
+                ng-click="$ctrl.configDevice()">
+            {{:: 'Update' | translate }}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/PermitJoinsModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Join device now' | translate }}</h3>
+    </div>
+    <div class="modal-body">
+        <h1 ng-bind-html="countdown" style="text-align: center;"></h1>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button"
+                class="btn btn-primary"
+                ng-click="$mctrl.endPermit()">
+            {{:: 'End' | translate }}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/DeleteModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Delete Device' | translate }}</h3>
+    </div>
+    <div class="modal-body" style="text-align: center;">
+        {{:: 'Confirm deletion of: ' | translate }}<b ng-bind-html=$ctrl.myname></b>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button"
+                class="btn btn-cancel"
+                ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>        
+        <button type="button"
+                class="btn btn-primary"
+                ng-click="$ctrl.deleteDevice()">
+            {{:: 'Yes' | translate }}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/autoConfPluginModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Configuring Plugin' | translate }}</h3>
+    </div>
+    <div class="modal-body" style="text-align: left;">
+        <table style="border-spacing: 5px; margin-left: auto; margin-right: auto;" width="66%">
+            <tbody>
+                <tr ng-repeat="(key, value) in configOutput[0]"><td>{{key}}</td><td>{{value}}</td></tr>
+            </tbody>
+          </table>
+        <hr>
+            <form style="text-align: center;" class="form-horizontal" name="modalGwPassForm">
+                <div class="control-group">
+                    <label class="control-label" for="gwPassword">{{:: 'Gateway Password' | translate }}:</label>
+                    <div class="controls">
+                        <input type="password"
+                            id="gwPassword"
+                            class="form-control"
+                            minlength="1"
+                            maxlength="100"
+                            ng-model="$mctrl.gwPassword"
+                            name="gwPassword"
+                        />
+                    </div>
+                </div>
+            </form>
+        <p>
+            <table style="border-spacing: 5px; margin-left: auto; margin-right: auto;" width="66%">
+                <tbody>
+                    <tr ng-repeat="(key, value) in configOutput1[0]"><td>{{key}}</td><td>{{value}}</td></tr>
+                </tbody>
+            </table>
+        </p>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button"
+                class="btn btn-cancel"
+                ng-click="$dismiss()">
+            {{apiCancelButton}}
+        </button>        
+        <button type="button"
+                class="btn btn-primary"
+                ng-show="apiShowGet"
+                ng-click="$mctrl.getAPIkey()">
+            {{:: 'Get API Key' | translate }}
+        </button>
+    </div>
+</script>
