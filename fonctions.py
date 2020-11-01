@@ -771,3 +771,71 @@ def VibrationSensorConvertion(val_v,val_t):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     return kwarg
+
+#**************************************************************************************************
+# Front end fonctions
+#
+#**************************************************************************************************
+
+# Code templated from https://github.com/stas-demydiuk/domoticz-zigbee2mqtt-plugin
+def installFE():
+
+    import os
+    from shutil import copy2
+
+    source_path = os.path.dirname(os.path.abspath(__file__)) + '/frontend'
+    templates_path = os.path.abspath(source_path + '/../../../www/templates')
+    #dst_plugin_path = templates_path + '/deCONZ'
+    fs = False
+
+    try:
+        fs = os.path.getsize(templates_path + '/deCONZ.html')
+    except:
+        pass
+        
+    #Domoticz.Status('File size : ' + str(fs))
+
+    if fs == 8559:
+        return
+
+    Domoticz.Status('Installing plugin custom page...')
+
+    try:
+
+        Domoticz.Debug('Copying files from ' + source_path + ' to ' + templates_path)
+
+        #if not (os.path.isdir(dst_plugin_path)):
+        #    os.makedirs(dst_plugin_path)
+
+        copy2(source_path + '/deCONZ.html', templates_path)
+        copy2(source_path + '/deCONZ.js', templates_path)
+
+        Domoticz.Log('Installing plugin custom page completed.')
+    except Exception as e:
+        Domoticz.Error('Error during installing plugin custom page')
+        Domoticz.Error(repr(e))
+
+def uninstallFE(self):
+    Domoticz.Status('Uninstalling plugin custom page...')
+    
+    from shutil import rmtree
+
+    try:
+        templates_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../../www/templates')
+        dst_plugin_path = templates_path + '/deCONZ'
+
+        Domoticz.Debug('Removing files from ' + templates_path)
+
+        #if (os.path.isdir(dst_plugin_path)):
+        #    rmtree(dst_plugin_path)
+
+        if os.path.exists(templates_path + "/deCONZ.html"):
+            os.remove(templates_path + "/deCONZ.html")
+
+        if os.path.exists(templates_path + "/deCONZ.js"):
+            os.remove(templates_path + "/deCONZ.js")
+
+        Domoticz.Log('Uninstalling plugin custom page completed.')
+    except Exception as e:
+        Domoticz.Error('Error during uninstalling plugin custom page')
+        Domoticz.Error(repr(e))
