@@ -754,7 +754,7 @@ def ButtonConvertion(val,model = 0):
 
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/748
 #For the moment only vibrations are working
-def VibrationSensorConvertion(val_v,val_t):
+def VibrationSensorConvertion(val_v,val_t, val_a):
 
     kwarg = {}
 
@@ -769,6 +769,9 @@ def VibrationSensorConvertion(val_v,val_t):
         kwarg['sValue'] = 'Off'
     else:
         kwarg['sValue'] = str( kwarg['nValue'] )
+
+    if val_a:
+        kwarg['orientation'] = str(val_a)
 
     return kwarg
 
@@ -792,7 +795,7 @@ def installFE():
         fs = os.path.getsize(templates_path + '/deCONZ.html')
     except:
         pass
-        
+
     #Domoticz.Status('File size : ' + str(fs))
 
     if fs == 8559:
@@ -817,7 +820,7 @@ def installFE():
 
 def uninstallFE(self):
     Domoticz.Status('Uninstalling plugin custom page...')
-    
+
     from shutil import rmtree
 
     try:
