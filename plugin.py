@@ -149,7 +149,7 @@ class BasePlugin:
                 myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
 
         myPluginConfFile.close()
-        
+
         #check and load Front end
         installFE()
 
@@ -560,6 +560,12 @@ class BasePlugin:
                     self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            elif Type == 'ZHAVibration':
+                #Create a Angle device
+                self.Devices[IEEE + "_orientation"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Vibration_Orientation' }
+                self.CreateIfnotExist(IEEE + "_orientation",'Vibration_Orientation',Name)
+                #Create the current device
+                self.CreateIfnotExist(IEEE,'ZHAVibration',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -788,7 +794,7 @@ class BasePlugin:
                     self.NeedToReset.append(IEEE)
 
             if 'vibration' in state:
-                kwarg.update(VibrationSensorConvertion( state['vibration'] , state.get('tiltangle',None)) )
+                kwarg.update(VibrationSensorConvertion( state['vibration'] , state.get('tiltangle',None), state.get('orientation',None)) )
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -1064,6 +1070,29 @@ def GetDomoUnit(_id,_type):
 
     return False
 
+def UpdateDevice_Special(_id,_type,kwarg, field):
+    value = kwarg.get(field ,False)
+
+    IEEE,dummy = GetDeviceIEEE(_id,_type)
+
+    #select special device
+    Unit2 = GetDomoDeviceInfo(IEEE + '_' + field)
+
+    kwarg2 = kwarg.copy()
+
+    if field == 'mode':
+        kwarg2['nValue'] = value
+    else:
+        kwarg2['nValue'] = 0
+    kwarg2['sValue'] = str(value)
+
+    if not Unit2 :
+        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+        return
+
+    #Update it
+    UpdateDeviceProc(kwarg2,Unit2)
+
 def UpdateDevice(_id,_type,kwarg):
 
     Unit = GetDomoUnit(_id,_type)
@@ -1073,38 +1102,14 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
+    if 'orientation' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"orientation")
+
     if 'heatsetpoint' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
 
-        thermostat_Htpt = kwarg.pop('heatsetpoint',False)
-        thermostat_Mode = kwarg.pop('mode',False)
-
-        IEEE,dummy = GetDeviceIEEE(_id,_type)
-
-        #update basic sensor without special field
-        UpdateDeviceProc(kwarg,Unit)
-
-        #select termostat heatpoint
-        Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
-
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(thermostat_Htpt)
-
-        if not Unit :
-            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
-            return
-
-        #Update it
-        UpdateDeviceProc(kwarg,Unit)
-
-        #select termostat mode
-        Unit = GetDomoDeviceInfo(IEEE + '_mode')
-
-        kwarg['nValue'] = thermostat_Mode
-        kwarg['sValue'] = str(thermostat_Mode)
-
-        if not Unit :
-            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
-            return
+    if 'mode' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"mode")
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1117,6 +1122,8 @@ def UpdateDeviceProc(kwarg,Unit):
         kwarg.pop('mode')
     if 'heatsetpoint' in kwarg:
         kwarg.pop('heatsetpoint')
+    if 'orientation' in kwarg:
+        kwarg.pop('orientation')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
@@ -1369,6 +1376,10 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
+
+    elif _Type == 'Vibration_Orientation':
+        kwarg['Type'] = 243
+        kwarg['Subtype'] = 19
 
     #groups
     elif _Type == 'LightGroup' or _Type == 'groups':
