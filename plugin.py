@@ -111,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
+        #CreateDevice('zzzz','En test','Chrismast_E')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -301,6 +301,11 @@ class BasePlugin:
                         IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
                         Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
                         _json['heatsetpoint'] = Hp
+                elif Devices[Unit].DeviceID.endswith('_effect'):
+                    _json['effect'] = Devices[Unit].sValue
+                    #_json['effectColours'] = [[255,0,0],[0,255,0],[0,0,255]]
+                    #_json['effectSpeed' = 10
+                    
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -473,6 +478,7 @@ class BasePlugin:
             Name = str(_Data['name'])
             Type = str(_Data['type'])
             Model = str(_Data.get('modelid',''))
+            Manuf = str(_Data.get('manufacturername',''))
             if not Model:
                 Model = ''
 
@@ -547,6 +553,12 @@ class BasePlugin:
 
             if self.Ready == True:
                 Domoticz.Status("Adding missing device :" + str(key) + ' Type:' + str(Type))
+
+            #lidl strip
+            if Manuf == '_TZE200_s8gkrkxk':
+                #Create a widget for effect
+                self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
+                self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
 
             #Special devices
             if Type == 'ZHAThermostat':
@@ -1210,6 +1222,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
+    #elif _Type == 'Color Temperature dimmable light':
+    #    kwarg['Type'] = 241
+    #    kwarg['Subtype'] = 4
+    #    kwarg['Switchtype'] = 7
+
     #Some device have unknow as type, but are full working.
     elif _Type == 'Unknown':
         Domoticz.Error("Unknow device : assume a light " + IEEE + " > " + _Name + ' (' + _Type +')' )
@@ -1377,6 +1394,13 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
+    elif _Type == 'Chrismast_E':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 14
+        kwarg['Options'] = {"LevelActions": "|||||||||||||||", "LevelNames": "none|steady|snow|rainbow|snake|tinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "false", "SelectorStyle": "1"}
+
     elif _Type == 'Vibration_Orientation':
         kwarg['Type'] = 243
         kwarg['Subtype'] = 19
@@ -1410,4 +1434,4 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) )
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) ) #Devices[Unit].ID
