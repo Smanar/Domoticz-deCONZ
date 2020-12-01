@@ -284,9 +284,10 @@ class BasePlugin:
 
             _json['bri'] = round(Level*254/100)
 
-            #thermostat situation
+            #Special situation
             if _type == 'config':
                 _json.clear()
+                #Thermostat
                 if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
                     _json['mode'] = "auto"
                     _json['heatsetpoint'] = Level * 100
@@ -301,11 +302,14 @@ class BasePlugin:
                         IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
                         Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
                         _json['heatsetpoint'] = Hp
+                #Chritsmas tree
                 elif Devices[Unit].DeviceID.endswith('_effect'):
+                    Domoticz.Log(">>>>>>>>" + str(Devices[Unit].sValue) + " / " + str(Devices[Unit]))
                     _json['effect'] = Devices[Unit].sValue
                     #_json['effectColours'] = [[255,0,0],[0,255,0],[0,0,255]]
                     #_json['effectSpeed' = 10
-                    
+                    _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
+
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
