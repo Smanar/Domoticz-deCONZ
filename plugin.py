@@ -305,7 +305,8 @@ class BasePlugin:
                 #Chritsmas tree
                 elif Devices[Unit].DeviceID.endswith('_effect'):
                     Domoticz.Log(">>>>>>>>" + str(Devices[Unit].sValue) + " / " + str(Devices[Unit]))
-                    _json['effect'] = Devices[Unit].sValue
+                    v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10)]
+                    _json['effect'] = v
                     #_json['effectColours'] = [[255,0,0],[0,255,0],[0,0,255]]
                     #_json['effectSpeed' = 10
                     _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
