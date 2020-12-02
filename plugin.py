@@ -304,11 +304,22 @@ class BasePlugin:
                         _json['heatsetpoint'] = Hp
                 #Chritsmas tree
                 elif Devices[Unit].DeviceID.endswith('_effect'):
-                    Domoticz.Log(">>>>>>>>" + str(Devices[Unit].sValue) + " / " + str(Devices[Unit]))
                     v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10)]
                     _json['effect'] = v
-                    #_json['effectColours'] = [[255,0,0],[0,255,0],[0,0,255]]
-                    #_json['effectSpeed' = 10
+
+                    #Set special options
+                    try :
+                        for o in Devices[Unit].Description.split("\n"):
+                            o2 = o.split("=")
+                            if o2[0] == 'effectSpeed':
+                                _json['effectSpeed'] = int(o2[1])
+                            if o2[0] == 'effectColours':
+                                _json['effectColours'] = json.loads(o2[1])
+
+                    except:
+                        Domoticz.Log("No special effect options")
+
+                    # Get light device
                     _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
 
 
@@ -564,6 +575,7 @@ class BasePlugin:
                 #Create a widget for effect
                 self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
                 self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
+                Type = 'Color Temperature dimmable light'
 
             #Special devices
             if Type == 'ZHAThermostat':
@@ -1227,10 +1239,10 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
-    #elif _Type == 'Color Temperature dimmable light':
-    #    kwarg['Type'] = 241
-    #    kwarg['Subtype'] = 4
-    #    kwarg['Switchtype'] = 7
+    elif _Type == 'Color Temperature dimmable light':
+        kwarg['Type'] = 241
+        kwarg['Subtype'] = 4
+        kwarg['Switchtype'] = 7
 
     #Some device have unknow as type, but are full working.
     elif _Type == 'Unknown':
