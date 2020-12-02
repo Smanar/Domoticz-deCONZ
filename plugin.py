@@ -304,7 +304,7 @@ class BasePlugin:
                         _json['heatsetpoint'] = Hp
                 #Chritsmas tree
                 elif Devices[Unit].DeviceID.endswith('_effect'):
-                    v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10)]
+                    v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
                     _json['effect'] = v
 
                     #Set special options
@@ -1416,7 +1416,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 14
-        kwarg['Options'] = {"LevelActions": "|||||||||||||||", "LevelNames": "none|steady|snow|rainbow|snake|tinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "false", "SelectorStyle": "1"}
+        kwarg['Options'] = {"LevelActions": "||||||||||||||||", "LevelNames": "off|none|steady|snow|rainbow|snake|tinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Vibration_Orientation':
         kwarg['Type'] = 243
