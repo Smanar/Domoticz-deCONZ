@@ -575,6 +575,8 @@ class BasePlugin:
                 #Create a widget for effect
                 self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
                 self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
+                #Correction
+                self.Devices[IEEE]['colormode'] = 'hs'
                 Type = 'Color Temperature dimmable light'
 
             #Special devices
