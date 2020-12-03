@@ -307,6 +307,8 @@ class BasePlugin:
                     v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
                     _json['effect'] = v
 
+                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+
                     #Set special options
                     try :
                         for o in Devices[Unit].Description.split("\n"):
