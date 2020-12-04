@@ -72,7 +72,7 @@ try:
 except:
     REQUESTPRESENT = False
 
-from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
+from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
 from fonctions import ButtonConvertion, VibrationSensorConvertion
@@ -369,10 +369,10 @@ class BasePlugin:
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
-                    h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                    h,s,v = rgb_to_hsv((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
                     saturation = int(s * 254)
-                    lightness = int(l * 254)
+                    lightness = int(v * 254)
                     _json['hue'] = hue
                     _json['sat'] = saturation
                     _json['bri'] = lightness
@@ -527,6 +527,9 @@ class BasePlugin:
                 state = _Data['state']
                 kwarg.update(ProcessAllState(state,Model))
                 if 'colormode' in state:
+                    cm = state['colormode']
+                    if (cm == 'xy') and ('hue' in state):
+                        cm = 'hs'
                     self.Devices[IEEE]['colormode'] = state['colormode']
 
             if 'config' in _Data:
