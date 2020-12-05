@@ -366,6 +366,14 @@ class BasePlugin:
                 #if previous not working
                 #TempMired = round(float(Hue_List['t'])*(500.0f - 153.0f) / 255.0f + 153.0f)
                 _json['ct'] = TempMired
+
+                # temporary patch
+                if self.Devices.get(IEEE + "_effect"):
+                    _json.clear()
+                    _json['sat'] = 0
+                    _json['bri'] = int((100 * Hue_List['t']) / 255)
+
+
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
