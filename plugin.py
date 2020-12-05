@@ -371,7 +371,7 @@ class BasePlugin:
                 if self.Devices.get(IEEE + "_effect"):
                     _json.clear()
                     _json['sat'] = 0
-                    _json['bri'] = int((100 * Hue_List['t']) / 255)
+                    _json['bri'] = int(Hue_List['t'])
 
 
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
