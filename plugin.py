@@ -289,8 +289,10 @@ class BasePlugin:
                 _json.clear()
                 #Thermostat
                 if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
-                    _json['mode'] = "auto"
-                    _json['heatsetpoint'] = Level * 100
+                    _json['heatsetpoint'] = int(Level * 100)
+                    dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
+                    if deCONZ_ID_2:
+                        _json['mode'] = "auto"
                 elif Devices[Unit].DeviceID.endswith('_mode'):
                     if Level == 0:
                         _json['mode'] = "off"
@@ -505,17 +507,18 @@ class BasePlugin:
             Type = str(_Data['type'])
             Model = str(_Data.get('modelid',''))
             Manuf = str(_Data.get('manufacturername',''))
+            StateList = _Data.get('state',False)
             if not Model:
                 Model = ''
 
-            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
+            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(_Data.get('config','')) )
 
             #Skip useless devices
             if Type == 'Configuration tool':
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 self.IDGateway = key
                 return
-            if (Type == 'Unknown') and (len(_Data['state']) == 1) and ('reachable' in _Data['state']):
+            if (Type == 'Unknown') and (len(StateList) == 1) and ('reachable' in StateList):
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 if self.IDGateway == -1:
                     self.IDGateway = key
@@ -531,14 +534,13 @@ class BasePlugin:
 
             #Get some infos
             kwarg = {}
-            if 'state' in _Data:
-                state = _Data['state']
-                kwarg.update(ProcessAllState(state,Model))
-                if 'colormode' in state:
-                    cm = state['colormode']
-                    if (cm == 'xy') and ('hue' in state):
+            if StateList:
+                kwarg.update(ProcessAllState(StateList,Model))
+                if 'colormode' in StateList:
+                    cm = StateList['colormode']
+                    if (cm == 'xy') and ('hue' in StateList):
                         cm = 'hs'
-                    self.Devices[IEEE]['colormode'] = state['colormode']
+                    self.Devices[IEEE]['colormode'] = StateList['colormode']
 
             if 'config' in _Data:
                 config = _Data['config']
@@ -597,11 +599,13 @@ class BasePlugin:
                 # Not working for cable outlet yet.
                 if not Model == 'Cable outlet':
                     #Create a setpoint device
-                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                    self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                    if 'heatsetpoint' in StateList:
+                        self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                        self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
                     #Create a mode device
-                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
-                    self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    if 'mode' in StateList:
+                        self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                        self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAVibration':
