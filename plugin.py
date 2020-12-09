@@ -26,7 +26,7 @@
     <params>
         <param field="Address" label="deCONZ IP" width="150px" required="true" default="127.0.0.1"/>
         <param field="Port" label="Port" width="150px" required="true" default="80"/>
-        <param field="Mode2" label="API KEY" width="75px" required="true" default="1234567890" />
+        <param field="Mode2" label="API KEY" width="100px" required="true" default="1234567890" />
         <param field="Mode3" label="Debug" width="150px">
             <options>
                 <option label="None" value="0"  default="true" />
