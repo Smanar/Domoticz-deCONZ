@@ -507,14 +507,15 @@ class BasePlugin:
             Type = str(_Data['type'])
             Model = str(_Data.get('modelid',''))
             Manuf = str(_Data.get('manufacturername',''))
-            StateList = _Data.get('state',False)
+            StateList = _Data.get('state',[])
+            ConfigList = _Data.get('config',[])
             if not Model:
                 Model = ''
 
-            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(_Data.get('config','')) )
+            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(ConfigList) )
 
             #Skip useless devices
-            if Type == 'Configuration tool':
+            if Type == 'Configuration tool' :
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 self.IDGateway = key
                 return
@@ -531,6 +532,8 @@ class BasePlugin:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
                 return
+            if Type == 'ZHATime':
+                return
 
             #Get some infos
             kwarg = {}
@@ -542,9 +545,8 @@ class BasePlugin:
                         cm = 'hs'
                     self.Devices[IEEE]['colormode'] = StateList['colormode']
 
-            if 'config' in _Data:
-                config = _Data['config']
-                kwarg.update(ProcessAllConfig(config))
+            if ConfigList:
+                kwarg.update(ProcessAllConfig(ConfigList))
 
             #It's a switch ? Need special process
             if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
@@ -553,7 +555,7 @@ class BasePlugin:
                 kwarg.update({'sValue': 'Off', 'nValue': 0})
 
                 #ignore ZHASwitch if vibration sensor
-                if 'sensitivity' in _Data['config']:
+                if 'sensitivity' in ConfigList:
                     return
                 if 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
@@ -599,11 +601,11 @@ class BasePlugin:
                 # Not working for cable outlet yet.
                 if not Model == 'Cable outlet':
                     #Create a setpoint device
-                    if 'heatsetpoint' in StateList:
+                    if 'heatsetpoint' in ConfigList:
                         self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
                         self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
                     #Create a mode device
-                    if 'mode' in StateList:
+                    if 'mode' in ConfigList:
                         self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
                         self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
                     #Create the current device but as temperature device
