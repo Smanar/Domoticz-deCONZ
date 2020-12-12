@@ -43,6 +43,11 @@ You can later update the plugin
 ```git pull```
 - Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
 
+To test the beta branch :   
+```git pull```   
+```git checkout beta```   
+```git pull```   
+
 ## Configuration.
 - The plugin works better with websocketnotifyall option set to true (it's the configuration by default).   
 ```curl -H 'Content-Type: application/json' -X PUT -d '{"websocketnotifyall": true}' http://IP_DECONZ:80/api/API_KEY/config```
