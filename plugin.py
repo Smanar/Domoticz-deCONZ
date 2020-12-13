@@ -72,10 +72,11 @@ try:
 except:
     REQUESTPRESENT = False
 
-from fonctions import rgb_to_xy, rgb_to_hsl, xy_to_rgb
+from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
 from fonctions import ButtonConvertion, VibrationSensorConvertion
+from fonctions import installFE, uninstallFE
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -110,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('zzzz','En test','Xiaomi_Opple_6_button_switch')
+        #CreateDevice('zzzz','En test','Chrismast_E')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -148,6 +149,9 @@ class BasePlugin:
                 myPluginConfFile.write("#Alarm on Detector\n00:15:8d:00:02:36:c2:3f-01-0500")
 
         myPluginConfFile.close()
+
+        #check and load Front end
+        installFE()
 
         #Read and Set config
         #json = '{"websocketnotifyall":true}'
@@ -280,12 +284,15 @@ class BasePlugin:
 
             _json['bri'] = round(Level*254/100)
 
-            #thermostat situation
+            #Special situation
             if _type == 'config':
                 _json.clear()
+                #Thermostat
                 if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
-                    _json['mode'] = "auto"
-                    _json['heatsetpoint'] = Level * 100
+                    _json['heatsetpoint'] = int(Level * 100)
+                    dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
+                    if deCONZ_ID_2:
+                        _json['mode'] = "auto"
                 elif Devices[Unit].DeviceID.endswith('_mode'):
                     if Level == 0:
                         _json['mode'] = "off"
@@ -297,6 +304,28 @@ class BasePlugin:
                         IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
                         Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
                         _json['heatsetpoint'] = Hp
+                #Chritsmas tree
+                elif Devices[Unit].DeviceID.endswith('_effect'):
+                    v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
+                    _json['effect'] = v
+
+                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+
+                    #Set special options
+                    try :
+                        for o in Devices[Unit].Description.split("\n"):
+                            o2 = o.split("=")
+                            if o2[0] == 'effectSpeed':
+                                _json['effectSpeed'] = int(o2[1])
+                            if o2[0] == 'effectColours':
+                                _json['effectColours'] = json.loads(o2[1])
+
+                    except:
+                        Domoticz.Log("No special effect options")
+
+                    # Get light device
+                    _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
+
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -339,13 +368,21 @@ class BasePlugin:
                 #if previous not working
                 #TempMired = round(float(Hue_List['t'])*(500.0f - 153.0f) / 255.0f + 153.0f)
                 _json['ct'] = TempMired
+
+                # temporary patch
+                if self.Devices.get(IEEE + "_effect"):
+                    _json.clear()
+                    _json['sat'] = 0
+                    _json['bri'] = int(Hue_List['t'])
+
+
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
-                    h,l,s = rgb_to_hsl((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                    h,s,v = rgb_to_hsv((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     hue = int(h * 65535)
                     saturation = int(s * 254)
-                    lightness = int(l * 254)
+                    lightness = int(v * 254)
                     _json['hue'] = hue
                     _json['sat'] = saturation
                     _json['bri'] = lightness
@@ -469,17 +506,20 @@ class BasePlugin:
             Name = str(_Data['name'])
             Type = str(_Data['type'])
             Model = str(_Data.get('modelid',''))
+            Manuf = str(_Data.get('manufacturername',''))
+            StateList = _Data.get('state',[])
+            ConfigList = _Data.get('config',[])
             if not Model:
                 Model = ''
 
-            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(_Data['state']) + ' and ' + str(_Data.get('config','')) )
+            Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(ConfigList) )
 
             #Skip useless devices
-            if Type == 'Configuration tool':
+            if Type == 'Configuration tool' :
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 self.IDGateway = key
                 return
-            if (Type == 'Unknown') and (len(_Data['state']) == 1) and ('reachable' in _Data['state']):
+            if (Type == 'Unknown') and (len(StateList) == 1) and ('reachable' in StateList):
                 Domoticz.Log("Skipping Device (Useless) : " + str(IEEE) )
                 if self.IDGateway == -1:
                     self.IDGateway = key
@@ -492,18 +532,21 @@ class BasePlugin:
                 Domoticz.Log("Skipping Device (Banned) : " + str(IEEE) )
                 self.Devices[IEEE]['state'] = 'banned'
                 return
+            if Type == 'ZHATime':
+                return
 
             #Get some infos
             kwarg = {}
-            if 'state' in _Data:
-                state = _Data['state']
-                kwarg.update(ProcessAllState(state,Model))
-                if 'colormode' in state:
-                    self.Devices[IEEE]['colormode'] = state['colormode']
+            if StateList:
+                kwarg.update(ProcessAllState(StateList,Model))
+                if 'colormode' in StateList:
+                    cm = StateList['colormode']
+                    if (cm == 'xy') and ('hue' in StateList):
+                        cm = 'hs'
+                    self.Devices[IEEE]['colormode'] = StateList['colormode']
 
-            if 'config' in _Data:
-                config = _Data['config']
-                kwarg.update(ProcessAllConfig(config))
+            if ConfigList:
+                kwarg.update(ProcessAllConfig(ConfigList))
 
             #It's a switch ? Need special process
             if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
@@ -512,7 +555,7 @@ class BasePlugin:
                 kwarg.update({'sValue': 'Off', 'nValue': 0})
 
                 #ignore ZHASwitch if vibration sensor
-                if 'sensitivity' in _Data['config']:
+                if 'sensitivity' in ConfigList:
                     return
                 if 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
@@ -544,18 +587,35 @@ class BasePlugin:
             if self.Ready == True:
                 Domoticz.Status("Adding missing device :" + str(key) + ' Type:' + str(Type))
 
+            #lidl strip
+            if Manuf == '_TZE200_s8gkrkxk':
+                #Create a widget for effect
+                self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
+                self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
+                #Correction
+                self.Devices[IEEE]['colormode'] = 'hs'
+                Type = 'Color Temperature dimmable light'
+
             #Special devices
             if Type == 'ZHAThermostat':
                 # Not working for cable outlet yet.
                 if not Model == 'Cable outlet':
                     #Create a setpoint device
-                    self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
-                    self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
+                    if 'heatsetpoint' in ConfigList:
+                        self.Devices[IEEE + "_heatsetpoint"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAThermostat' }
+                        self.CreateIfnotExist(IEEE + "_heatsetpoint",'ZHAThermostat',Name)
                     #Create a mode device
-                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
-                    self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    if 'mode' in ConfigList:
+                        self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
+                        self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            elif Type == 'ZHAVibration':
+                #Create a Angle device
+                self.Devices[IEEE + "_orientation"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Vibration_Orientation' }
+                self.CreateIfnotExist(IEEE + "_orientation",'Vibration_Orientation',Name)
+                #Create the current device
+                self.CreateIfnotExist(IEEE,'ZHAVibration',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -784,7 +844,7 @@ class BasePlugin:
                     self.NeedToReset.append(IEEE)
 
             if 'vibration' in state:
-                kwarg.update(VibrationSensorConvertion( state['vibration'] , state.get('tiltangle',None)) )
+                kwarg.update(VibrationSensorConvertion( state['vibration'] , state.get('tiltangle',None), state.get('orientation',None)) )
 
             if 'reachable' in state:
                 if state['reachable'] == True:
@@ -1060,6 +1120,29 @@ def GetDomoUnit(_id,_type):
 
     return False
 
+def UpdateDevice_Special(_id,_type,kwarg, field):
+    value = kwarg.get(field ,False)
+
+    IEEE,dummy = GetDeviceIEEE(_id,_type)
+
+    #select special device
+    Unit2 = GetDomoDeviceInfo(IEEE + '_' + field)
+
+    kwarg2 = kwarg.copy()
+
+    if field == 'mode':
+        kwarg2['nValue'] = value
+    else:
+        kwarg2['nValue'] = 0
+    kwarg2['sValue'] = str(value)
+
+    if not Unit2 :
+        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+        return
+
+    #Update it
+    UpdateDeviceProc(kwarg2,Unit2)
+
 def UpdateDevice(_id,_type,kwarg):
 
     Unit = GetDomoUnit(_id,_type)
@@ -1069,38 +1152,14 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
+    if 'orientation' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"orientation")
+
     if 'heatsetpoint' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
 
-        thermostat_Htpt = kwarg.pop('heatsetpoint',False)
-        thermostat_Mode = kwarg.pop('mode',False)
-
-        IEEE,dummy = GetDeviceIEEE(_id,_type)
-
-        #update basic sensor without special field
-        UpdateDeviceProc(kwarg,Unit)
-
-        #select termostat heatpoint
-        Unit = GetDomoDeviceInfo(IEEE + '_heatsetpoint')
-
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(thermostat_Htpt)
-
-        if not Unit :
-            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
-            return
-
-        #Update it
-        UpdateDeviceProc(kwarg,Unit)
-
-        #select termostat mode
-        Unit = GetDomoDeviceInfo(IEEE + '_mode')
-
-        kwarg['nValue'] = thermostat_Mode
-        kwarg['sValue'] = str(thermostat_Mode)
-
-        if not Unit :
-            Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
-            return
+    if 'mode' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"mode")
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1113,6 +1172,8 @@ def UpdateDeviceProc(kwarg,Unit):
         kwarg.pop('mode')
     if 'heatsetpoint' in kwarg:
         kwarg.pop('heatsetpoint')
+    if 'orientation' in kwarg:
+        kwarg.pop('orientation')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
@@ -1198,6 +1259,11 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
+
+    elif _Type == 'Color Temperature dimmable light':
+        kwarg['Type'] = 241
+        kwarg['Subtype'] = 4
+        kwarg['Switchtype'] = 7
 
     #Some device have unknow as type, but are full working.
     elif _Type == 'Unknown':
@@ -1301,6 +1367,9 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 5
 
+    elif _Type == 'ZHABattery':
+        kwarg['TypeName'] = 'Percentage'
+
     elif _Type == 'CLIPGenericStatus':
         kwarg['TypeName'] = 'Text'
 
@@ -1363,11 +1432,27 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
+    elif _Type == 'Chrismast_E':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 14
+        kwarg['Options'] = {"LevelActions": "||||||||||||||||", "LevelNames": "off|none|steady|snow|rainbow|snake|tinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "true", "SelectorStyle": "1"}
+
+    elif _Type == 'Vibration_Orientation':
+        kwarg['Type'] = 243
+        kwarg['Subtype'] = 19
+
     #groups
     elif _Type == 'LightGroup' or _Type == 'groups':
-        kwarg['Type'] = 241
-        kwarg['Subtype'] = 7
-        kwarg['Switchtype'] = 7
+        if "_dim" in _Name:
+            kwarg['Type'] = 244
+            kwarg['Subtype'] = 62
+            kwarg['Switchtype'] = 7
+        else:
+            kwarg['Type'] = 241
+            kwarg['Subtype'] = 7
+            kwarg['Switchtype'] = 7
         #if 'bulbs_group' in Images:
         #    kwarg['Image'] = Images['bulbs_group'].ID
 
@@ -1387,4 +1472,4 @@ def CreateDevice(IEEE,_Name,_Type):
     kwarg['Unit'] = Unit
     Domoticz.Device(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) )
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) ) #Devices[Unit].ID

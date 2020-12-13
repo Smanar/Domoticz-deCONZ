@@ -173,6 +173,51 @@ def xy_to_rgb(x, y, brightness = 1):
     return {'r': int(r * 255), 'g': int(g * 255), 'b': int(b * 255)}
 
 
+def rgb_to_hsv(rgb):
+    ''' convert rgb tuple to hls tuple '''
+    r, g, b = rgb
+    r = float(r/255)
+    g = float(g/255)
+    b = float(b/255)
+    high = max(r, g, b)
+    low = min(r, g, b)
+    h, s, v = high, high, high
+
+    d = high - low
+    s = 0 if high == 0 else d/high
+
+    if high == low:
+        h = 0.0
+    else:
+        h = {
+            r: (g - b) / d + (6 if g < b else 0),
+            g: (b - r) / d + 2,
+            b: (r - g) / d + 4,
+        }[high]
+        h /= 6
+
+    return h, s, v
+
+
+def hsv_to_rgb(h, s, v):
+    i = math.floor(h*6)
+    f = h*6 - i
+    p = v * (1-s)
+    q = v * (1-f*s)
+    t = v * (1-(1-f)*s)
+
+    r, g, b = [
+        (v, t, p),
+        (q, v, p),
+        (p, v, t),
+        (p, q, v),
+        (t, p, v),
+        (v, p, q),
+    ][int(i%6)]
+
+    return r, g, b
+
+
 def Count_Type(d):
     b = l = s = g = o = c = 0
     for i in d:
@@ -599,27 +644,29 @@ def ButtonconvertionXCUBE_R(val):
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
-    if val == '0':# off
-        kwarg['nValue'] = 0
-    elif val == '7007':# shake
-        kwarg['nValue'] = 10
-    elif val == '7000': # wake
-        kwarg['nValue'] = 20
-    elif val == '7008':# drop
-        kwarg['nValue'] = 30
-    elif int(val[3]) == (7 - int(val[0])) :# 180 flip
-        kwarg['nValue'] = 50
-    elif val[1:] == '000':# push
-        kwarg['nValue'] = 60
-    elif val[0] == val[3]:# double tap
-        kwarg['nValue'] = 70
-    else:# 90 flip
-        kwarg['nValue'] = 40
+    v = 0
 
-    if kwarg['nValue'] == 0:
+    if val == '7007':# shake
+        v = 10
+    elif val == '7000': # wake
+        v = 20
+    elif val == '7008':# drop
+        v = 30
+    elif int(val[3]) == (7 - int(val[0])) :# 180 flip
+        v = 50
+    elif val[1:] == '000':# push
+        v = 60
+    elif val[0] == val[3]:# double tap
+        v = 70
+    else:# 90 flip
+        v = 40
+
+    if v == 0:
         kwarg['sValue'] = 'Off'
     else:
-        kwarg['sValue'] = str( kwarg['nValue'] )
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = int(val)
 
     return kwarg
 
@@ -752,7 +799,7 @@ def ButtonConvertion(val,model = 0):
 
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/748
 #For the moment only vibrations are working
-def VibrationSensorConvertion(val_v,val_t):
+def VibrationSensorConvertion(val_v,val_t, val_a):
 
     kwarg = {}
 
@@ -768,4 +815,75 @@ def VibrationSensorConvertion(val_v,val_t):
     else:
         kwarg['sValue'] = str( kwarg['nValue'] )
 
+    if val_a:
+        kwarg['orientation'] = str(val_a)
+
     return kwarg
+
+#**************************************************************************************************
+# Front end fonctions
+#
+#**************************************************************************************************
+
+# Code templated from https://github.com/stas-demydiuk/domoticz-zigbee2mqtt-plugin
+def installFE():
+
+    import os
+    from shutil import copy2
+
+    source_path = os.path.dirname(os.path.abspath(__file__)) + '/frontend'
+    templates_path = os.path.abspath(source_path + '/../../../www/templates')
+    #dst_plugin_path = templates_path + '/deCONZ'
+    fs = False
+
+    try:
+        fs = os.path.getsize(templates_path + '/deCONZ.html')
+    except:
+        pass
+
+    #Domoticz.Status('File size : ' + str(fs))
+
+    if fs == 8559:
+        return
+
+    Domoticz.Status('Installing plugin custom page...')
+
+    try:
+
+        Domoticz.Debug('Copying files from ' + source_path + ' to ' + templates_path)
+
+        #if not (os.path.isdir(dst_plugin_path)):
+        #    os.makedirs(dst_plugin_path)
+
+        copy2(source_path + '/deCONZ.html', templates_path)
+        copy2(source_path + '/deCONZ.js', templates_path)
+
+        Domoticz.Log('Installing plugin custom page completed.')
+    except Exception as e:
+        Domoticz.Error('Error during installing plugin custom page')
+        Domoticz.Error(repr(e))
+
+def uninstallFE(self):
+    Domoticz.Status('Uninstalling plugin custom page...')
+
+    from shutil import rmtree
+
+    try:
+        templates_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../../www/templates')
+        dst_plugin_path = templates_path + '/deCONZ'
+
+        Domoticz.Debug('Removing files from ' + templates_path)
+
+        #if (os.path.isdir(dst_plugin_path)):
+        #    rmtree(dst_plugin_path)
+
+        if os.path.exists(templates_path + "/deCONZ.html"):
+            os.remove(templates_path + "/deCONZ.html")
+
+        if os.path.exists(templates_path + "/deCONZ.js"):
+            os.remove(templates_path + "/deCONZ.js")
+
+        Domoticz.Log('Uninstalling plugin custom page completed.')
+    except Exception as e:
+        Domoticz.Error('Error during uninstalling plugin custom page')
+        Domoticz.Error(repr(e))
