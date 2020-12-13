@@ -44,12 +44,15 @@ You can later update the plugin
 - With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
 - Run:   
 ```git pull```
-- Just restart Domoticz    
+- Restart Domoticz.    
 
-To test the beta branch :   
-```git pull```   
-```git checkout beta```   
-```git pull```   
+To test the beta branch :
+```
+git pull
+git checkout beta
+git pull
+```
+
 
 ## Configuration.
 - The plugin works better with websocketnotifyall option set to true (it's the configuration by default).   
