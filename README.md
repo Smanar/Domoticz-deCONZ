@@ -17,7 +17,10 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 ![deconz7](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
 
 
-- And use this plugin to bridge between the deCONZ server and domoticz.
+- And use this plugin to bridge between the deCONZ server and domoticz. The plugin have now a Frontend for some actions (thx to @JayPearlman). To use it, just go in "Custom"/"DeCONZ".   
+
+![sshot-1](https://user-images.githubusercontent.com/20152487/102008804-7e81e300-3d33-11eb-8ad4-5949f1eb189e.jpg)   
+
 
 ## Requirement.
 deCONZ : Last version.   
@@ -54,7 +57,8 @@ To test the beta branch :
 - The plugin doesn't use a special configuration file, except the banned.txt file.   
 - At every start, it synchronises the deCONZ network with yours domoticz devices, so if you delete a device, at next startup, it will be re-created, so to prevent that, you can put the adress in the banned.txt file.   
 - If you have problem to find your IP or the used port, take a look at https://phoscon.de/discover (Remember better to use 127.0.0.1 if domoticz and deconz are on the same machine).   
-- Don't worry about the name, the plugin never updates name even you change it in deCONZ to prevent problems with scripts.
+- Don't worry about the name, the plugin never updates name even you change it in deCONZ to prevent problems with scripts.   
+- If you create a group, it's not possible to identify the type of device they are inside, so the type will be by defaut RGBWWZ to have all options, if you want to create only a dimmer group for exemple add "_dim" at the group name.   
 - For those who have problems with API Key, there is a file called API_KEY.py to help you to create/delete/get list with command line, informations and commands inside the file. It can also give some information like your used websocket port. To show all commands or parameters just use:   
 ```
 python3 API_KEY.py
