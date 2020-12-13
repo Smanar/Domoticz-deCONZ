@@ -18,7 +18,7 @@
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
-            <li>https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices</li>
+            <li>&<a href="https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices">https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices</a></li>
         </ul>
         <h3>Configuration</h3>
         Gateway configuration
