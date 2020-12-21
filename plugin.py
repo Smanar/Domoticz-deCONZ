@@ -326,6 +326,10 @@ class BasePlugin:
                     # Get light device
                     _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
 
+            #Special code to force devive update for group
+            elif _type == 'groups':
+                UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
+                pass
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
