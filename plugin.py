@@ -533,6 +533,7 @@ class BasePlugin:
                 self.Devices[IEEE]['state'] = 'banned'
                 return
             if Type == 'ZHATime':
+                self.Devices[IEEE]['state'] = 'banned'
                 return
 
             #Get some infos
