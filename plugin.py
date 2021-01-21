@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.16" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.17" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -1190,6 +1190,24 @@ def UpdateDeviceProc(kwarg,Unit):
     # Only sensors >  _type == 'sensors'
     if (('nValue' in kwarg) or ('sValue' in kwarg)) and ( ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0) ):
         NeedUpdate = True
+
+    #hack to make graph more realistic, we loose the first value, but have at least a good value every hour.
+    if (Devices[Unit].Type == 113) or (Devices[Unit].Type == 248):
+        if NeedUpdate:
+            LUpdate = Devices[Unit].LastUpdate
+            LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+            current = time.time()
+            if (current-LUpdate) > 3600:
+                kwarg['nValue'] = Devices[Unit].nValue
+                kwarg['sValue'] = Devices[Unit].sValue
+                Domoticz.Status("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        #else:
+        #   # Code tu autorise update at least 1 time by hour if you have same data.
+        #   LUpdate = Devices[Unit].LastUpdate
+        #   LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
+        #   current = time.time()
+        #   if (current-LUpdate) > 3600:
+        #       NeedUpdate = True
 
     #Disabled because no update for battery or last seen for exemple
     #No need to trigger in this situation
