@@ -816,7 +816,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = str(val_a)
+        kwarg['orientation'] = [ str(val_a) , int (val_t) ]
 
     return kwarg
 
