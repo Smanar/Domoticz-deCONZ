@@ -1137,9 +1137,15 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
 
     if field == 'mode':
         kwarg2['nValue'] = value
+        kwarg2['sValue'] = str(value)
+
+    elif field == 'orientation':
+        kwarg2['nValue'] = value[1]
+        kwarg2['sValue'] = value[0]
+
     else:
         kwarg2['nValue'] = 0
-    kwarg2['sValue'] = str(value)
+        kwarg2['sValue'] = str(value)
 
     if not Unit2 :
         Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
