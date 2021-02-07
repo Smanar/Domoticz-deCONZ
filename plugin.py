@@ -111,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('zzzz','En test','Chrismast_E')
+        #CreateDevice('bulb test','En test','Extended color light')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -362,6 +362,7 @@ class BasePlugin:
                 ww = int(Hue_List['ww']) # Can be used as level for monochrome white
                 #TODO : Jamais vu un device avec ca encore
                 Domoticz.Debug("Not implemented device color 1")
+
             #ColorModeTemp = 2   // White with color temperature. Valid fields: t
             if Hue_List['m'] == 2:
                 #Value is in mireds (not kelvin)
@@ -379,7 +380,6 @@ class BasePlugin:
                     _json['sat'] = 0
                     _json['bri'] = int(Hue_List['t'])
 
-
             #ColorModeRGB = 3    // Color. Valid fields: r, g, b.
             elif Hue_List['m'] == 3:
                 if self.Devices[IEEE].get('colormode','Unknow') == 'hs':
@@ -389,20 +389,32 @@ class BasePlugin:
                     lightness = int(v * 254)
                     _json['hue'] = hue
                     _json['sat'] = saturation
-                    _json['bri'] = lightness
+                    #Using a hack here, because this mode is not for this kind of bulb
+                    _json['bri'] = round(Level*lightness/100)
                     _json['transitiontime'] = 0
                 else:
                     x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
                     x = round(x,6)
                     y = round(y,6)
                     _json['xy'] = [x,y]
+
             #ColorModeCustom = 4, // Custom (color + white). Valid fields: r, g, b, cw, ww, depending on device capabilities
             elif Hue_List['m'] == 4:
+                #process white color
                 ww = int(Hue_List['ww'])
                 cw = int(Hue_List['cw'])
-                x, y = rgb_to_xy((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
-                #TODO, Pas trouve de device avec ca encore ...
-                Domoticz.Debug("Not implemented device color 2")
+                TempKelvin = int(((255 - int(Hue_List['t']))*(6500-1700)/255)+1700);
+                TempMired = 1000000 // TempKelvin
+                _json['ct'] = TempMired
+                #process RGB color now
+                h,s,v = rgb_to_hsv((int(Hue_List['r']),int(Hue_List['g']),int(Hue_List['b'])))
+                hue = int(h * 65535)
+                saturation = int(s * 254)
+                lightness = int(v * 254)
+                _json['hue'] = hue
+                _json['sat'] = saturation
+                _json['bri'] = lightness
+                _json['transitiontime'] = 0
 
             #To prevent bug
             if 'bri' not in _json:
@@ -1206,7 +1218,7 @@ def UpdateDeviceProc(kwarg,Unit):
             if (current-LUpdate) > 3600:
                 kwarg['nValue'] = Devices[Unit].nValue
                 kwarg['sValue'] = Devices[Unit].sValue
-                Domoticz.Status("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+                Domoticz.Status("### debug 2 ("+Devices[Unit].Name+") : " + str(kwarg))
         #else:
         #   # Code tu autorise update at least 1 time by hour if you have same data.
         #   LUpdate = Devices[Unit].LastUpdate
