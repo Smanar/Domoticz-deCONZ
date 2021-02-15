@@ -1313,7 +1313,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 0
 
-    elif _Type == 'Window covering device':
+    elif _Type == 'Window covering device' or _Type == 'Window covering controller' :
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 15
