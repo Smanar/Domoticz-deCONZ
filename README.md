@@ -70,7 +70,7 @@ If using default settings you might be able to obtain the API key using:
 ```
 python3 API_KEY.py 127.0.0.1:80 create
 ```
-And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
+And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/getting_started/#acquire-an-api-key
 
 ## Remark.
 - There is a deconz Discord channel https://discord.gg/QFhTxqN
