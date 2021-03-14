@@ -7,7 +7,7 @@ import json
 import Domoticz
 buffercommand = {}
 
-BOOLEAN_SENSOR = ['flag' , 'water' , 'fire' , 'presence' , 'carbonmonoxide' ,'daylight', 'alarm']
+BOOLEAN_SENSOR = ['flag', 'water', 'fire', 'presence', 'carbonmonoxide', 'daylight', 'alarm', 'lock']
 
 #****************************************************************************************************
 # Global fonctions
@@ -341,6 +341,8 @@ def ProcessAllConfig(data):
         if 'mode' in data:
             if not (data['mode'] == 'off' and data['on'] == True):
                 kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+    if 'lock' in data:
+        kwarg.update(ReturnUpdateValue( 'lock' , data['lock'] ) )
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -408,6 +410,8 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
     if 'carbonmonoxide' in data:
         kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
+    if 'lockstate' in data:
+        kwarg.update(ReturnUpdateValue( 'lockstate' , data['lockstate'] ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
 
@@ -511,6 +515,14 @@ def ReturnUpdateValue(command,val,model = None):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Closed'
+
+    if command == 'lockstate':
+        if val == 'locked':
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Closed'
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'Open'
 
     if command in BOOLEAN_SENSOR:
         if val == 'True':
