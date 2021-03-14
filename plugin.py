@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.17" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.18" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -272,10 +272,16 @@ class BasePlugin:
             _json['on'] = True
             if Level:
                 _json['bri'] = round(Level*254/100)
+            if _type == 'config':
+                if Devices[Unit].DeviceID.endswith('_lock'):
+                    _json = {'lock':True}
         if Command == 'Off':
             _json['on'] = False
             if _type == 'config':
-                _json = {'mode':'off'}
+                if Devices[Unit].DeviceID.endswith('_mode'):
+                    _json = {'mode':'off'}
+                elif Devices[Unit].DeviceID.endswith('_lock'):
+                    _json = {'lock':False}
 
         #level
         if Command == 'Set Level':
@@ -633,6 +639,12 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_orientation",'Vibration_Orientation',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHAVibration',Name)
+            elif Type == 'ZHADoorLock':
+                #Create a locker device
+                self.Devices[IEEE + "_lock"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Door Lock' }
+                self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
+                #Create the current device
+                self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -1177,12 +1189,12 @@ def UpdateDevice(_id,_type,kwarg):
     #Check for special device, and remove special kwarg
     if 'orientation' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"orientation")
-
     if 'heatsetpoint' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
-
     if 'mode' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"mode")
+    if 'lock' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"lock")
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1197,6 +1209,8 @@ def UpdateDeviceProc(kwarg,Unit):
         kwarg.pop('heatsetpoint')
     if 'orientation' in kwarg:
         kwarg.pop('orientation')
+    if 'lock' in kwarg:
+        kwarg.pop('lock')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
@@ -1357,7 +1371,7 @@ def CreateDevice(IEEE,_Name,_Type):
     elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
 
-    elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose':
+    elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 73
         kwarg['Switchtype'] = 11
