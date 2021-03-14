@@ -591,16 +591,16 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'consumption':
         #Wh to Kwh
         kwh = round( float(val) * 1 ,3)
-        #Device with power and comsuption
-        if buffercommand.get('power'):
-            p = buffercommand['power']
-            buffercommand.clear()
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = str(p) + ';' + str(kwh)
-        #device with only consumption
-        else:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = str(kwh)
+        #Device with power and comsuption, never see yet, so disabled
+        #if buffercommand.get('power'):
+        #    p = buffercommand['power']
+        #    buffercommand.clear()
+        #    kwarg['nValue'] = 0
+        #    kwarg['sValue'] = str(p) + ';' + str(kwh)
+        ##device with only consumption
+        #else:
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
@@ -816,7 +816,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = str(val_a)
+        kwarg['orientation'] = [ str(val_a) , int (val_t) ]
 
     return kwarg
 
@@ -846,7 +846,7 @@ def installFE():
     if fs == 8559:
         return
 
-    Domoticz.Status('Installing plugin custom page...')
+    Domoticz.Status('Starting the installation of plugin custom page...')
 
     try:
 
@@ -858,9 +858,9 @@ def installFE():
         copy2(source_path + '/deCONZ.html', templates_path)
         copy2(source_path + '/deCONZ.js', templates_path)
 
-        Domoticz.Log('Installing plugin custom page completed.')
+        Domoticz.Log('Installation of plugin custom page completed.')
     except Exception as e:
-        Domoticz.Error('Error during installing plugin custom page')
+        Domoticz.Error('Error during the installation of plugin custom page')
         Domoticz.Error(repr(e))
 
 def uninstallFE(self):
@@ -883,7 +883,7 @@ def uninstallFE(self):
         if os.path.exists(templates_path + "/deCONZ.js"):
             os.remove(templates_path + "/deCONZ.js")
 
-        Domoticz.Log('Uninstalling plugin custom page completed.')
+        Domoticz.Log('Uninstalled plugin custom page succesfully!')
     except Exception as e:
         Domoticz.Error('Error during uninstalling plugin custom page')
         Domoticz.Error(repr(e))
