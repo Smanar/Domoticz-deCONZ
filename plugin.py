@@ -1263,7 +1263,7 @@ def UpdateDeviceProc(kwarg,Unit):
            Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
            if kwarg['TimedOut'] == 1:
               kwarg['nValue'] = 0
-			  kwarg['sValue'] = 'Off'
+              kwarg['sValue'] = 'Off'
         Devices[Unit].Update(**kwarg)
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
