@@ -722,9 +722,9 @@ class BasePlugin:
             #Command Error
             if First_item == 'error':
                 Domoticz.Error("deCONZ error :" + str(_Data2))
-				Domoticz.Log("I'm here")
+                #Domoticz.Log("I'm here")
                 if _Data2['error']['type'] == 3:
-					Domoticz.Log("Seems like disconnected")
+                    #Domoticz.Log("Seems like disconnected")
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
                     _type = dev[1]
