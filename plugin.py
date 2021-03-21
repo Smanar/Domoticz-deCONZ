@@ -1259,7 +1259,7 @@ def UpdateDeviceProc(kwarg,Unit):
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
         Domoticz.Log("Need update")
-        if (Devices[Unit].Type == 241):
+        if (Devices[Unit].Type == 241) or (Device[Unit].Type == 244):
            Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
            if kwarg.get('TimedOut',0) == 1:
               kwarg['nValue'] = 0
