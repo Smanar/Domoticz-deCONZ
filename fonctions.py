@@ -341,9 +341,9 @@ def ProcessAllConfig(data):
         if 'mode' in data:
             if not (data['mode'] == 'off' and data['on'] == True):
                 kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
-    if 'reachable' in data:
-        if data['reachable'] == False:
-            kwarg.update({'TimedOut':1})
+    #if 'reachable' in data:
+    #    if data['reachable'] == False:
+    #        kwarg.update({'TimedOut':1})
 
     return kwarg
 
@@ -418,9 +418,9 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
 
     #Special
-    if 'reachable' in data:
-        if data['reachable'] == False:
-            kwarg.update({'TimedOut':1})
+    #if 'reachable' in data:
+    #    if data['reachable'] == False:
+    #        kwarg.update({'TimedOut':1})
 
     return kwarg
 
