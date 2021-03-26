@@ -41,8 +41,8 @@
         </param>
         <param field="Mode5" label="Treat disconnected as off" width="150px">
             <options>
-                <option label="True" value="True"/>
-                <option label="False" value="False"  default="true" />
+                <option label="True" value="1"/>
+                <option label="False" value="0"  default="true" />
             </options>
         </param>
     </params>
@@ -1265,7 +1265,7 @@ def UpdateDeviceProc(kwarg,Unit):
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
         Domoticz.Debug("Need update")
-        if Parameters["Mode5"] == True:
+        if Parameters["Mode5"] == 1:
             Domoticz.Log("Treating unreachable as off")
             if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Subtype == 73) and (Devices[Unit].Switchtype == 7)):
                Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
