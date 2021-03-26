@@ -39,6 +39,12 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
+        <param field="Mode5" label="Treat disconnected as off" width="150px">
+            <options>
+                <option label="True" value="True"/>
+                <option label="False" value="False"  default="true" />
+            </options>
+        </param>
     </params>
 </plugin>
 """
@@ -1258,12 +1264,13 @@ def UpdateDeviceProc(kwarg,Unit):
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
-        Domoticz.Log("Need update")
-        if (Devices[Unit].Type == 241) or (Devices[Unit].Type == 244):
-           Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
-           if kwarg.get('TimedOut',0) == 1:
-              kwarg['nValue'] = 0
-              kwarg['sValue'] = 'Off'
+        Domoticz.Debug("Need update")
+        if Parameters["Mode5"] == True:
+            if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Subtype == 73) and (Devices[Unit].Switchtype == 7)):
+               Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
+               if kwarg.get('TimedOut',0) == 1:
+                  kwarg['nValue'] = 0
+                  kwarg['sValue'] = 'Off'
         Devices[Unit].Update(**kwarg)
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
