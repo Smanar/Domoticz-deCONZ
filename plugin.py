@@ -1270,7 +1270,7 @@ def UpdateDeviceProc(kwarg,Unit):
         Domoticz.Debug("Need update")
         if  Parameters["Mode5"]:
             Domoticz.Log("Updating unreachable as off")
-            if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Switchtype == 7)):
+            if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
                Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
                if kwarg.get('TimedOut',0) == 1:
                   kwarg['nValue'] = 0
