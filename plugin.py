@@ -142,8 +142,7 @@ class BasePlugin:
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
             
-        if Parameters["Mode5"] == True:
-            self.ReachableOff = 1
+        if !Parameters["Mode5"]:
             Domoticz.Log("Treating unreachable as Off")
         #Read banned devices
         try:
@@ -1269,7 +1268,7 @@ def UpdateDeviceProc(kwarg,Unit):
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
         Domoticz.Debug("Need update")
-        if self.ReachableOff == 1:
+        if  == 1:
             Domoticz.Log("Updating unreachable as off")
             if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Subtype == 73) and (Devices[Unit].Switchtype == 7)):
                Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
