@@ -1263,9 +1263,10 @@ def UpdateDeviceProc(kwarg,Unit):
         kwarg['TimedOut'] = 0
 
     if NeedUpdate or not LIGHTLOG:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
         Domoticz.Debug("Need update")
         if Parameters["Mode5"] == True:
+            Domoticz.Log("Treating unreachable as off")
             if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Subtype == 73) and (Devices[Unit].Switchtype == 7)):
                Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
                if kwarg.get('TimedOut',0) == 1:
