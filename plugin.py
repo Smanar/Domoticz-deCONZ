@@ -142,8 +142,8 @@ class BasePlugin:
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
             
-        if Parameters["Mode5"] != "0":
-            self.ReachableOff = int(Parameters["Mode5"])
+        if Parameters["Mode5"] == True:
+            self.ReachableOff = 1
             Domoticz.Log("Treating unreachable as Off")
         #Read banned devices
         try:
