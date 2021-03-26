@@ -108,6 +108,7 @@ class BasePlugin:
         self.Banned_Devices = []
         self.BufferReceive = ''
         self.BufferLenght = 0
+        self.ReachableOff = 0
 
         self.IDGateway = -1
 
@@ -140,7 +141,10 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
-
+            
+        if Parameters["Mode5"] != "0":
+            self.ReachableOff = int(Parameters["Mode5"])
+            Domoticz.Log("Treating unreachable as Off")
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -1265,8 +1269,8 @@ def UpdateDeviceProc(kwarg,Unit):
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Log("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
         Domoticz.Debug("Need update")
-        if Parameters["Mode5"] == 1:
-            Domoticz.Log("Treating unreachable as off")
+        if self.ReachableOff == 1:
+            Domoticz.Log("Updating unreachable as off")
             if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].Subtype == 73) and (Devices[Unit].Switchtype == 7)):
                Domoticz.Log("Will handle Timeout like off args: " + str(kwarg))
                if kwarg.get('TimedOut',0) == 1:
