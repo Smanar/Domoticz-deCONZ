@@ -39,12 +39,6 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
-        <param field="Mode5" label="Treat disconnected as off" width="150px">
-            <options>
-                <option label="True" value="True"/>
-                <option label="False" value="False"  default="true" />
-            </options>
-        </param>
     </params>
 </plugin>
 """
@@ -107,8 +101,6 @@ class BasePlugin:
         self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
-        self.BufferLenght = 0
-        self.ReachableOff = True
 
         self.IDGateway = -1
 
@@ -141,10 +133,6 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
-
-        if Parameters["Mode5"] == "False":
-            Domoticz.Log("Treating unreachable as On")
-            self.ReachableOff = False
 
         #Read banned devices
         try:
@@ -1284,12 +1272,11 @@ def UpdateDeviceProc(kwarg,Unit):
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
 
         #Disable offline light ?
-        if self.ReachableOff :
-            if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
-               if (kwarg.get('TimedOut',0) == 1) and (Devices[Unit].nValue != 0) :
-                   Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
-                   kwarg['nValue'] = 0
-                   kwarg['sValue'] = 'Off'
+        if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
+           if (kwarg.get('TimedOut',0) != 0) and (Devices[Unit].nValue != 0) :
+               Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
+               kwarg['nValue'] = 0
+               kwarg['sValue'] = 'Off'
 
         Devices[Unit].Update(**kwarg)
     else:
