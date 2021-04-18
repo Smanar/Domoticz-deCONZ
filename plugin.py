@@ -1287,7 +1287,7 @@ def UpdateDeviceProc(kwarg,Unit):
         if self.ReachableOff :
             if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
                if (kwarg.get('TimedOut',0) == 1) and (Devices[Unit].nValue != 0) :
-				   Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
+                   Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
                    kwarg['nValue'] = 0
                    kwarg['sValue'] = 'Off'
 
