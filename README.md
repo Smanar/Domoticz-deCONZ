@@ -103,6 +103,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 18/04/21 : 1.0.18 > Set light state to off if detected off line (thx @nonolk), starting to implement ZHADoorlock.   
 - 14/03/21 : 1.0.17 > Grammar corrections, corrective for power sensor, can retreive raw data from Xiaomi cube (to get side), improve widget for extended color light, adding remote covering devices.
 - 13/12/20 : 1.0.16 > Correction to support Ally thermostat (@johnsprogs), the Xiaomi sensor return the 3 angles (@flopp999), the xiaomi cube can give complete information (@kispalsz ), Color correction for devices that don't support XY, the frontend (@JayPearlman), support of the Lidl Melinera Smart XMAS LED string lights (@sonar98), can specify type for group (@Plantje).   
 - 01/08/20 : 1.0.15 > Better support for Friend of HUE device. Disable error message about the gateway.
