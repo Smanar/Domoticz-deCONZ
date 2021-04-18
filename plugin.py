@@ -39,6 +39,12 @@
                 <option label="All" value="-1"/>
             </options>
         </param>
+        <param field="Mode5" label="Treat disconnected as off" width="150px">
+            <options>
+                <option label="True" value="True"/>
+                <option label="False" value="False"  default="true" />
+            </options>
+        </param>
     </params>
 </plugin>
 """
@@ -102,6 +108,7 @@ class BasePlugin:
         self.Banned_Devices = []
         self.BufferReceive = ''
         self.BufferLenght = 0
+        self.ReachableOff = 0
 
         self.IDGateway = -1
 
@@ -134,7 +141,9 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
-
+            
+        if Parameters["Mode5"] == "True":
+            Domoticz.Log("Treating unreachable as Off")
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -722,7 +731,9 @@ class BasePlugin:
             #Command Error
             if First_item == 'error':
                 Domoticz.Error("deCONZ error :" + str(_Data2))
+                Domoticz.Log("Command for type: " + str(_type))
                 if _Data2['error']['type'] == 3:
+                    Domoticz.Log("Seems like disconnected type") + str(_type)
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
                     _type = dev[1]
@@ -1256,6 +1267,14 @@ def UpdateDeviceProc(kwarg,Unit):
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Domoticz.Debug("Need update")
+        if  Parameters["Mode5"] == "True":
+            Domoticz.Debug("Updating unreachable as off")
+            if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
+               Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
+               if kwarg.get('TimedOut',0) == 1:
+                  kwarg['nValue'] = 0
+                  kwarg['sValue'] = 'Off'
         Devices[Unit].Update(**kwarg)
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
