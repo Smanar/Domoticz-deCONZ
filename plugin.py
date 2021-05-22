@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.18" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.19" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -101,7 +101,6 @@ class BasePlugin:
         self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
-        self.BufferLenght = 0
 
         self.IDGateway = -1
 
@@ -602,6 +601,9 @@ class BasePlugin:
                 #Used for all opple switches
                 elif Model.endswith('86opcn01'):
                     Type = 'Xiaomi_Opple_6_button_switch'
+                #Used for all tuya switch
+                elif Model.startswith('_TZ3'):
+                    Type = 'Tuya_button_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -735,6 +737,7 @@ class BasePlugin:
             if First_item == 'error':
                 Domoticz.Error("deCONZ error :" + str(_Data2))
                 if _Data2['error']['type'] == 3:
+                    Domoticz.Log("Seems like disconnected type") + str(_type)
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
                     _type = dev[1]
@@ -867,6 +870,8 @@ class BasePlugin:
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
                 elif model == 'Xiaomi_single_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
+                elif model == "Tuya_button_switch":
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 4) )
                 else:
                     kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1270,6 +1275,14 @@ def UpdateDeviceProc(kwarg,Unit):
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+
+        #Disable offline light ?
+        if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
+           if (kwarg.get('TimedOut',0) != 0) and (Devices[Unit].nValue != 0) :
+               Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
+               kwarg['nValue'] = 0
+               kwarg['sValue'] = 'Off'
+
         Devices[Unit].Update(**kwarg)
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
@@ -1449,14 +1462,18 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8|B9", "LevelOffHidden": "true", "SelectorStyle": "0"}
-    #eyal start
     elif _Type == 'Xiaomi_Opple_6_button_switch':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1RL|B2RL|B3RL|B4RL|B5RL|B6RL|B1D|B2D|B3D|B4D|B5D|B6D|B1T|B2T|B3T|B4T|B5T|B6T", "LevelOffHidden": "true", "SelectorStyle": "1"}
-    #eyal end
+    elif _Type == 'Tuya_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||||||", "LevelNames": "Off|B1|L1|D1|B2|L2|D2|B3|L3|D3|B4|L4|D4", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
