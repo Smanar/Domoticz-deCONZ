@@ -323,6 +323,7 @@ XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','
 XiaomiOpple6ButtonSwitchTable = ['1002','2002','3002','4002','5002','6002','1001','2001','3001','4001','5001','6001','1003','2003','3003','4003','5003','6003',
                                  '1004','2004','3004','4004','5004','6004','1005','2005','3005','4005','5005','6005']
 
+TuyaXGangButtonSwitchTable = ['1002','1003','1004','2002','2003','2004','3002','3003','3004','4002','4003','4004']
 
 #**************************************************************************************************
 # Domoticz fonctions
@@ -801,6 +802,9 @@ def ButtonConvertion(val,model = 0):
             if val in XiaomiSingleGangButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
 
+        if model == 4:
+            if val in TuyaXGangButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + TuyaXGangButtonSwitchTable.index(val))
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
