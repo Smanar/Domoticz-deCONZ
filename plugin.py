@@ -602,7 +602,7 @@ class BasePlugin:
                 elif Model.endswith('86opcn01'):
                     Type = 'Xiaomi_Opple_6_button_switch'
                 #Used for all tuya switch
-                elif Model.startswith('_TZ3'):
+                elif Model.startswith('TS004'):
                     Type = 'Tuya_button_switch'
                 else:
                     Type = 'Switch_Generic'
