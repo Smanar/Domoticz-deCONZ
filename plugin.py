@@ -596,7 +596,7 @@ class BasePlugin:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b186acn01' in Model:
                     Type = 'Xiaomi_single_gang'
-                elif 'lumi.remote.b286acn01' in Model:
+                elif Model.startswith('lumi.remote.b286acn0'):
                     Type = 'Xiaomi_double_gang'
                 #Used for all opple switches
                 elif Model.endswith('86opcn01'):
