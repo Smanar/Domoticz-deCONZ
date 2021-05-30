@@ -859,7 +859,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8559:
+    if fs == 8564:
         return
 
     Domoticz.Status('Starting the installation of plugin custom page...')
