@@ -778,6 +778,8 @@ class BasePlugin:
         Domoticz.Status("Websocketnotifyall: " + str(_Data['websocketnotifyall']))
         if not _Data['websocketnotifyall'] == True:
             Domoticz.Error("Websocketnotifyall is not set to True")
+        if len(_Data['whitelist']) > 10:
+            Domoticz.Error("You have " + str(len(_Data['whitelist'])) + " API keys memorised, some of them are probably useless, can use the API_KEY.py tool to clean them")
 
         #Launch Web socket connexion
         self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
