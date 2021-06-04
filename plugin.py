@@ -226,7 +226,7 @@ class BasePlugin:
                     try:
                         payload, extra_data = get_JSON_payload(Data)
                     except:
-                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 300) :
+                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 1000) :
                             self.WebsoketBuffer = Data
                             Domoticz.Log("Incomplete JSON keep it for later : " + str(self.WebsoketBuffer) )
                         else:
