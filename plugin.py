@@ -110,7 +110,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('bulb test','En test','Extended color light')
+        #CreateDevice('sirene test','En test','Warning device')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -264,23 +264,32 @@ class BasePlugin:
 
         IEEE = Devices[Unit].DeviceID
 
+        #Get device type
+        device_type = self.Devices[IEEE].get('model','Unknow')
+
         _json = {}
 
         #on/off
         if Command == 'On':
-            _json['on'] = True
-            if Level:
-                _json['bri'] = round(Level*254/100)
-            if _type == 'config':
-                if Devices[Unit].DeviceID.endswith('_lock'):
-                    _json = {'lock':True}
+            if device_type == 'Warning device':
+                _json['alert'] = 'lselect'
+            else:
+                _json['on'] = True
+                if Level:
+                    _json['bri'] = round(Level*254/100)
+                if _type == 'config':
+                    if Devices[Unit].DeviceID.endswith('_lock'):
+                        _json = {'lock':True}
         if Command == 'Off':
-            _json['on'] = False
-            if _type == 'config':
-                if Devices[Unit].DeviceID.endswith('_mode'):
-                    _json = {'mode':'off'}
-                elif Devices[Unit].DeviceID.endswith('_lock'):
-                    _json = {'lock':False}
+            if device_type == 'Warning device':
+                _json['alert'] = 'none'
+            else:
+                _json['on'] = False
+                if _type == 'config':
+                    if Devices[Unit].DeviceID.endswith('_mode'):
+                        _json = {'mode':'off'}
+                    elif Devices[Unit].DeviceID.endswith('_lock'):
+                        _json = {'lock':False}
 
         #level
         if Command == 'Set Level':
