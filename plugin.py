@@ -604,6 +604,9 @@ class BasePlugin:
                 #Used for all tuya switch
                 elif Model.startswith('TS004'):
                     Type = 'Tuya_button_switch'
+                #Used by philips remote
+                elif Model == 'RWL021':
+                    Type = 'Philips_button_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -874,6 +877,8 @@ class BasePlugin:
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
                 elif model == "Tuya_button_switch":
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 4) )
+                elif model == "Philips_button_switch":
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 5) )
                 else:
                     kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1476,6 +1481,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||||||", "LevelNames": "Off|B1|L1|D1|B2|L2|D2|B3|L3|D3|B4|L4|D4", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    elif _Type == 'Philips_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
