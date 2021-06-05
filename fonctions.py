@@ -545,14 +545,14 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
-    if command == 'alert':
-        #Can be none, lselect, select, strobe
-        if val == None:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-        else:
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
+    #if command == 'alert':
+    #    #Can be none, lselect, select, strobe
+    #    if val == None:
+    #        kwarg['nValue'] = 0
+    #        kwarg['sValue'] = 'Off'
+    #    else:
+    #        kwarg['nValue'] = 1
+    #        kwarg['sValue'] = 'On'
 
     if command == 'temperature':
         kwarg['nValue'] = 0
