@@ -369,6 +369,8 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
     if 'on' in data:
         kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
+    if 'alert' in data:
+        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] , model) )
     if 'x' in data:
         kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
     if 'y' in data:
@@ -455,6 +457,14 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['sValue'] = '0'
             else:
                 kwarg['sValue'] = 'off'
+
+    if command == 'alert' and model == 'Warning device':
+        if val == 'none':
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'off'
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'on'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
