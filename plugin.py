@@ -771,7 +771,9 @@ class BasePlugin:
                         _type = dev[1]
 
                     if dev[1] == 'config':
-                        Domoticz.Status("Editing configuration: " + str(data) )
+                        Domoticz.Status("Editing configuration: " + str(data))
+                    if dev[1] == 'lights' and dev[4] == 'alert':
+                        kwarg.update(ProcessAllState({'alert':val} ,''))
 
             else:
                 Domoticz.Error("Not managed return JSON: " + str(_Data2) )
