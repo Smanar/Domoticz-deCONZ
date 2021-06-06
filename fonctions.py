@@ -364,67 +364,65 @@ def ProcessAllState(data,model):
     kwarg = {}
 
     if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+        kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
-        kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
+        kwarg.update(ReturnUpdateValue('status', data['status']))
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
-    if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] , model) )
+        kwarg.update(ReturnUpdateValue('on', data['on'], model) )
     if 'x' in data:
-        kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
+        kwarg.update(ReturnUpdateValue('x', data['x']))
     if 'y' in data:
-        kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
+        kwarg.update(ReturnUpdateValue('y', data['y']))
     if 'xy' in data:
-        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
+        kwarg.update(ReturnUpdateValue('xy', data['xy']))
     if 'ct' in data:
-        kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
+        kwarg.update(ReturnUpdateValue('ct', data['ct']))
     if 'bri' in data:
-        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] , model) )
+        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'temperature' in data:
-        kwarg.update(ReturnUpdateValue( 'temperature' , data['temperature'] ) )
+        kwarg.update(ReturnUpdateValue('temperature', data['temperature']))
     if 'pressure' in data:
-        kwarg.update(ReturnUpdateValue( 'pressure' , data['pressure'] ) )
+        kwarg.update(ReturnUpdateValue('pressure', data['pressure']))
     if 'humidity' in data:
-        kwarg.update(ReturnUpdateValue( 'humidity' , data['humidity'] ) )
+        kwarg.update(ReturnUpdateValue('humidity', data['humidity']))
     if 'open' in data:
-        kwarg.update(ReturnUpdateValue( 'open' , data['open'] ) )
+        kwarg.update(ReturnUpdateValue('open', data['open']))
     if 'presence' in data:
-        kwarg.update(ReturnUpdateValue( 'presence' , data['presence'] ) )
+        kwarg.update(ReturnUpdateValue('presence', data['presence']))
     if 'daylight' in data:
-        kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
+        kwarg.update(ReturnUpdateValue('daylight', data['daylight']))
     #if 'lightlevel' in data:
-    #    kwarg.update(ReturnUpdateValue( 'lightlevel' , data['lightlevel'] ) )
+    #    kwarg.update(ReturnUpdateValue('lightlevel', data['lightlevel']))
     if 'lux' in data:
-        kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
+        kwarg.update(ReturnUpdateValue('lux', data['lux']))
     if 'power' in data:
-        kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
+        kwarg.update(ReturnUpdateValue('power', data['power']))
     if 'consumption' in data:
-        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
+        kwarg.update(ReturnUpdateValue('consumption', data['consumption']))
     if 'battery' in data:
-        kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+        kwarg.update(ReturnUpdateValue('battery', data['battery']))
     if 'buttonevent' in data:
-        kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
+        kwarg.update(ReturnUpdateValue('buttonevent', data['buttonevent']))
     if 'flag' in data:
-        kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
+        kwarg.update(ReturnUpdateValue('flag', data['flag']))
     if 'water' in data:
-        kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
+        kwarg.update(ReturnUpdateValue('water', data['water']))
     if 'fire' in data:
-        kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
+        kwarg.update(ReturnUpdateValue('fire', data['fire']))
     if 'alarm' in data:
-        kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
+        kwarg.update(ReturnUpdateValue('alarm', data['alarm']))
     if 'carbonmonoxide' in data:
-        kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
+        kwarg.update(ReturnUpdateValue('carbonmonoxide', data['carbonmonoxide']))
     if 'lockstate' in data:
-        kwarg.update(ReturnUpdateValue( 'lockstate' , data['lockstate'] ) )
+        kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     #if 'lastupdated' in data:
-    #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
+    #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
     #For groups
     if 'all_on' in data:
-        kwarg.update(ReturnUpdateValue( 'all_on' , data['all_on'] ) )
+        kwarg.update(ReturnUpdateValue('all_on', data['all_on']))
     if 'any_on' in data:
-        kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
+        kwarg.update(ReturnUpdateValue('any_on', data['any_on']))
 
     #Special
     if 'reachable' in data:
@@ -458,13 +456,14 @@ def ReturnUpdateValue(command,val,model = None):
             else:
                 kwarg['sValue'] = 'off'
 
-    if command == 'alert' and model == 'Warning device':
+    if command == 'alert':
+        #Can be none, lselect, select, strobe
         if val == 'none':
             kwarg['nValue'] = 0
-            kwarg['sValue'] = 'off'
+            kwarg['sValue'] = 'Off'
         else:
             kwarg['nValue'] = 1
-            kwarg['sValue'] = 'on'
+            kwarg['sValue'] = 'On'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
@@ -545,22 +544,13 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
-    #if command == 'alert':
-    #    #Can be none, lselect, select, strobe
-    #    if val == None:
-    #        kwarg['nValue'] = 0
-    #        kwarg['sValue'] = 'Off'
-    #    else:
-    #        kwarg['nValue'] = 1
-    #        kwarg['sValue'] = 'On'
-
     if command == 'temperature':
         kwarg['nValue'] = 0
-        val = round( int(val) / 100 , 2  )
+        val = round( int(val) / 100, 2  )
         kwarg['sValue'] = str(val)
 
     if command == 'heatsetpoint':
-        val = round( int(val) / 100 , 2  )
+        val = round( int(val) / 100, 2  )
         #ignore boost and off value
         if val != 5 and val != 30:
             kwarg['heatsetpoint'] = str(val)
@@ -615,7 +605,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'consumption':
         #Wh to Kwh
-        kwh = round( float(val) * 1 ,3)
+        kwh = round( float(val) * 1, 3)
         #Device with power and comsuption, never see yet, so disabled
         #if buffercommand.get('power'):
         #    p = buffercommand['power']
@@ -850,7 +840,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = [ str(val_a) , int (val_t) ]
+        kwarg['orientation'] = [ str(val_a), int (val_t) ]
 
     return kwarg
 
