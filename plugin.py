@@ -273,6 +273,8 @@ class BasePlugin:
         if Command == 'On':
             if device_type == 'Warning device':
                 _json['alert'] = 'lselect'
+                #Force Update using domoticz, because some device don't have return
+                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, Unit)
             else:
                 _json['on'] = True
                 if Level:
@@ -283,6 +285,8 @@ class BasePlugin:
         if Command == 'Off':
             if device_type == 'Warning device':
                 _json['alert'] = 'none'
+                #Force Update using domoticz, because some device don't have return
+                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, Unit)
             else:
                 _json['on'] = False
                 if _type == 'config':
@@ -343,7 +347,6 @@ class BasePlugin:
             #Special code to force devive update for group
             elif _type == 'groups':
                 UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
-                pass
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -772,8 +775,8 @@ class BasePlugin:
 
                     if dev[1] == 'config':
                         Domoticz.Status("Editing configuration: " + str(data))
-                    if dev[1] == 'lights' and dev[4] == 'alert':
-                        kwarg.update(ProcessAllState({'alert':val} ,''))
+                    #if dev[1] == 'lights' and dev[4] == 'alert':
+                    #    kwarg.update(ProcessAllState({'alert':val} ,''))
 
             else:
                 Domoticz.Error("Not managed return JSON: " + str(_Data2) )
