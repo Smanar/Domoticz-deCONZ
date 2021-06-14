@@ -11,10 +11,11 @@
         <br/><br/>
         <h3>Remark</h3>
         <ul style="list-style-type:square">
-            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port</li>
-            <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
-            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine)</li>
-            <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only)</li>
+            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port.</li>
+            <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin.</li>
+            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
+            <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only).</li>
+            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key or configure sensors.</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
