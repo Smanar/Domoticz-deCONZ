@@ -28,14 +28,14 @@
             <section class="bottom-panel">
                 <button class="btn btn-default pull-left ng-binding"
                  ng-click="$ctrl.autoConfPlugin()">
-                 {{:: 'Configure Plugin' | translate }}
+                 {{:: 'Tools' | translate }}
                 </button>
                 <button class="btn btn-default pull-right ng-binding"
                  ng-click="$ctrl.permitJoins()"
                  ng-disabled="$ctrl.isJoining">
                  {{:: 'Permit Joins' | translate }}
                 </button>
-            </section>            
+            </section>
         </div>
 
     </div>
@@ -105,14 +105,13 @@
                         <div>
                             <input type = "text"
                             ng-model = "$ctrl.deviceconfig[key]"
-                            ng-disabled = "['duration','sensitivity','mode','offset','delay','windowopen_set','locked','preset'].indexOf(key) < 0"
+                            ng-disabled = "['duration','sensitivity','mode','offset','delay','windowopen_set','locked','preset','on'].indexOf(key) < 0"
                             ng-change = "$ctrl.isUnchanged = false">
                         </div>
                     </td>
                 </tr>
             </tbody>
           </table>
-
         <hr>
     </div>
 
@@ -121,7 +120,7 @@
                 class="btn btn-cancel"
                 ng-click="$dismiss()">
             {{:: 'Cancel' | translate }}
-        </button>        
+        </button>
         <button type="button"
                 class="btn btn-primary"
                 ng-disabled="modalForm.$invalid || $ctrl.isUnchanged"
@@ -161,7 +160,7 @@
                 class="btn btn-cancel"
                 ng-click="$dismiss()">
             {{:: 'Cancel' | translate }}
-        </button>        
+        </button>
         <button type="button"
                 class="btn btn-primary"
                 ng-click="$ctrl.deleteDevice()">
@@ -172,7 +171,7 @@
 
 <script type="text/ng-template" id="app/deCONZ/autoConfPluginModal.html">
     <div class="modal-header">
-        <h3 class="modal-title">{{:: 'Configuring Plugin' | translate }}</h3>
+        <h3 class="modal-title">{{:: 'Tools' | translate }}</h3>
     </div>
     <div class="modal-body" style="text-align: left;">
         <table style="border-spacing: 5px; margin-left: auto; margin-right: auto;" width="66%">
@@ -203,6 +202,15 @@
                 </tbody>
             </table>
         </p>
+         <hr>
+        <p>
+            <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.ConfPlugin()">
+                {{:: 'Config Plugin' | translate }}
+            </button>
+            <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.getAPIkey()">
+                {{:: 'Get API Key' | translate }}
+            </button>
+        </p>
     </div>
 
     <div class="modal-footer">
@@ -210,12 +218,11 @@
                 class="btn btn-cancel"
                 ng-click="$dismiss()">
             {{apiCancelButton}}
-        </button>        
+        </button>
         <button type="button"
                 class="btn btn-primary"
-                ng-show="apiShowGet"
-                ng-click="$mctrl.getAPIkey()">
-            {{:: 'Get API Key' | translate }}
+                ng-click="$dismiss()">
+            {{:: 'Update' | translate }}
         </button>
     </div>
 </script>

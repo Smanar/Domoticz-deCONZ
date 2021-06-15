@@ -323,6 +323,9 @@ XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','
 XiaomiOpple6ButtonSwitchTable = ['1002','2002','3002','4002','5002','6002','1001','2001','3001','4001','5001','6001','1003','2003','3003','4003','5003','6003',
                                  '1004','2004','3004','4004','5004','6004','1005','2005','3005','4005','5005','6005']
 
+TuyaXGangButtonSwitchTable = ['1002','1003','1004','2002','2003','2004','3002','3003','3004','4002','4003','4004']
+
+PhilipsRWL02ButtonSwitchTable = ['1002','1003','2002','2003','3002','3003','4002','4003']
 
 #**************************************************************************************************
 # Domoticz fonctions
@@ -361,65 +364,65 @@ def ProcessAllState(data,model):
     kwarg = {}
 
     if 'alert' in data:
-        kwarg.update(ReturnUpdateValue( 'alert' , data['alert'] ) )
+        kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
-        kwarg.update(ReturnUpdateValue( 'status' , data['status'] ) )
+        kwarg.update(ReturnUpdateValue('status', data['status']))
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue( 'on' , data['on'] , model) )
+        kwarg.update(ReturnUpdateValue('on', data['on'], model) )
     if 'x' in data:
-        kwarg.update(ReturnUpdateValue( 'x' , data['x'] ) )
+        kwarg.update(ReturnUpdateValue('x', data['x']))
     if 'y' in data:
-        kwarg.update(ReturnUpdateValue( 'y' , data['y'] ) )
+        kwarg.update(ReturnUpdateValue('y', data['y']))
     if 'xy' in data:
-        kwarg.update(ReturnUpdateValue( 'xy' , data['xy'] ) )
+        kwarg.update(ReturnUpdateValue('xy', data['xy']))
     if 'ct' in data:
-        kwarg.update(ReturnUpdateValue( 'ct' , data['ct'] ) )
+        kwarg.update(ReturnUpdateValue('ct', data['ct']))
     if 'bri' in data:
-        kwarg.update(ReturnUpdateValue( 'bri' , data['bri'] , model) )
+        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'temperature' in data:
-        kwarg.update(ReturnUpdateValue( 'temperature' , data['temperature'] ) )
+        kwarg.update(ReturnUpdateValue('temperature', data['temperature']))
     if 'pressure' in data:
-        kwarg.update(ReturnUpdateValue( 'pressure' , data['pressure'] ) )
+        kwarg.update(ReturnUpdateValue('pressure', data['pressure']))
     if 'humidity' in data:
-        kwarg.update(ReturnUpdateValue( 'humidity' , data['humidity'] ) )
+        kwarg.update(ReturnUpdateValue('humidity', data['humidity']))
     if 'open' in data:
-        kwarg.update(ReturnUpdateValue( 'open' , data['open'] ) )
+        kwarg.update(ReturnUpdateValue('open', data['open']))
     if 'presence' in data:
-        kwarg.update(ReturnUpdateValue( 'presence' , data['presence'] ) )
+        kwarg.update(ReturnUpdateValue('presence', data['presence']))
     if 'daylight' in data:
-        kwarg.update(ReturnUpdateValue( 'daylight' , data['daylight'] ) )
+        kwarg.update(ReturnUpdateValue('daylight', data['daylight']))
     #if 'lightlevel' in data:
-    #    kwarg.update(ReturnUpdateValue( 'lightlevel' , data['lightlevel'] ) )
+    #    kwarg.update(ReturnUpdateValue('lightlevel', data['lightlevel']))
     if 'lux' in data:
-        kwarg.update(ReturnUpdateValue( 'lux' , data['lux'] ) )
+        kwarg.update(ReturnUpdateValue('lux', data['lux']))
     if 'power' in data:
-        kwarg.update(ReturnUpdateValue( 'power' , data['power'] ) )
+        kwarg.update(ReturnUpdateValue('power', data['power']))
     if 'consumption' in data:
-        kwarg.update(ReturnUpdateValue( 'consumption' , data['consumption'] ) )
+        kwarg.update(ReturnUpdateValue('consumption', data['consumption']))
     if 'battery' in data:
-        kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
+        kwarg.update(ReturnUpdateValue('battery', data['battery']))
     if 'buttonevent' in data:
-        kwarg.update(ReturnUpdateValue( 'buttonevent' , data['buttonevent'] ) )
+        kwarg.update(ReturnUpdateValue('buttonevent', data['buttonevent']))
     if 'flag' in data:
-        kwarg.update(ReturnUpdateValue( 'flag' , data['flag'] ) )
+        kwarg.update(ReturnUpdateValue('flag', data['flag']))
     if 'water' in data:
-        kwarg.update(ReturnUpdateValue( 'water' , data['water'] ) )
+        kwarg.update(ReturnUpdateValue('water', data['water']))
     if 'fire' in data:
-        kwarg.update(ReturnUpdateValue( 'fire' , data['fire'] ) )
+        kwarg.update(ReturnUpdateValue('fire', data['fire']))
     if 'alarm' in data:
-        kwarg.update(ReturnUpdateValue( 'alarm' , data['alarm'] ) )
+        kwarg.update(ReturnUpdateValue('alarm', data['alarm']))
     if 'carbonmonoxide' in data:
-        kwarg.update(ReturnUpdateValue( 'carbonmonoxide' , data['carbonmonoxide'] ) )
+        kwarg.update(ReturnUpdateValue('carbonmonoxide', data['carbonmonoxide']))
     if 'lockstate' in data:
-        kwarg.update(ReturnUpdateValue( 'lockstate' , data['lockstate'] ) )
+        kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     #if 'lastupdated' in data:
-    #    kwarg.update(ReturnUpdateValue( 'lastupdated' , data['lastupdated'] ) )
+    #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
     #For groups
     if 'all_on' in data:
-        kwarg.update(ReturnUpdateValue( 'all_on' , data['all_on'] ) )
+        kwarg.update(ReturnUpdateValue('all_on', data['all_on']))
     if 'any_on' in data:
-        kwarg.update(ReturnUpdateValue( 'any_on' , data['any_on'] ) )
+        kwarg.update(ReturnUpdateValue('any_on', data['any_on']))
 
     #Special
     if 'reachable' in data:
@@ -452,6 +455,15 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['sValue'] = '0'
             else:
                 kwarg['sValue'] = 'off'
+
+    if command == 'alert':
+        #Can be none, lselect, select, strobe
+        if val == 'none':
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = 'Off'
+        else:
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
@@ -532,22 +544,13 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
-    if command == 'alert':
-        #Can be none, lselect, select, strobe
-        if val == None:
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = 'Off'
-        else:
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
-
     if command == 'temperature':
         kwarg['nValue'] = 0
-        val = round( int(val) / 100 , 2  )
+        val = round( int(val) / 100, 2  )
         kwarg['sValue'] = str(val)
 
     if command == 'heatsetpoint':
-        val = round( int(val) / 100 , 2  )
+        val = round( int(val) / 100, 2  )
         #ignore boost and off value
         if val != 5 and val != 30:
             kwarg['heatsetpoint'] = str(val)
@@ -602,7 +605,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'consumption':
         #Wh to Kwh
-        kwh = round( float(val) * 1 ,3)
+        kwh = round( float(val) * 1, 3)
         #Device with power and comsuption, never see yet, so disabled
         #if buffercommand.get('power'):
         #    p = buffercommand['power']
@@ -801,6 +804,15 @@ def ButtonConvertion(val,model = 0):
             if val in XiaomiSingleGangButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + XiaomiSingleGangButtonSwitchTable.index(val))
 
+        #Tuya generic
+        if model == 4:
+            if val in TuyaXGangButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + TuyaXGangButtonSwitchTable.index(val))
+
+        #Philips remote
+        if model == 5:
+            if val in PhilipsRWL02ButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + PhilipsRWL02ButtonSwitchTable.index(val))
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
@@ -828,7 +840,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = [ str(val_a) , int (val_t) ]
+        kwarg['orientation'] = [ str(val_a), int (val_t) ]
 
     return kwarg
 
@@ -855,7 +867,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8559:
+    if fs == 8859:
         return
 
     Domoticz.Status('Starting the installation of plugin custom page...')

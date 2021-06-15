@@ -33,7 +33,7 @@ function(app) {
             }
         }
     };
-    
+
     var configDeviceModal = {
         templateUrl: 'app/deCONZ/ConfigModal.html',
         controllerAs: '$ctrl',
@@ -51,13 +51,13 @@ function(app) {
 
                 // Make api call here
                 payload = new Object()
-                
+
                 for (const [key, value] of Object.entries($ctrl.deviceconfig)) {
                   if ( oldconfig[key] != value ) {
                       payload[key] = value;
                   }
                 }
-                
+
                 //payload.name = $ctrl.myname
                 JSONpayload = angular.toJson(payload)
 
@@ -69,7 +69,7 @@ function(app) {
                     $scope.$emit("refreshDeCONZfunc", $ctrl.device.deviceclass);
                 })
                 .then($scope.$close())
-                
+
             }
         }
     };
@@ -98,7 +98,7 @@ function(app) {
             }
         }
     };
-    
+
     app.component('zzDeconzPlugin', {
         templateUrl: 'app/deCONZ/index.html',
         controller: deCONZController,
@@ -134,7 +134,7 @@ function(app) {
                 // console.log('Returned Data Zigbee Devices')
                 $ctrl.zigdevs = Object.values(zigdevs)
                 $ctrl.value = deviceClass
-                
+
             })
         }
 
@@ -142,7 +142,7 @@ function(app) {
             var JSONpayload
 
             $ctrl.isJoining = true;
-            
+
             payload = new Object()
             payload.permitjoin = seconds
             JSONpayload = angular.toJson(payload)
@@ -174,13 +174,13 @@ function(app) {
                     }, 1000);
 
                     $mctrl.endPermit = function() {
-        
+
                         // console.log('End Permit')
-        
+
                         payload = new Object()
                         payload.permitjoin = 0
                         JSONpayload = angular.toJson(payload)
-            
+
                         apiDeCONZ.setDeCONZdata('config', 'PUT', '', JSONpayload,'').then(function() {
                             // console.log('Permit Join de-activated')
                         })
@@ -209,17 +209,17 @@ function(app) {
                     var $mctrl = this;
 
                     $scope.apiShowGet = true
-                    
+
                     $scope.apiCancelButton = $.t('Cancel')
 
                     $scope.configOutput = angular.fromJson(configOutput)
 
                     $mctrl.getAPIkey = function() {
-        
+
                         payload = new Object()
                         payload.devicetype = "domoticz_deconz"
                         JSONpayload = angular.toJson(payload)
-            
+
                         apiDeCONZ.postDeCONZdata(configOutput[0].internalipaddress, configOutput[0].internalport, 'api', JSONpayload, $mctrl.gwPassword).then(function(response) {
                             // console.log('Response was: ' + angular.toJson(response, true))
                             if ("success" in response[0]) {
@@ -231,7 +231,18 @@ function(app) {
 
                             $scope.configOutput1 = response
                         })
-                        
+                    }
+
+                    $mctrl.ConfPlugin = function() {
+
+                        payload = new Object()
+                        payload.devicetype = "domoticz_deconz"
+                        JSONpayload = angular.toJson(payload)
+
+                        apiDeCONZ.getDeCONZdata("config").then(function(response) {
+                            // console.log('Returned Data Zigbee Devices')
+                            bootbox.alert('<pre>' + angular.toJson(response, true) + '</pre>')
+                        })
                     }
                 }
             })
@@ -341,12 +352,15 @@ function(app) {
                         // console.log('deCONZ: Data Recieved')
                         // As there is no IDX and the API requires an ID, we must add back the ID to the array
                         keys = Object.keys(response.data)
-                        // loop through count
-                        for (i = 0; i < keys.length; i++) {
-                            // add id to each object
-                            response.data[keys[i]].id = keys[i]
-                            // add class type to allow puts
-                            response.data[keys[i]].deviceclass = deviceClass
+
+                        if (deviceClass != "config") {
+                            // loop through count
+                            for (i = 0; i < keys.length; i++) {
+                                // add id to each object
+                                response.data[keys[i]].id = keys[i]
+                                // add class type to allow puts
+                                response.data[keys[i]].deviceclass = deviceClass
+                            }
                         }
                         deferred.resolve(response.data)
                         },function errorCallback(response) {
@@ -469,7 +483,7 @@ function(app) {
             } else {
                 requestInfo.deferred.resolve(data.payload);
             }
-            
+
             requestsQueue.splice(requestIndex, 1);
         }
     })
@@ -491,7 +505,7 @@ function(app) {
                     { title: 'Type', data: 'type'},
                     { title: 'Firmware', data: 'swversion', "defaultContent": "" },
                     { title: 'Last Seen', data: 'lastseen', "defaultContent": "" },
-                    
+
                     {
                         title: '',
                         className: 'actions-column',
@@ -515,7 +529,7 @@ function(app) {
                       // Do something when the modal is closed
                     //   console.log('closed callback')
                     }
-                
+
                     function dismissedCallback(){
                       // Do something when the modal is dismissed
                     //   console.log('cancelled callback')
@@ -524,7 +538,7 @@ function(app) {
                 $scope.$apply();
 
             });
-            
+
             table.on('click', '.js-config-device', function() {
                 var row = table.api().row($(this).closest('tr')).data();
                 var scope = $scope.$new(true);
@@ -537,7 +551,7 @@ function(app) {
                       // Do something when the modal is closed
                     //   console.log('closed callback')
                     }
-                
+
                     function dismissedCallback(){
                       // Do something when the modal is dismissed
                     //   console.log('cancelled callback')

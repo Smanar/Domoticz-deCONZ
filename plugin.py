@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.18" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.19" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -11,10 +11,11 @@
         <br/><br/>
         <h3>Remark</h3>
         <ul style="list-style-type:square">
-            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port</li>
-            <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin</li>
-            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine)</li>
-            <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only)</li>
+            <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port.</li>
+            <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin.</li>
+            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
+            <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only).</li>
+            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key or configure sensors.</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
@@ -110,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('bulb test','En test','Extended color light')
+        #CreateDevice('sirene test','En test','Warning device')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -226,7 +227,7 @@ class BasePlugin:
                     try:
                         payload, extra_data = get_JSON_payload(Data)
                     except:
-                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 300) :
+                        if (Data[0:1] == b'\x81') and (len(str(Data)) < 1000) :
                             self.WebsoketBuffer = Data
                             Domoticz.Log("Incomplete JSON keep it for later : " + str(self.WebsoketBuffer) )
                         else:
@@ -264,23 +265,36 @@ class BasePlugin:
 
         IEEE = Devices[Unit].DeviceID
 
+        #Get device type
+        device_type = self.Devices[IEEE].get('model','Unknow')
+
         _json = {}
 
         #on/off
         if Command == 'On':
-            _json['on'] = True
-            if Level:
-                _json['bri'] = round(Level*254/100)
-            if _type == 'config':
-                if Devices[Unit].DeviceID.endswith('_lock'):
-                    _json = {'lock':True}
+            if device_type == 'Warning device':
+                _json['alert'] = 'lselect'
+                #Force Update using domoticz, because some device don't have return
+                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, Unit)
+            else:
+                _json['on'] = True
+                if Level:
+                    _json['bri'] = round(Level*254/100)
+                if _type == 'config':
+                    if Devices[Unit].DeviceID.endswith('_lock'):
+                        _json = {'lock':True}
         if Command == 'Off':
-            _json['on'] = False
-            if _type == 'config':
-                if Devices[Unit].DeviceID.endswith('_mode'):
-                    _json = {'mode':'off'}
-                elif Devices[Unit].DeviceID.endswith('_lock'):
-                    _json = {'lock':False}
+            if device_type == 'Warning device':
+                _json['alert'] = 'none'
+                #Force Update using domoticz, because some device don't have return
+                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, Unit)
+            else:
+                _json['on'] = False
+                if _type == 'config':
+                    if Devices[Unit].DeviceID.endswith('_mode'):
+                        _json = {'mode':'off'}
+                    elif Devices[Unit].DeviceID.endswith('_lock'):
+                        _json = {'lock':False}
 
         #level
         if Command == 'Set Level':
@@ -334,7 +348,6 @@ class BasePlugin:
             #Special code to force devive update for group
             elif _type == 'groups':
                 UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
-                pass
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -596,11 +609,17 @@ class BasePlugin:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b186acn01' in Model:
                     Type = 'Xiaomi_single_gang'
-                elif 'lumi.remote.b286acn01' in Model:
+                elif Model.startswith('lumi.remote.b286acn0'):
                     Type = 'Xiaomi_double_gang'
                 #Used for all opple switches
                 elif Model.endswith('86opcn01'):
                     Type = 'Xiaomi_Opple_6_button_switch'
+                #Used for all tuya switch
+                elif Model.startswith('TS004'):
+                    Type = 'Tuya_button_switch'
+                #Used by philips remote
+                elif Model == 'RWL021':
+                    Type = 'Philips_button_switch'
                 else:
                     Type = 'Switch_Generic'
 
@@ -756,7 +775,9 @@ class BasePlugin:
                         _type = dev[1]
 
                     if dev[1] == 'config':
-                        Domoticz.Status("Editing configuration: " + str(data) )
+                        Domoticz.Status("Editing configuration: " + str(data))
+                    #if dev[1] == 'lights' and dev[4] == 'alert':
+                    #    kwarg.update(ProcessAllState({'alert':val} ,''))
 
             else:
                 Domoticz.Error("Not managed return JSON: " + str(_Data2) )
@@ -775,6 +796,8 @@ class BasePlugin:
         Domoticz.Status("Websocketnotifyall: " + str(_Data['websocketnotifyall']))
         if not _Data['websocketnotifyall'] == True:
             Domoticz.Error("Websocketnotifyall is not set to True")
+        if len(_Data['whitelist']) > 10:
+            Domoticz.Error("You have " + str(len(_Data['whitelist'])) + " API keys memorised, some of them are probably useless, can use the API_KEY.py tool to clean them")
 
         #Launch Web socket connexion
         self.WebSocket = Domoticz.Connection(Name="deCONZ_WebSocket", Transport="TCP/IP", Address=Parameters["Address"], Port=str(_Data['websocketport']) )
@@ -867,6 +890,10 @@ class BasePlugin:
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
                 elif model == 'Xiaomi_single_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
+                elif model == "Tuya_button_switch":
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 4) )
+                elif model == "Philips_button_switch":
+                    kwarg.update(ButtonConvertion( state['buttonevent'] , 5) )
                 else:
                     kwarg.update(ButtonConvertion( state['buttonevent'] ) )
                 if IEEE not in self.NeedToReset:
@@ -1457,14 +1484,24 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8|B9", "LevelOffHidden": "true", "SelectorStyle": "0"}
-    #eyal start
     elif _Type == 'Xiaomi_Opple_6_button_switch':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1RL|B2RL|B3RL|B4RL|B5RL|B6RL|B1D|B2D|B3D|B4D|B5D|B6D|B1T|B2T|B3T|B4T|B5T|B6T", "LevelOffHidden": "true", "SelectorStyle": "1"}
-    #eyal end
+    elif _Type == 'Tuya_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||||||", "LevelNames": "Off|B1|L1|D1|B2|L2|D2|B3|L3|D3|B4|L4|D4", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    elif _Type == 'Philips_button_switch':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
