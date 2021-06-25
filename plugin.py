@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.19" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.20" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -111,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('sirene test','En test','Warning device')
+        #CreateDevice('sirene test','En test','ZHAAirQuality')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -1405,6 +1405,9 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
+
+    elif _Type == 'ZHAAirQuality':
+        kwarg['TypeName'] = 'Air Quality'
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
         kwarg['Type'] = 244
