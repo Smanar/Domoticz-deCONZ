@@ -1407,7 +1407,9 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['TypeName'] = 'Barometer'
 
     elif _Type == 'ZHAAirQuality':
-        kwarg['TypeName'] = 'Air Quality'
+        #kwarg['TypeName'] = 'Air Quality'
+        kwarg['TypeName'] = 'Custom'
+        kwarg['Options'] = {"Custom": ("1;ppb")}
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
         kwarg['Type'] = 244
