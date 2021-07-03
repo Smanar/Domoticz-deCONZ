@@ -59,6 +59,8 @@ function(app) {
                       {
                         newvalue = parseInt(newvalue);
                       }
+                      if (newvalue == 'false') { newvalue = false; }
+                      if (newvalue == 'true') { newvalue = true; }
                       payload[key] = newvalue;
                   }
                 }
