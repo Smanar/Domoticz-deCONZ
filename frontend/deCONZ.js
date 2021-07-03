@@ -54,7 +54,12 @@ function(app) {
 
                 for (const [key, value] of Object.entries($ctrl.deviceconfig)) {
                   if ( oldconfig[key] != value ) {
-                      payload[key] = value;
+                      newvalue = value
+                      if (Number(newvalue))
+                      {
+                        newvalue = parseInt(newvalue);
+                      }
+                      payload[key] = newvalue;
                   }
                 }
 

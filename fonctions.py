@@ -415,6 +415,8 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('carbonmonoxide', data['carbonmonoxide']))
     if 'lockstate' in data:
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
+    if 'airqualityppb' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -601,6 +603,10 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'lux':
         kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'airqualityppb':
+        kwarg['nValue'] = int(val)
         kwarg['sValue'] = str(val)
 
     if command == 'consumption':
@@ -867,10 +873,10 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8859:
+    if fs == 8861:
         return
 
-    Domoticz.Status('Starting the installation of plugin custom page...')
+    Domoticz.Status('Starting the installation of plugin custom page (' + str(fs) + ')...')
 
     try:
 
