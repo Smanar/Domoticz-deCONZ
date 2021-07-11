@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.20" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.21" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://www.dresden-elektronik.de/funktechnik/products/software/pc-software/deconz/?L=1">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -348,6 +348,19 @@ class BasePlugin:
             #Special code to force devive update for group
             elif _type == 'groups':
                 UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
+
+            #Special devices
+            if device_type == 'Warning device':
+                #Heyman Siren
+                _json.clear()
+                if Level == 10:
+                    _json['alert'] = "select"
+                elif Level == 20:
+                    _json['alert'] = "lselect"
+                elif Level == 30:
+                    _json['alert'] = "blink"
+                else:
+                    _json['alert'] = "none"
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -1387,9 +1400,10 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'Warning device':
         kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
         kwarg['Image'] = 13
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "none|select|lselect|blink", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
     #Sensors
     elif _Type == 'Daylight':
