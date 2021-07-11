@@ -460,12 +460,15 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'alert':
         #Can be none, lselect, select, strobe
-        if val == 'none':
+        if val == 'select':
+            kwarg['nValue'] = 10
+        if val == 'lselect':
+            kwarg['nValue'] = 20
+        if val == 'blink':
+            kwarg['nValue'] = 30
+        else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
-        else:
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
