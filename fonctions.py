@@ -462,10 +462,13 @@ def ReturnUpdateValue(command,val,model = None):
         #Can be none, lselect, select, strobe
         if val == 'select':
             kwarg['nValue'] = 10
+            kwarg['sValue'] = '10'
         if val == 'lselect':
             kwarg['nValue'] = 20
+            kwarg['sValue'] = '20'
         if val == 'blink':
             kwarg['nValue'] = 30
+            kwarg['sValue'] = '30'
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
