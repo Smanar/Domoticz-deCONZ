@@ -463,10 +463,10 @@ def ReturnUpdateValue(command,val,model = None):
         if val == 'select':
             kwarg['nValue'] = 10
             kwarg['sValue'] = '10'
-        if val == 'lselect':
+        elif val == 'lselect':
             kwarg['nValue'] = 20
             kwarg['sValue'] = '20'
-        if val == 'blink':
+        elif val == 'blink':
             kwarg['nValue'] = 30
             kwarg['sValue'] = '30'
         else:
