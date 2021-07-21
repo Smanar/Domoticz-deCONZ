@@ -111,7 +111,7 @@ class BasePlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #CreateDevice('sirene test','En test','ZHAAirQuality')
+        #CreateDevice('sirene test','En test','Warning device')
 
         #try:
         #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
@@ -361,6 +361,9 @@ class BasePlugin:
                     _json['alert'] = "blink"
                 else:
                     _json['alert'] = "none"
+
+                #Force Update using domoticz, because some device don't have return
+                UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
