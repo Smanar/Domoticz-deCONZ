@@ -240,11 +240,36 @@ function(app) {
                         })
                     }
 
+                    $mctrl.cleanAPIkey = function() {
+
+                        payload = new Object()
+                        payload.devicetype = "domoticz_deconz"
+                        key_list = {}
+
+                        apiDeCONZ.getDeCONZdata("config").then(function(response) {
+                            // console.log('Returned Data Zigbee Devices')
+                            key_list = angular.toJson(response, true)
+                            key_list = response["whitelist"]
+                            
+
+                            for(var k in key_list) {
+                                 if ((key_list[k]["name"].indexOf("Phoscon#") != -1) || (key_list[k]["name"].indexOf("deCONZ WebApp") != -1))
+                                 {
+                                    apiDeCONZ.setDeCONZdata('config/whitelist/' + k, 'DELETE', '', '','').then(function() {
+                                        //console.log('Delete API Key : ' + k )
+                                    })
+                                 }
+                            }
+                            
+                        })
+
+                    }
+
                     $mctrl.ConfPlugin = function() {
 
                         payload = new Object()
                         payload.devicetype = "domoticz_deconz"
-                        JSONpayload = angular.toJson(payload)
+                        //JSONpayload = angular.toJson(payload)
 
                         apiDeCONZ.getDeCONZdata("config").then(function(response) {
                             // console.log('Returned Data Zigbee Devices')
@@ -255,8 +280,6 @@ function(app) {
             })
             );
         }
-
-
 
     }
 
