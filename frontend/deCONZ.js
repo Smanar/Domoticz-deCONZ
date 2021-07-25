@@ -253,7 +253,7 @@ function(app) {
                             
 
                             for(var k in key_list) {
-                                 if ((key_list[k]["name"].indexOf("Phoscon#") != -1) || (key_list[k]["name"].indexOf("deCONZ WebApp") != -1))
+                                 if ((key_list[k]["name"].indexOf("Phoscon#") != -1) || (key_list[k]["name"].indexOf("deCONZ WebApp") != -1) || (key_list[k]["name"].indexOf("homebridge-hue#") != -1))
                                  {
                                     apiDeCONZ.setDeCONZdata('config/whitelist/' + k, 'DELETE', '', '','').then(function() {
                                         //console.log('Delete API Key : ' + k )
