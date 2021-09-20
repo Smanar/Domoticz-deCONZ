@@ -459,13 +459,19 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['sValue'] = 'off'
 
     if command == 'alert':
-        #Can be none, lselect, select, strobe
-        if val == 'none':
+        #Can be none, lselect, select, blink
+        if val == 'select':
+            kwarg['nValue'] = 10
+            kwarg['sValue'] = '10'
+        elif val == 'lselect':
+            kwarg['nValue'] = 20
+            kwarg['sValue'] = '20'
+        elif val == 'blink':
+            kwarg['nValue'] = 30
+            kwarg['sValue'] = '30'
+        else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
-        else:
-            kwarg['nValue'] = 1
-            kwarg['sValue'] = 'On'
 
     if command == 'bri':
         #kwarg['nValue'] = 1
@@ -767,7 +773,7 @@ def ButtonConvertion(val,model = 0):
 
         #Green power device
         if e < 1000:
-            t = [(1,16),(2,17),(3,18),(4,34),(5,98),(6,99),(7,100),(8,101)]
+            t = [(1,16),(2,17,32),(3,18,33),(4,34),(5,98),(6,99),(7,100),(8,101)]
             for i in range(len(t)):
                 if e in t[i]:
                     v = (i + 1) * 10
@@ -873,7 +879,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8861:
+    if fs == 9007:
         return
 
     Domoticz.Status('Starting the installation of plugin custom page (' + str(fs) + ')...')

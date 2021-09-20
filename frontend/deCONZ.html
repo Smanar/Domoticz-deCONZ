@@ -27,14 +27,11 @@
             ></zz-deconz-plugins-table>
 
             <section class="bottom-panel">
-                <button class="btn btn-default pull-left ng-binding"
-                 ng-click="$ctrl.autoConfPlugin()">
-                 {{:: 'Tools' | translate }}
+                <button class="btn btn-default pull-left ng-binding" ng-click="$ctrl.autoConfPlugin()">
+                    {{:: 'Tools' | translate }}
                 </button>
-                <button class="btn btn-default pull-right ng-binding"
-                 ng-click="$ctrl.permitJoins()"
-                 ng-disabled="$ctrl.isJoining">
-                 {{:: 'Permit Joins' | translate }}
+                <button class="btn btn-default pull-right ng-binding" ng-click="$ctrl.permitJoins()" ng-disabled="$ctrl.isJoining">
+                    {{:: 'Permit Joins' | translate }}
                 </button>
             </section>
         </div>
@@ -211,6 +208,9 @@
             </button>
             <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.getAPIkey()">
                 {{:: 'Get API Key' | translate }}
+            </button>
+            <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.cleanAPIkey()">
+                {{:: 'Clean API Key List' | translate }}
             </button>
         </p>
     </div>
