@@ -377,8 +377,6 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('xy', data['xy']))
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue('ct', data['ct']))
-    if 'bri' in data:
-        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'temperature' in data:
         kwarg.update(ReturnUpdateValue('temperature', data['temperature']))
     if 'pressure' in data:
@@ -417,6 +415,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
+    if 'bri' in data:
+        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
+    if 'lift' in data:
+        kwarg.update(ReturnUpdateValue('lift', data['lift'], model) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -473,6 +475,18 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
+    if command == 'lift':
+            val = int(val)
+            if val <= 0:
+                kwarg['sValue'] = '0'
+                kwarg['nValue'] = 0
+            elif val >= 100:
+                kwarg['sValue'] = '100'
+                kwarg['nValue'] = 1
+            else:
+                kwarg['sValue'] = str(val)
+                kwarg['nValue'] = 2
+    
     if command == 'bri':
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
@@ -485,7 +499,7 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['nValue'] = 1
             else:
                 kwarg['sValue'] = str(val)
-                kwarg['nValue'] = 17
+                kwarg['nValue'] = 2
         else:
             kwarg['sValue'] = str(val)
 
