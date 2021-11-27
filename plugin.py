@@ -619,8 +619,8 @@ class BasePlugin:
                         return
                 elif 'TRADFRI remote control' in Model:
                     Type = 'Tradfri_remote'
-                #elif 'RWL021' in Model:
-                #    Type = 'Tradfri_remote'
+                elif 'Remote Control N2' in Model:
+                    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b186acn01' in Model:
