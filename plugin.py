@@ -645,7 +645,7 @@ class BasePlugin:
                 Domoticz.Status("Adding missing device: " + str(key) + ' Type:' + str(Type))
 
             #lidl strip
-            if Manuf == '_TZE200_s8gkrkxk':
+	    if Model == 'HG06467':
                 #Create a widget for effect
                 self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
                 self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
