@@ -745,24 +745,34 @@ def ButtonconvertionTradfriRemote(val):
 
     return kwarg
 
-def ButtonconvertionTradfriSwitch(val):
+def ButtonconvertionStyrbar(val):
     kwarg = {}
     val = str(val)
 
-    if val == '1002':
+    if val == '1001':
         kwarg['nValue'] = 10
-    elif val == '1003':
+    elif val == '1002':
         kwarg['nValue'] = 20
-    elif val == '2002':
+    elif val == '1003':
         kwarg['nValue'] = 30
-    elif val == '2003':
+    elif val == '2001':
         kwarg['nValue'] = 40
-    elif val == '3002':
+    elif val == '2002':
         kwarg['nValue'] = 50
-    elif val == '4002':
+    elif val == '2003':
         kwarg['nValue'] = 60
-    elif val == '5002':
+    elif val == '4001':
         kwarg['nValue'] = 70
+    elif val == '4002':
+        kwarg['nValue'] = 80
+    elif val == '4003':
+        kwarg['nValue'] = 90
+    elif val == '5001':
+        kwarg['nValue'] = 100
+    elif val == '5002':
+        kwarg['nValue'] = 110
+    elif val == '5003':
+        kwarg['nValue'] = 120
     else:
         kwarg['nValue'] = 0
 

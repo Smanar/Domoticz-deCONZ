@@ -75,7 +75,7 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionStyrbar, ButtonconvertionTradfriSwitch
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 
@@ -620,7 +620,7 @@ class BasePlugin:
                 elif 'TRADFRI remote control' in Model:
                     Type = 'Tradfri_remote'
                 elif 'Remote Control N2' in Model:
-                    Type = 'Tradfri_remote'
+                    Type = 'Styrbar_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b186acn01' in Model:
@@ -900,6 +900,8 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
                 elif model == 'Tradfri_on/off_switch':
                     kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                elif model == 'Styrbar_remote':
+                    kwarg.update(ButtonconvertionStyrbar( state['buttonevent'] ) )
                 elif model == 'Xiaomi_double_gang':
                     kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
                 elif model == 'Xiaomi_Opple_6_button_switch':
@@ -1531,6 +1533,13 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|On|+|-|<|>|L +|L -|L <|L >", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        
+    elif _Type == 'Styrbar_remote':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "||||||||||||", "LevelNames": "V0|V1|V2|V3|V4|V5|V6|V7|V8|V9|V10|V11|V12", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_on/off_switch':
         kwarg['Type'] = 244
