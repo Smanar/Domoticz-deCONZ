@@ -652,7 +652,11 @@ class BasePlugin:
                 #Correction
                 self.Devices[IEEE]['colormode'] = 'hs'
                 Type = 'Color Temperature dimmable light'
-
+            #lidl led strip
+            if Model == 'HG06104A':
+                #Correction
+                self.Devices[IEEE]['colormode'] = 'xy'
+                Type = 'Extended color light'
             #Special devices
             if Type == 'ZHAThermostat':
                 # Not working for cable outlet yet.
