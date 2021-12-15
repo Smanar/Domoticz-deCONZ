@@ -283,6 +283,8 @@ XiaomiSingleGangButtonSwitchTable = ['1002','1004','1001']
 
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
 
+IkeaStyrbarButtonSwitchTable = ['1001','1002','1003','2001','2002','2003','4001','4002','4003','5001','5002','5003']
+
 
 #0 - Off
 #single press
@@ -486,7 +488,7 @@ def ReturnUpdateValue(command,val,model = None):
             else:
                 kwarg['sValue'] = str(val)
                 kwarg['nValue'] = 2
-    
+
     if command == 'bri':
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
@@ -839,6 +841,11 @@ def ButtonConvertion(val,model = 0):
         if model == 5:
             if val in PhilipsRWL02ButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + PhilipsRWL02ButtonSwitchTable.index(val))
+
+        #Ikea Styrbar
+        if model == 6:
+            if val in IkeaStyrbarButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + IkeaStyrbarButtonSwitchTable.index(val))
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
