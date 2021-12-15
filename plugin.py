@@ -636,6 +636,9 @@ class BasePlugin:
                 #Used by philips remote
                 elif Model == 'RWL021':
                     Type = 'Philips_button_switch'
+                #used by ikea Stybar
+                elif 'Remote Control N2' in Model:
+                    Type = 'Styrbar_remote'
                 else:
                     Type = 'Switch_Generic'
 
@@ -897,25 +900,27 @@ class BasePlugin:
 
             if 'buttonevent' in state:
                 if model == 'XCube_C':
-                    kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
                 elif model == 'XCube_R':
-                    kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
-                    kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
-                    kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionTradfriSwitch(state['buttonevent']) )
                 elif model == 'Xiaomi_double_gang':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 1 ) )
                 elif model == 'Xiaomi_Opple_6_button_switch':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 2) )
                 elif model == 'Xiaomi_single_gang':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 3) )
                 elif model == "Tuya_button_switch":
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 4) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 4) )
                 elif model == "Philips_button_switch":
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 5) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 5) )
+                elif model == "Styrbar_remote":
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 6) )
                 else:
-                    kwarg.update(ButtonConvertion( state['buttonevent'] ) )
+                    kwarg.update(ButtonConvertion(state['buttonevent']) )
                 if IEEE not in self.NeedToReset:
                     self.NeedToReset.append(IEEE)
 
@@ -1528,6 +1533,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    elif _Type == 'Styrbar_remote':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "||||||||||||", "LevelNames": "V0|V1|V2|V3|V4|V5|V6|V7|V8|V9|V10|V11|V12", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
