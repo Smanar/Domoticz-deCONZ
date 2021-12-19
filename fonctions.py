@@ -346,6 +346,8 @@ def ProcessAllConfig(data):
         if 'mode' in data:
             if not (data['mode'] == 'off' and data['on'] == True):
                 kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+    if 'preset' in data:
+        kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
         kwarg.update(ReturnUpdateValue( 'lock' , data['lock'] ) )
     if 'reachable' in data:
@@ -586,6 +588,24 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['mode'] = 10
         if val == 'auto':
             kwarg['mode'] = 20
+
+    if command == 'preset':
+        if val == 'off':
+            kwarg['preset'] = 0
+        if val == 'holiday':
+            kwarg['preset'] = 10
+        if val == 'auto':
+            kwarg['preset'] = 20
+        if val == 'manual':
+            kwarg['preset'] = 30
+        if val == 'comfort':
+            kwarg['preset'] = 40
+        if val == 'eco':
+            kwarg['preset'] = 50
+        if val == 'boost':
+            kwarg['preset'] = 60
+        if val == 'complex':
+            kwarg['preset'] = 70
 
     if command == 'status':
         if int(val) == 0:
