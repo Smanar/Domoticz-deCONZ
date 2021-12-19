@@ -312,6 +312,21 @@ class BasePlugin:
                     dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
                     if deCONZ_ID_2:
                         _json['mode'] = "auto"
+                elif Devices[Unit].DeviceID.endswith('_preset'):
+                    if Level == 10:
+                        _json['preset'] = "holiday"
+                    if Level == 20:
+                        _json['preset'] = "auto"
+                    if Level == 30:
+                        _json['preset'] = "manual"
+                    if Level == 40:
+                        _json['preset'] = "comfort"
+                    if Level == 50:
+                        _json['preset'] = "eco"
+                    if Level == 60:
+                        _json['preset'] = "boost"
+                    if Level == 70:
+                        _json['preset'] = "complex"
                 elif Devices[Unit].DeviceID.endswith('_mode'):
                     if Level == 0:
                         _json['mode'] = "off"
@@ -672,6 +687,10 @@ class BasePlugin:
                     if 'mode' in ConfigList:
                         self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
                         self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    #Create a preset device
+                    if 'preset' in ConfigList:
+                        self.Devices[IEEE + "_preset"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Preset' }
+                        self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Preset',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAVibration':
@@ -1215,6 +1234,10 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['nValue'] = value
         kwarg2['sValue'] = str(value)
 
+    if field == 'preset':
+        kwarg2['nValue'] = value
+        kwarg2['sValue'] = str(value)
+
     elif field == 'orientation':
         kwarg2['nValue'] = value[1]
         kwarg2['sValue'] = value[0]
@@ -1245,6 +1268,8 @@ def UpdateDevice(_id,_type,kwarg):
         UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
     if 'mode' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"mode")
+    if 'preset' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"preset")
     if 'lock' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"lock")
 
@@ -1257,6 +1282,8 @@ def UpdateDeviceProc(kwarg,Unit):
 
     if 'mode' in kwarg:
         kwarg.pop('mode')
+    if 'preset' in kwarg:
+        kwarg.pop('preset')
     if 'heatsetpoint' in kwarg:
         kwarg.pop('heatsetpoint')
     if 'orientation' in kwarg:
@@ -1569,6 +1596,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
+
+    elif _Type == 'Thermostat_Preset':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Chrismast_E':
         kwarg['Type'] = 244
