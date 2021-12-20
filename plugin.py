@@ -690,7 +690,7 @@ class BasePlugin:
                     #Create a preset device
                     if 'preset' in ConfigList:
                         self.Devices[IEEE + "_preset"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Preset' }
-                        self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Preset',Name)
+                        self.CreateIfnotExist(IEEE + "_preset",'Thermostat_Preset',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAVibration':
