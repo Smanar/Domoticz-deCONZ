@@ -327,6 +327,8 @@ class BasePlugin:
                         _json['preset'] = "boost"
                     if Level == 70:
                         _json['preset'] = "complex"
+                    if Level == 80:
+                        _json['preset'] = "program"
                 elif Devices[Unit].DeviceID.endswith('_mode'):
                     if Level == 0:
                         _json['mode'] = "off"
@@ -1595,13 +1597,13 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
     elif _Type == 'Thermostat_Preset':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex|program", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Chrismast_E':
         kwarg['Type'] = 244
