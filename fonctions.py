@@ -606,6 +606,8 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['preset'] = 60
         if val == 'complex':
             kwarg['preset'] = 70
+        if val == 'program':
+            kwarg['preset'] = 80
 
     if command == 'status':
         if int(val) == 0:
