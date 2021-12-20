@@ -1603,7 +1603,7 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex|program", "LevelOffHidden": "true", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex|program", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Chrismast_E':
         kwarg['Type'] = 244
