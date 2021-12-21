@@ -310,7 +310,7 @@ class BasePlugin:
                 if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
                     _json['heatsetpoint'] = int(Level * 100)
                     dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
-                    if deCONZ_ID_2:
+                    if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
                         _json['mode'] = "auto"
                 elif Devices[Unit].DeviceID.endswith('_preset'):
                     if Level == 10:
