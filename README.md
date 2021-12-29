@@ -104,7 +104,8 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
-- 20/09/21 : 1.0.20 > Warning device use now a selector switch instead of a 2 position one, add some new value for ZGP switches, repair the front end to be able to set "0" value, add a tool to clean the API key list.    
+- 29/12/21 : 1.0.22 > Add specific widget for the Ikea Styrbar, optimisation/update for covering, some devices correctives, thx to @veitk, @RDols and @sonar98.   
+- 20/09/21 : 1.0.21 > Warning device use now a selector switch instead of a 2 position one, add some new value for ZGP switches, repair the front end to be able to set "0" value, add a tool to clean the API key list.    
 - 03/07/21 : 1.0.20 > add primary support for ZHAAirQuality, repair of frontend, now it s possible again to configure device.   
 - 15/06/21 : 1.0.19 > Make special widget for Tuya switches and philips RWL02 one. Starting to repair siren. Increase Websocket buffer to prevent message "Incomplete JSON keep it for later". Add the possibility to see the deconz config on the front-end.    
 - 18/04/21 : 1.0.18 > Set light state to off if detected off line (thx @nonolk), starting to implement ZHADoorlock.   
