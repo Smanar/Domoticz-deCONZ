@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.21" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.22" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -310,8 +310,25 @@ class BasePlugin:
                 if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
                     _json['heatsetpoint'] = int(Level * 100)
                     dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
-                    if deCONZ_ID_2:
+                    if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
                         _json['mode'] = "auto"
+                elif Devices[Unit].DeviceID.endswith('_preset'):
+                    if Level == 10:
+                        _json['preset'] = "holiday"
+                    if Level == 20:
+                        _json['preset'] = "auto"
+                    if Level == 30:
+                        _json['preset'] = "manual"
+                    if Level == 40:
+                        _json['preset'] = "comfort"
+                    if Level == 50:
+                        _json['preset'] = "eco"
+                    if Level == 60:
+                        _json['preset'] = "boost"
+                    if Level == 70:
+                        _json['preset'] = "complex"
+                    if Level == 80:
+                        _json['preset'] = "program"
                 elif Devices[Unit].DeviceID.endswith('_mode'):
                     if Level == 0:
                         _json['mode'] = "off"
@@ -325,7 +342,7 @@ class BasePlugin:
                         _json['heatsetpoint'] = Hp
                 #Chritsmas tree
                 elif Devices[Unit].DeviceID.endswith('_effect'):
-                    v = ["none","steady","snow","rainbow","snake","tinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
+                    v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
                     _json['effect'] = v
 
                     UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
@@ -619,8 +636,6 @@ class BasePlugin:
                         return
                 elif 'TRADFRI remote control' in Model:
                     Type = 'Tradfri_remote'
-                #elif 'RWL021' in Model:
-                #    Type = 'Tradfri_remote'
                 elif 'TRADFRI on/off switch' in Model:
                     Type = 'Tradfri_on/off_switch'
                 elif 'lumi.remote.b186acn01' in Model:
@@ -636,6 +651,9 @@ class BasePlugin:
                 #Used by philips remote
                 elif Model == 'RWL021':
                     Type = 'Philips_button_switch'
+                #used by ikea Stybar
+                elif 'Remote Control N2' in Model:
+                    Type = 'Styrbar_remote'
                 else:
                     Type = 'Switch_Generic'
 
@@ -645,14 +663,18 @@ class BasePlugin:
                 Domoticz.Status("Adding missing device: " + str(key) + ' Type:' + str(Type))
 
             #lidl strip
-            if Manuf == '_TZE200_s8gkrkxk':
+            if Model == 'HG06467':
                 #Create a widget for effect
                 self.Devices[IEEE + "_effect"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Chrismast_E' }
                 self.CreateIfnotExist(IEEE + "_effect",'Chrismast_E',Name)
                 #Correction
                 self.Devices[IEEE]['colormode'] = 'hs'
                 Type = 'Color Temperature dimmable light'
-
+            #lidl led strip
+            if Model == 'HG06104A':
+                #Correction
+                self.Devices[IEEE]['colormode'] = 'xy'
+                Type = 'Extended color light'
             #Special devices
             if Type == 'ZHAThermostat':
                 # Not working for cable outlet yet.
@@ -665,6 +687,10 @@ class BasePlugin:
                     if 'mode' in ConfigList:
                         self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Mode' }
                         self.CreateIfnotExist(IEEE + "_mode",'Thermostat_Mode',Name)
+                    #Create a preset device
+                    if 'preset' in ConfigList:
+                        self.Devices[IEEE + "_preset"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Thermostat_Preset' }
+                        self.CreateIfnotExist(IEEE + "_preset",'Thermostat_Preset',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAVibration':
@@ -893,25 +919,27 @@ class BasePlugin:
 
             if 'buttonevent' in state:
                 if model == 'XCube_C':
-                    kwarg.update(ButtonconvertionXCUBE( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
                 elif model == 'XCube_R':
-                    kwarg.update(ButtonconvertionXCUBE_R( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
-                    kwarg.update(ButtonconvertionTradfriRemote( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
-                    kwarg.update(ButtonconvertionTradfriSwitch( state['buttonevent'] ) )
+                    kwarg.update(ButtonconvertionTradfriSwitch(state['buttonevent']) )
                 elif model == 'Xiaomi_double_gang':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 1 ) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 1 ) )
                 elif model == 'Xiaomi_Opple_6_button_switch':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 2) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 2) )
                 elif model == 'Xiaomi_single_gang':
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 3) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 3) )
                 elif model == "Tuya_button_switch":
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 4) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 4) )
                 elif model == "Philips_button_switch":
-                    kwarg.update(ButtonConvertion( state['buttonevent'] , 5) )
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 5) )
+                elif model == "Styrbar_remote":
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 6) )
                 else:
-                    kwarg.update(ButtonConvertion( state['buttonevent'] ) )
+                    kwarg.update(ButtonConvertion(state['buttonevent']) )
                 if IEEE not in self.NeedToReset:
                     self.NeedToReset.append(IEEE)
 
@@ -1206,6 +1234,10 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['nValue'] = value
         kwarg2['sValue'] = str(value)
 
+    if field == 'preset':
+        kwarg2['nValue'] = value
+        kwarg2['sValue'] = str(value)
+
     elif field == 'orientation':
         kwarg2['nValue'] = value[1]
         kwarg2['sValue'] = value[0]
@@ -1236,6 +1268,8 @@ def UpdateDevice(_id,_type,kwarg):
         UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
     if 'mode' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"mode")
+    if 'preset' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"preset")
     if 'lock' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"lock")
 
@@ -1248,6 +1282,8 @@ def UpdateDeviceProc(kwarg,Unit):
 
     if 'mode' in kwarg:
         kwarg.pop('mode')
+    if 'preset' in kwarg:
+        kwarg.pop('preset')
     if 'heatsetpoint' in kwarg:
         kwarg.pop('heatsetpoint')
     if 'orientation' in kwarg:
@@ -1524,6 +1560,12 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    elif _Type == 'Styrbar_remote':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "||||||||||||", "LevelNames": "V0|V1|V2|V3|V4|V5|V6|V7|V8|V9|V10|V11|V12", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'Tradfri_remote':
         kwarg['Type'] = 244
@@ -1553,14 +1595,20 @@ def CreateDevice(IEEE,_Name,_Type):
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Boost|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
+
+    elif _Type == 'Thermostat_Preset':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex|program", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Chrismast_E':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 14
-        kwarg['Options'] = {"LevelActions": "||||||||||||||||", "LevelNames": "off|none|steady|snow|rainbow|snake|tinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "true", "SelectorStyle": "1"}
+        kwarg['Options'] = {"LevelActions": "||||||||||||||||", "LevelNames": "off|none|steady|snow|rainbow|snake|twinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "true", "SelectorStyle": "1"}
 
     elif _Type == 'Vibration_Orientation':
         kwarg['Type'] = 243

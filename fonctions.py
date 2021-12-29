@@ -283,6 +283,8 @@ XiaomiSingleGangButtonSwitchTable = ['1002','1004','1001']
 
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
 
+IkeaStyrbarButtonSwitchTable = ['1001','1002','1003','2001','2002','2003','3001','3002','3003','4001','4002','4003','5001','5002','5003']
+
 
 #0 - Off
 #single press
@@ -344,6 +346,8 @@ def ProcessAllConfig(data):
         if 'mode' in data:
             if not (data['mode'] == 'off' and data['on'] == True):
                 kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+    if 'preset' in data:
+        kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
         kwarg.update(ReturnUpdateValue( 'lock' , data['lock'] ) )
     if 'reachable' in data:
@@ -377,8 +381,6 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('xy', data['xy']))
     if 'ct' in data:
         kwarg.update(ReturnUpdateValue('ct', data['ct']))
-    if 'bri' in data:
-        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'temperature' in data:
         kwarg.update(ReturnUpdateValue('temperature', data['temperature']))
     if 'pressure' in data:
@@ -417,6 +419,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
+    if 'bri' in data:
+        kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
+    if 'lift' in data:
+        kwarg.update(ReturnUpdateValue('lift', data['lift'], model) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -473,6 +479,18 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
 
+    if command == 'lift':
+            val = int(val)
+            if val <= 0:
+                kwarg['sValue'] = '0'
+                kwarg['nValue'] = 0
+            elif val >= 100:
+                kwarg['sValue'] = '100'
+                kwarg['nValue'] = 1
+            else:
+                kwarg['sValue'] = str(val)
+                kwarg['nValue'] = 2
+
     if command == 'bri':
         #kwarg['nValue'] = 1
         val = int(int(val) * 100 / 255 )
@@ -485,7 +503,7 @@ def ReturnUpdateValue(command,val,model = None):
                 kwarg['nValue'] = 1
             else:
                 kwarg['sValue'] = str(val)
-                kwarg['nValue'] = 17
+                kwarg['nValue'] = 2
         else:
             kwarg['sValue'] = str(val)
 
@@ -570,6 +588,26 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['mode'] = 10
         if val == 'auto':
             kwarg['mode'] = 20
+
+    if command == 'preset':
+        if val == 'off':
+            kwarg['preset'] = 0
+        if val == 'holiday':
+            kwarg['preset'] = 10
+        if val == 'auto':
+            kwarg['preset'] = 20
+        if val == 'manual':
+            kwarg['preset'] = 30
+        if val == 'comfort':
+            kwarg['preset'] = 40
+        if val == 'eco':
+            kwarg['preset'] = 50
+        if val == 'boost':
+            kwarg['preset'] = 60
+        if val == 'complex':
+            kwarg['preset'] = 70
+        if val == 'program':
+            kwarg['preset'] = 80
 
     if command == 'status':
         if int(val) == 0:
@@ -825,6 +863,11 @@ def ButtonConvertion(val,model = 0):
         if model == 5:
             if val in PhilipsRWL02ButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + PhilipsRWL02ButtonSwitchTable.index(val))
+
+        #Ikea Styrbar
+        if model == 6:
+            if val in IkeaStyrbarButtonSwitchTable:
+                kwarg['nValue'] = 10 * (1 + IkeaStyrbarButtonSwitchTable.index(val))
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
