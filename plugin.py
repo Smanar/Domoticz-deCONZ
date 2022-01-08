@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.22" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.23" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -705,6 +705,8 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
+            elif Model == 'ZHEMI101': # power and consumption on the same endpoint
+                self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -1361,7 +1363,7 @@ def UpdateDeviceProc(kwarg,Unit):
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
-def CreateDevice(IEEE,_Name,_Type):
+def CreateDevice(IEEE, _Name, _Type, opt = 0):
     kwarg = {}
     Unit = FreeUnit()
     TypeName = ''
@@ -1479,11 +1481,11 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'ZHAConsumption':# in kWh
         #Device with only comsumption
-        if True: # if IEEE.endswith('0702'):
+        if opt == 0:
             kwarg['Type'] = 113
             kwarg['Subtype'] = 0
             kwarg['Switchtype'] = 0
-        #Device with power and energy, not exist (yet)
+        #Device with power and energy
         else:
             kwarg['TypeName'] = 'kWh'
 
