@@ -656,16 +656,16 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'consumption':
         #Wh to Kwh
         kwh = round( float(val) * 1, 3)
-        #Device with power and comsuption, never see yet, so disabled
-        #if buffercommand.get('power'):
-        #    p = buffercommand['power']
-        #    buffercommand.clear()
-        #    kwarg['nValue'] = 0
-        #    kwarg['sValue'] = str(p) + ';' + str(kwh)
-        ##device with only consumption
-        #else:
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(kwh)
+        #Device with power and comsuption
+        if buffercommand.get('power'):
+            p = buffercommand['power']
+            buffercommand.clear()
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(p) + ';' + str(kwh)
+        #device with only consumption
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
