@@ -341,7 +341,7 @@ function(app) {
                 var deferred = $q.defer();
                 console.log('Checking DeCONZdsetup')
 
-                url = 'https://dresden-light.appspot.com/discover'
+                url = 'https://phoscon.de/discover'
 
                 $http({
                     method: 'GET',
@@ -356,7 +356,7 @@ function(app) {
                     console.error('Error getting deCONZ Discover data:' + angular.toJson(response, true) )
                     bootbox.alert('<h2>' + $.t('Likely 503 Over Quota Error') + '</h2><br><p>' +
                     $.t('This application is temporarily over its serving quota. Please try again tomorrow.') +
-                    '</p><a target="_blank" href="https://dresden-light.appspot.com/discover">https://dresden-light.appspot.com/discover</a>')
+                    '</p><a target="_blank" href="https://phoscon.de/discover">https://phoscon.de/discover</a>')
                     deferred.reject(response)
                 });
 
