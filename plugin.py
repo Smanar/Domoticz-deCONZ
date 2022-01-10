@@ -744,9 +744,9 @@ class BasePlugin:
                 if GetDomoDeviceInfo(Dev_name) == False:
                     CreateDevice(Dev_name,Name,Type)
 
-    def CreateIfnotExist(self,__IEEE,__Type,Name):
+    def CreateIfnotExist(self, __IEEE, __Type, Name, opt = 0):
         if GetDomoDeviceInfo(__IEEE) == False:
-            CreateDevice(__IEEE,Name,__Type)
+            CreateDevice(__IEEE, Name, __Type, opt)
 
     def NormalConnexion(self,_Data):
 
