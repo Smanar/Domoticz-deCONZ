@@ -807,7 +807,7 @@ def ButtonConvertion(val,model = 0):
 
         v = 0
         Button_Number = 1
-        e = int(val)
+        e = int(val or 0)
 
         #Green power device
         if e < 1000:
