@@ -350,6 +350,7 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
         kwarg.update(ReturnUpdateValue( 'lock' , data['lock'] ) )
+
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -423,6 +424,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
         kwarg.update(ReturnUpdateValue('lift', data['lift'], model) )
+    if 'voltage' in data:
+        kwarg.update(ReturnUpdateValue( 'voltage' , data['voltage'], model) )
+    if 'current' in data:
+        kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -641,11 +646,7 @@ def ReturnUpdateValue(command,val,model = None):
         else:
             kwarg['sValue'] = '3'
 
-    if command == 'lightlevel':
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
-
-    if command == 'lux':
+    if (command == 'lightlevel') or (command == 'current') or (command == 'voltage') or (command == 'lux'):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
