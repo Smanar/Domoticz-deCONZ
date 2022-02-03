@@ -84,6 +84,7 @@ DOMOTICZ_IP = '127.0.0.1'
 
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
+ENABLEMORESENSOR = True
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -710,6 +711,17 @@ class BasePlugin:
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
+            #Bonus sensor ?
+            if ENABLEMORESENSOR:
+                # Voltage sensor ?
+                if 'voltage' in StateList:
+                    self.Devices[IEEE + "voltage"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_voltage' }
+                    self.CreateIfnotExist(IEEE + "_voltage",'ZHAPower_voltage',Name)
+                # Current Sensor ?
+                if 'current' in StateList:
+                    self.Devices[IEEE + "current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
+                    self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
+
             #update
             if kwarg:
                 UpdateDevice(key,Type_device,kwarg)
@@ -1244,7 +1256,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['nValue'] = value[1]
         kwarg2['sValue'] = value[0]
 
-    else:
+    else: # used for voltage, current
         kwarg2['nValue'] = 0
         kwarg2['sValue'] = str(value)
 
@@ -1274,6 +1286,10 @@ def UpdateDevice(_id,_type,kwarg):
         UpdateDevice_Special(_id,_type,kwarg,"preset")
     if 'lock' in kwarg:
         UpdateDevice_Special(_id,_type,kwarg,"lock")
+    if 'current' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"current")
+    if 'voltage' in kwarg:
+        UpdateDevice_Special(_id,_type,kwarg,"voltage")
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1292,6 +1308,10 @@ def UpdateDeviceProc(kwarg,Unit):
         kwarg.pop('orientation')
     if 'lock' in kwarg:
         kwarg.pop('lock')
+    if 'current' in kwarg:
+        kwarg.pop('current')
+    if 'voltage' in kwarg:
+        kwarg.pop('voltage')
 
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
@@ -1491,6 +1511,12 @@ def CreateDevice(IEEE, _Name, _Type, opt = 0):
 
     elif _Type == 'ZHAPower':# in W
         kwarg['TypeName'] = 'Usage'
+    elif _Type == 'ZHAPower_voltage':
+            kwarg['Type'] = 243
+            kwarg['Subtype'] = 8
+    elif _Type == 'ZHAPower_current':
+            kwarg['Type'] = 243
+            kwarg['Subtype'] = 23
 
     elif _Type == 'ZHAVibration':
         kwarg['Type'] = 244
