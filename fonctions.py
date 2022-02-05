@@ -646,9 +646,15 @@ def ReturnUpdateValue(command,val,model = None):
         else:
             kwarg['sValue'] = '3'
 
-    if (command == 'lightlevel') or (command == 'current') or (command == 'voltage') or (command == 'lux'):
+    if (command == 'lightlevel') or (command == 'lux'):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
+
+    if command == 'voltage':
+        kwarg['voltage'] = int(val)
+
+    if command == 'current':
+        kwarg['current'] = int(val)
 
     if command == 'airqualityppb':
         kwarg['nValue'] = int(val)
