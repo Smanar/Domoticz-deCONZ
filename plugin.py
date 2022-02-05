@@ -715,11 +715,11 @@ class BasePlugin:
             if ENABLEMORESENSOR:
                 # Voltage sensor ?
                 if 'voltage' in StateList:
-                    self.Devices[IEEE + "voltage"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_voltage' }
+                    self.Devices[IEEE + "_voltage"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_voltage' }
                     self.CreateIfnotExist(IEEE + "_voltage",'ZHAPower_voltage',Name)
                 # Current Sensor ?
                 if 'current' in StateList:
-                    self.Devices[IEEE + "current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
+                    self.Devices[IEEE + "_current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
                     self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
 
             #update
