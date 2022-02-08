@@ -28,6 +28,7 @@
         <param field="Address" label="deCONZ IP" width="150px" required="true" default="127.0.0.1"/>
         <param field="Port" label="Port" width="150px" required="true" default="80"/>
         <param field="Mode2" label="API KEY" width="100px" required="true" default="1234567890" />
+        <param field="Mode4" label="Specials settings, separated by comma" width="200px" required="false" default="" />
         <param field="Mode3" label="Debug" width="150px">
             <options>
                 <option label="None" value="0"  default="true" />
@@ -43,19 +44,6 @@
     </params>
 </plugin>
 """
-
-
-# Combo for Heartbeat, disabled for the moment
-#        <param field="Mode4" label="Refresh rate" width="150px" required="true">
-#        <options>
-#                <option label="1 second" value="1"  />
-#                <option label="2 seconds" value="2"/>
-#                <option label="5 seconds" value="5"/>
-#                <option label="10 seconds" value="10" default="true"/>
-#                <option label="20 seconds" value="20"/>
-#            </options>
-#        </param>
-
 
 # All imports
 import Domoticz
@@ -84,7 +72,9 @@ DOMOTICZ_IP = '127.0.0.1'
 
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
-ENABLEMORESENSOR = True
+ENABLEMORESENSOR = False #Create more sensors, like tension and current
+
+SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -114,12 +104,6 @@ class BasePlugin:
         Domoticz.Debug("onStart called")
         #CreateDevice('sirene test','En test','Warning device')
 
-        #try:
-        #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
-        #    Domoticz.Heartbeat(int(Parameters["Mode4"]))
-        #except:
-        #    pass
-
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
             global DOMOTICZ_IP
@@ -135,6 +119,10 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
+            
+        if "ENABLEMORESENSOR" in Parameters["Mode4"]:
+            Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
+            ENABLEMORESENSOR = True
 
         #Read banned devices
         try:
@@ -1244,11 +1232,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
 
     kwarg2 = kwarg.copy()
 
-    if field == 'mode':
-        kwarg2['nValue'] = value
-        kwarg2['sValue'] = str(value)
-
-    if field == 'preset':
+    if (field == 'mode') or (field == 'preset'):
         kwarg2['nValue'] = value
         kwarg2['sValue'] = str(value)
 
@@ -1276,20 +1260,9 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
-    if 'orientation' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"orientation")
-    if 'heatsetpoint' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
-    if 'mode' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"mode")
-    if 'preset' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"preset")
-    if 'lock' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"lock")
-    if 'current' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"current")
-    if 'voltage' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"voltage")
+    for d in SpecialDeviceList:
+        if d in in kwarg:
+            UpdateDevice_Special(_id, _type, kwarg, d)
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1297,22 +1270,11 @@ def UpdateDevice(_id,_type,kwarg):
 def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
-
-    if 'mode' in kwarg:
-        kwarg.pop('mode')
-    if 'preset' in kwarg:
-        kwarg.pop('preset')
-    if 'heatsetpoint' in kwarg:
-        kwarg.pop('heatsetpoint')
-    if 'orientation' in kwarg:
-        kwarg.pop('orientation')
-    if 'lock' in kwarg:
-        kwarg.pop('lock')
-    if 'current' in kwarg:
-        kwarg.pop('current')
-    if 'voltage' in kwarg:
-        kwarg.pop('voltage')
-
+    
+    for d in SpecialDeviceList:
+        if d in in kwarg:
+            kwarg.pop(d)
+        
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
