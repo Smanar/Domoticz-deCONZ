@@ -1261,7 +1261,7 @@ def UpdateDevice(_id,_type,kwarg):
 
     #Check for special device, and remove special kwarg
     for d in SpecialDeviceList:
-        if d in in kwarg:
+        if d in kwarg:
             UpdateDevice_Special(_id, _type, kwarg, d)
 
     #Update the device
@@ -1272,7 +1272,7 @@ def UpdateDeviceProc(kwarg,Unit):
     NeedUpdate = False
     
     for d in SpecialDeviceList:
-        if d in in kwarg:
+        if d in kwarg:
             kwarg.pop(d)
         
     for a in kwarg:
