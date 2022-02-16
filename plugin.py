@@ -265,6 +265,8 @@ class BasePlugin:
                 _json['alert'] = 'lselect'
                 #Force Update using domoticz, because some device don't have return
                 UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, Unit)
+            elif device_type.startswith('Window covering'):
+                _json['open'] = False
             else:
                 _json['on'] = True
                 if Level:
@@ -277,6 +279,8 @@ class BasePlugin:
                 _json['alert'] = 'none'
                 #Force Update using domoticz, because some device don't have return
                 UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, Unit)
+            elif device_type.startswith('Window covering'):
+                _json['open'] = True
             else:
                 _json['on'] = False
                 if _type == 'config':
@@ -287,89 +291,92 @@ class BasePlugin:
 
         #level
         if Command == 'Set Level':
-            #To prevent bug
-            _json['on'] = True
+            if device_type.startswith('Window covering'):
+                _json['lift'] = Level
+            else:
+                #To prevent bug
+                _json['on'] = True
 
-            _json['bri'] = round(Level*254/100)
+                _json['bri'] = round(Level*254/100)
 
-            #Special situation
-            if _type == 'config':
-                _json.clear()
-                #Thermostat
-                if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
-                    _json['heatsetpoint'] = int(Level * 100)
-                    dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
-                    if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
-                        _json['mode'] = "auto"
-                elif Devices[Unit].DeviceID.endswith('_preset'):
+                #Special situation
+                if _type == 'config':
+                    _json.clear()
+                    #Thermostat
+                    if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                        _json['heatsetpoint'] = int(Level * 100)
+                        dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
+                        if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
+                            _json['mode'] = "auto"
+                    elif Devices[Unit].DeviceID.endswith('_preset'):
+                        if Level == 10:
+                            _json['preset'] = "holiday"
+                        if Level == 20:
+                            _json['preset'] = "auto"
+                        if Level == 30:
+                            _json['preset'] = "manual"
+                        if Level == 40:
+                            _json['preset'] = "comfort"
+                        if Level == 50:
+                            _json['preset'] = "eco"
+                        if Level == 60:
+                            _json['preset'] = "boost"
+                        if Level == 70:
+                            _json['preset'] = "complex"
+                        if Level == 80:
+                            _json['preset'] = "program"
+                    elif Devices[Unit].DeviceID.endswith('_mode'):
+                        if Level == 0:
+                            _json['mode'] = "off"
+                        if Level == 10:
+                            _json['mode'] = "heat"
+                        if Level == 20:
+                            _json['mode'] = "auto"
+                            #retreive previous value from domoticz
+                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                            _json['heatsetpoint'] = Hp
+                    #Chritsmas tree
+                    elif Devices[Unit].DeviceID.endswith('_effect'):
+                        v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
+                        _json['effect'] = v
+
+                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+
+                        #Set special options
+                        try :
+                            for o in Devices[Unit].Description.split("\n"):
+                                o2 = o.split("=")
+                                if o2[0] == 'effectSpeed':
+                                    _json['effectSpeed'] = int(o2[1])
+                                if o2[0] == 'effectColours':
+                                    _json['effectColours'] = json.loads(o2[1])
+
+                        except:
+                            Domoticz.Log("No special effect options")
+
+                        # Get light device
+                        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
+
+                #Special code to force devive update for group
+                elif _type == 'groups':
+                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
+
+                #Special devices
+                if device_type == 'Warning device':
+                    #Heyman Siren
+                    _json.clear()
                     if Level == 10:
-                        _json['preset'] = "holiday"
-                    if Level == 20:
-                        _json['preset'] = "auto"
-                    if Level == 30:
-                        _json['preset'] = "manual"
-                    if Level == 40:
-                        _json['preset'] = "comfort"
-                    if Level == 50:
-                        _json['preset'] = "eco"
-                    if Level == 60:
-                        _json['preset'] = "boost"
-                    if Level == 70:
-                        _json['preset'] = "complex"
-                    if Level == 80:
-                        _json['preset'] = "program"
-                elif Devices[Unit].DeviceID.endswith('_mode'):
-                    if Level == 0:
-                        _json['mode'] = "off"
-                    if Level == 10:
-                        _json['mode'] = "heat"
-                    if Level == 20:
-                        _json['mode'] = "auto"
-                        #retreive previous value from domoticz
-                        IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                        Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                        _json['heatsetpoint'] = Hp
-                #Chritsmas tree
-                elif Devices[Unit].DeviceID.endswith('_effect'):
-                    v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
-                    _json['effect'] = v
+                        _json['alert'] = "select"
+                    elif Level == 20:
+                        _json['alert'] = "lselect"
+                    elif Level == 30:
+                        _json['alert'] = "blink"
+                    else:
+                        _json['alert'] = "none"
 
+                    #Force Update using domoticz, because some device don't have return
                     UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
-
-                    #Set special options
-                    try :
-                        for o in Devices[Unit].Description.split("\n"):
-                            o2 = o.split("=")
-                            if o2[0] == 'effectSpeed':
-                                _json['effectSpeed'] = int(o2[1])
-                            if o2[0] == 'effectColours':
-                                _json['effectColours'] = json.loads(o2[1])
-
-                    except:
-                        Domoticz.Log("No special effect options")
-
-                    # Get light device
-                    _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
-
-            #Special code to force devive update for group
-            elif _type == 'groups':
-                UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
-
-            #Special devices
-            if device_type == 'Warning device':
-                #Heyman Siren
-                _json.clear()
-                if Level == 10:
-                    _json['alert'] = "select"
-                elif Level == 20:
-                    _json['alert'] = "lselect"
-                elif Level == 30:
-                    _json['alert'] = "blink"
-                else:
-                    _json['alert'] = "none"
-
-                #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -378,15 +385,7 @@ class BasePlugin:
 
         #Stop for shutter
         if Command == 'Stop':
-            _json = {'bri_inc':0}
-
-        #Special part for shutter
-        #if self.Devices[IEEE]['model'] == 'Window covering device':
-        #    previous_sate = Devices[Unit].nValue
-        #    if _json['on'] == False and previous_sate == 0:
-        #        _json = {'bri_inc':0}
-        #    elif _json['on'] == True and previous_sate == 1:
-        #        _json = {'bri_inc':0}
+            _json = {'stop':True}
 
         #color
         if Command == 'Set Color':
