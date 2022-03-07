@@ -927,6 +927,10 @@ def installFE():
     except:
         pass
 
+    #Special part for dockers
+    if not os.path.exists(templates_path):
+        templates_path = templates_path.replace("userdata/","")
+
     #Domoticz.Status('File size : ' + str(fs))
 
     if fs == 8967:
