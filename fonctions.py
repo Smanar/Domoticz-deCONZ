@@ -934,6 +934,7 @@ def installFE():
     #Domoticz.Status('File size : ' + str(fs))
 
     if fs == 8967:
+        Domoticz.Status('Plugin custom pages in date')
         return
 
     Domoticz.Status('Starting the installation of plugin custom page (' + str(fs) + ')...')
