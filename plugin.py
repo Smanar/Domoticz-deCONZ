@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.22" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.23" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -28,6 +28,7 @@
         <param field="Address" label="deCONZ IP" width="150px" required="true" default="127.0.0.1"/>
         <param field="Port" label="Port" width="150px" required="true" default="80"/>
         <param field="Mode2" label="API KEY" width="100px" required="true" default="1234567890" />
+        <param field="Mode4" label="Specials settings, separated by comma" width="200px" required="false" default="" />
         <param field="Mode3" label="Debug" width="150px">
             <options>
                 <option label="None" value="0"  default="true" />
@@ -43,19 +44,6 @@
     </params>
 </plugin>
 """
-
-
-# Combo for Heartbeat, disabled for the moment
-#        <param field="Mode4" label="Refresh rate" width="150px" required="true">
-#        <options>
-#                <option label="1 second" value="1"  />
-#                <option label="2 seconds" value="2"/>
-#                <option label="5 seconds" value="5"/>
-#                <option label="10 seconds" value="10" default="true"/>
-#                <option label="20 seconds" value="20"/>
-#            </options>
-#        </param>
-
 
 # All imports
 import Domoticz
@@ -84,6 +72,9 @@ DOMOTICZ_IP = '127.0.0.1'
 
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
+ENABLEMORESENSOR = False #Create more sensors, like tension and current
+
+SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -113,12 +104,6 @@ class BasePlugin:
         Domoticz.Debug("onStart called")
         #CreateDevice('sirene test','En test','Warning device')
 
-        #try:
-        #    Domoticz.Log("Heartbeat set to: " + Parameters["Mode4"])
-        #    Domoticz.Heartbeat(int(Parameters["Mode4"]))
-        #except:
-        #    pass
-
         #Check Domoticz IP
         if Parameters["Address"] != '127.0.0.1' and Parameters["Address"] != 'localhost':
             global DOMOTICZ_IP
@@ -134,6 +119,10 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
+            
+        if "ENABLEMORESENSOR" in Parameters["Mode4"]:
+            Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
+            ENABLEMORESENSOR = True
 
         #Read banned devices
         try:
@@ -276,6 +265,8 @@ class BasePlugin:
                 _json['alert'] = 'lselect'
                 #Force Update using domoticz, because some device don't have return
                 UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, Unit)
+            elif device_type.startswith('Window covering'):
+                _json['open'] = False
             else:
                 _json['on'] = True
                 if Level:
@@ -288,6 +279,8 @@ class BasePlugin:
                 _json['alert'] = 'none'
                 #Force Update using domoticz, because some device don't have return
                 UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, Unit)
+            elif device_type.startswith('Window covering'):
+                _json['open'] = True
             else:
                 _json['on'] = False
                 if _type == 'config':
@@ -298,89 +291,92 @@ class BasePlugin:
 
         #level
         if Command == 'Set Level':
-            #To prevent bug
-            _json['on'] = True
+            if device_type.startswith('Window covering'):
+                _json['lift'] = Level
+            else:
+                #To prevent bug
+                _json['on'] = True
 
-            _json['bri'] = round(Level*254/100)
+                _json['bri'] = round(Level*254/100)
 
-            #Special situation
-            if _type == 'config':
-                _json.clear()
-                #Thermostat
-                if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
-                    _json['heatsetpoint'] = int(Level * 100)
-                    dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
-                    if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
-                        _json['mode'] = "auto"
-                elif Devices[Unit].DeviceID.endswith('_preset'):
+                #Special situation
+                if _type == 'config':
+                    _json.clear()
+                    #Thermostat
+                    if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                        _json['heatsetpoint'] = int(Level * 100)
+                        dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
+                        if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
+                            _json['mode'] = "auto"
+                    elif Devices[Unit].DeviceID.endswith('_preset'):
+                        if Level == 10:
+                            _json['preset'] = "holiday"
+                        if Level == 20:
+                            _json['preset'] = "auto"
+                        if Level == 30:
+                            _json['preset'] = "manual"
+                        if Level == 40:
+                            _json['preset'] = "comfort"
+                        if Level == 50:
+                            _json['preset'] = "eco"
+                        if Level == 60:
+                            _json['preset'] = "boost"
+                        if Level == 70:
+                            _json['preset'] = "complex"
+                        if Level == 80:
+                            _json['preset'] = "program"
+                    elif Devices[Unit].DeviceID.endswith('_mode'):
+                        if Level == 0:
+                            _json['mode'] = "off"
+                        if Level == 10:
+                            _json['mode'] = "heat"
+                        if Level == 20:
+                            _json['mode'] = "auto"
+                            #retreive previous value from domoticz
+                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                            _json['heatsetpoint'] = Hp
+                    #Chritsmas tree
+                    elif Devices[Unit].DeviceID.endswith('_effect'):
+                        v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
+                        _json['effect'] = v
+
+                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+
+                        #Set special options
+                        try :
+                            for o in Devices[Unit].Description.split("\n"):
+                                o2 = o.split("=")
+                                if o2[0] == 'effectSpeed':
+                                    _json['effectSpeed'] = int(o2[1])
+                                if o2[0] == 'effectColours':
+                                    _json['effectColours'] = json.loads(o2[1])
+
+                        except:
+                            Domoticz.Log("No special effect options")
+
+                        # Get light device
+                        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
+
+                #Special code to force devive update for group
+                elif _type == 'groups':
+                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
+
+                #Special devices
+                if device_type == 'Warning device':
+                    #Heyman Siren
+                    _json.clear()
                     if Level == 10:
-                        _json['preset'] = "holiday"
-                    if Level == 20:
-                        _json['preset'] = "auto"
-                    if Level == 30:
-                        _json['preset'] = "manual"
-                    if Level == 40:
-                        _json['preset'] = "comfort"
-                    if Level == 50:
-                        _json['preset'] = "eco"
-                    if Level == 60:
-                        _json['preset'] = "boost"
-                    if Level == 70:
-                        _json['preset'] = "complex"
-                    if Level == 80:
-                        _json['preset'] = "program"
-                elif Devices[Unit].DeviceID.endswith('_mode'):
-                    if Level == 0:
-                        _json['mode'] = "off"
-                    if Level == 10:
-                        _json['mode'] = "heat"
-                    if Level == 20:
-                        _json['mode'] = "auto"
-                        #retreive previous value from domoticz
-                        IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                        Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                        _json['heatsetpoint'] = Hp
-                #Chritsmas tree
-                elif Devices[Unit].DeviceID.endswith('_effect'):
-                    v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
-                    _json['effect'] = v
+                        _json['alert'] = "select"
+                    elif Level == 20:
+                        _json['alert'] = "lselect"
+                    elif Level == 30:
+                        _json['alert'] = "blink"
+                    else:
+                        _json['alert'] = "none"
 
+                    #Force Update using domoticz, because some device don't have return
                     UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
-
-                    #Set special options
-                    try :
-                        for o in Devices[Unit].Description.split("\n"):
-                            o2 = o.split("=")
-                            if o2[0] == 'effectSpeed':
-                                _json['effectSpeed'] = int(o2[1])
-                            if o2[0] == 'effectColours':
-                                _json['effectColours'] = json.loads(o2[1])
-
-                    except:
-                        Domoticz.Log("No special effect options")
-
-                    # Get light device
-                    _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
-
-            #Special code to force devive update for group
-            elif _type == 'groups':
-                UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
-
-            #Special devices
-            if device_type == 'Warning device':
-                #Heyman Siren
-                _json.clear()
-                if Level == 10:
-                    _json['alert'] = "select"
-                elif Level == 20:
-                    _json['alert'] = "lselect"
-                elif Level == 30:
-                    _json['alert'] = "blink"
-                else:
-                    _json['alert'] = "none"
-
-                #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
 
         #Pach for special device
         if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
@@ -389,15 +385,7 @@ class BasePlugin:
 
         #Stop for shutter
         if Command == 'Stop':
-            _json = {'bri_inc':0}
-
-        #Special part for shutter
-        #if self.Devices[IEEE]['model'] == 'Window covering device':
-        #    previous_sate = Devices[Unit].nValue
-        #    if _json['on'] == False and previous_sate == 0:
-        #        _json = {'bri_inc':0}
-        #    elif _json['on'] == True and previous_sate == 1:
-        #        _json = {'bri_inc':0}
+            _json = {'stop':True}
 
         #color
         if Command == 'Set Color':
@@ -705,8 +693,21 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
+            elif Model == 'ZHEMI101': # power and consumption on the same endpoint
+                self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
+
+            #Bonus sensor ?
+            if ENABLEMORESENSOR:
+                # Voltage sensor ?
+                if 'voltage' in StateList:
+                    self.Devices[IEEE + "_voltage"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_voltage' }
+                    self.CreateIfnotExist(IEEE + "_voltage",'ZHAPower_voltage',Name)
+                # Current Sensor ?
+                if 'current' in StateList:
+                    self.Devices[IEEE + "_current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
+                    self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
 
             #update
             if kwarg:
@@ -742,9 +743,9 @@ class BasePlugin:
                 if GetDomoDeviceInfo(Dev_name) == False:
                     CreateDevice(Dev_name,Name,Type)
 
-    def CreateIfnotExist(self,__IEEE,__Type,Name):
+    def CreateIfnotExist(self, __IEEE, __Type, Name, opt = 0):
         if GetDomoDeviceInfo(__IEEE) == False:
-            CreateDevice(__IEEE,Name,__Type)
+            CreateDevice(__IEEE, Name, __Type, opt)
 
     def NormalConnexion(self,_Data):
 
@@ -1230,11 +1231,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
 
     kwarg2 = kwarg.copy()
 
-    if field == 'mode':
-        kwarg2['nValue'] = value
-        kwarg2['sValue'] = str(value)
-
-    if field == 'preset':
+    if (field == 'mode') or (field == 'preset'):
         kwarg2['nValue'] = value
         kwarg2['sValue'] = str(value)
 
@@ -1242,7 +1239,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['nValue'] = value[1]
         kwarg2['sValue'] = value[0]
 
-    else:
+    else: # used for voltage, current
         kwarg2['nValue'] = 0
         kwarg2['sValue'] = str(value)
 
@@ -1262,16 +1259,9 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
-    if 'orientation' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"orientation")
-    if 'heatsetpoint' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"heatsetpoint")
-    if 'mode' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"mode")
-    if 'preset' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"preset")
-    if 'lock' in kwarg:
-        UpdateDevice_Special(_id,_type,kwarg,"lock")
+    for d in SpecialDeviceList:
+        if d in kwarg:
+            UpdateDevice_Special(_id, _type, kwarg, d)
 
     #Update the device
     UpdateDeviceProc(kwarg,Unit)
@@ -1279,18 +1269,11 @@ def UpdateDevice(_id,_type,kwarg):
 def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
-
-    if 'mode' in kwarg:
-        kwarg.pop('mode')
-    if 'preset' in kwarg:
-        kwarg.pop('preset')
-    if 'heatsetpoint' in kwarg:
-        kwarg.pop('heatsetpoint')
-    if 'orientation' in kwarg:
-        kwarg.pop('orientation')
-    if 'lock' in kwarg:
-        kwarg.pop('lock')
-
+    
+    for d in SpecialDeviceList:
+        if d in kwarg:
+            kwarg.pop(d)
+        
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
@@ -1361,7 +1344,7 @@ def UpdateDeviceProc(kwarg,Unit):
     else:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
-def CreateDevice(IEEE,_Name,_Type):
+def CreateDevice(IEEE, _Name, _Type, opt = 0):
     kwarg = {}
     Unit = FreeUnit()
     TypeName = ''
@@ -1479,16 +1462,22 @@ def CreateDevice(IEEE,_Name,_Type):
 
     elif _Type == 'ZHAConsumption':# in kWh
         #Device with only comsumption
-        if True: # if IEEE.endswith('0702'):
+        if opt == 0:
             kwarg['Type'] = 113
             kwarg['Subtype'] = 0
             kwarg['Switchtype'] = 0
-        #Device with power and energy, not exist (yet)
+        #Device with power and energy
         else:
             kwarg['TypeName'] = 'kWh'
 
     elif _Type == 'ZHAPower':# in W
         kwarg['TypeName'] = 'Usage'
+    elif _Type == 'ZHAPower_voltage':
+            kwarg['Type'] = 243
+            kwarg['Subtype'] = 8
+    elif _Type == 'ZHAPower_current':
+            kwarg['Type'] = 243
+            kwarg['Subtype'] = 23
 
     elif _Type == 'ZHAVibration':
         kwarg['Type'] = 244

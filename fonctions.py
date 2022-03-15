@@ -350,6 +350,7 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
         kwarg.update(ReturnUpdateValue( 'lock' , data['lock'] ) )
+
     if 'reachable' in data:
         if data['reachable'] == False:
             kwarg.update({'TimedOut':1})
@@ -423,6 +424,10 @@ def ProcessAllState(data,model):
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
         kwarg.update(ReturnUpdateValue('lift', data['lift'], model) )
+    if 'voltage' in data:
+        kwarg.update(ReturnUpdateValue( 'voltage' , data['voltage'], model) )
+    if 'current' in data:
+        kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -641,13 +646,15 @@ def ReturnUpdateValue(command,val,model = None):
         else:
             kwarg['sValue'] = '3'
 
-    if command == 'lightlevel':
+    if (command == 'lightlevel') or (command == 'lux'):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
-    if command == 'lux':
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(val)
+    if command == 'voltage':
+        kwarg['voltage'] = int(val)
+
+    if command == 'current':
+        kwarg['current'] = int(val)
 
     if command == 'airqualityppb':
         kwarg['nValue'] = int(val)
@@ -656,16 +663,16 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'consumption':
         #Wh to Kwh
         kwh = round( float(val) * 1, 3)
-        #Device with power and comsuption, never see yet, so disabled
-        #if buffercommand.get('power'):
-        #    p = buffercommand['power']
-        #    buffercommand.clear()
-        #    kwarg['nValue'] = 0
-        #    kwarg['sValue'] = str(p) + ';' + str(kwh)
-        ##device with only consumption
-        #else:
-        kwarg['nValue'] = 0
-        kwarg['sValue'] = str(kwh)
+        #Device with power and comsuption
+        if buffercommand.get('power'):
+            p = buffercommand['power']
+            buffercommand.clear()
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(p) + ';' + str(kwh)
+        #device with only consumption
+        else:
+            kwarg['nValue'] = 0
+            kwarg['sValue'] = str(kwh)
 
     if command == 'power':
         buffercommand['power'] = val
@@ -807,7 +814,7 @@ def ButtonConvertion(val,model = 0):
 
         v = 0
         Button_Number = 1
-        e = int(val)
+        e = int(val or 0)
 
         #Green power device
         if e < 1000:
@@ -920,9 +927,14 @@ def installFE():
     except:
         pass
 
+    #Special part for dockers
+    if not os.path.exists(templates_path):
+        templates_path = templates_path.replace("userdata/","")
+
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 9007:
+    if fs == 8967:
+        Domoticz.Status('Plugin custom pages in date')
         return
 
     Domoticz.Status('Starting the installation of plugin custom page (' + str(fs) + ')...')

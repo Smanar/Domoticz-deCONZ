@@ -23,8 +23,8 @@
             <zz-deconz-plugins-table
                     class="filters"
                     ng-if="::$ctrl.zigdevs"
-                    zigdevs="$ctrl.zigdevs"
-            ></zz-deconz-plugins-table>
+                    zigdevs="$ctrl.zigdevs">
+            </zz-deconz-plugins-table>
 
             <section class="bottom-panel">
                 <button class="btn btn-default pull-left ng-binding" ng-click="$ctrl.autoConfPlugin()">
@@ -76,15 +76,15 @@
     </div>
     <div class="modal-footer">
         <button type="button"
-                class="btn btn-primary"
-                ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
-                ng-click="$ctrl.renameDevice()">
+            class="btn btn-primary"
+            ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
+            ng-click="$ctrl.renameDevice()">
             {{:: 'Rename' | translate }}
         </button>
 
         <button type="button"
-                class="btn btn-default"
-                ng-click="$dismiss()">
+            class="btn btn-default"
+            ng-click="$dismiss()">
             {{:: 'Cancel' | translate }}
         </button>
     </div>
@@ -116,14 +116,14 @@
 
     <div class="modal-footer">
         <button type="button"
-                class="btn btn-cancel"
-                ng-click="$dismiss()">
+            class="btn btn-cancel"
+            ng-click="$dismiss()">
             {{:: 'Cancel' | translate }}
         </button>
         <button type="button"
-                class="btn btn-primary"
-                ng-disabled="modalForm.$invalid || $ctrl.isUnchanged"
-                ng-click="$ctrl.configDevice()">
+            class="btn btn-primary"
+            ng-disabled="modalForm.$invalid || $ctrl.isUnchanged"
+            ng-click="$ctrl.configDevice()">
             {{:: 'Update' | translate }}
         </button>
     </div>
