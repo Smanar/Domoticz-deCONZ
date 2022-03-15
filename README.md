@@ -73,6 +73,8 @@ python3 API_KEY.py 127.0.0.1:80 create
 And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/getting_started/#acquire-an-api-key    
 Or you can just use the Front End in Domoticz/Custom/Deconz.   
 
+- By defaut the plugin use standard setting, you can use special one in the field "specials settings" on the hardware panel, for exemple ENABLEMORESENSOR will enable tension and current sensors.   
+
 ## Remark.
 - There is a deconz Discord channel https://discord.gg/QFhTxqN
 
