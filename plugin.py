@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.23" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.24" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -74,7 +74,7 @@ LIGHTLOG = True #To disable some activation, log will be lighter, but less infor
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
 
-SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
+SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -123,6 +123,7 @@ class BasePlugin:
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             ENABLEMORESENSOR = True
+            SpecialDeviceList = SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
         try:
@@ -1244,7 +1245,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['sValue'] = str(value)
 
     if not Unit2 :
-        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+        Domoticz.Debug("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
         return
 
     #Update it
