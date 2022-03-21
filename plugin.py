@@ -75,6 +75,7 @@ SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
 
 SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
+FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -1271,7 +1272,7 @@ def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
     
-    for d in SpecialDeviceList:
+    for d in FullSpecialDeviceList:
         if d in kwarg:
             kwarg.pop(d)
         
