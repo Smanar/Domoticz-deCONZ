@@ -696,7 +696,8 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
-            elif Model == 'ZHEMI101': # power and consumption on the same endpoint
+            # power and consumption on the same endpoint
+            elif Model == 'ZHEMI101' or Model == 'TH1124ZB':
                 self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
