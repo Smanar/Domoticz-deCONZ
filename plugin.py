@@ -74,7 +74,6 @@ LIGHTLOG = True #To disable some activation, log will be lighter, but less infor
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
 
-SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
@@ -98,6 +97,8 @@ class BasePlugin:
         self.IDGateway = -1
 
         self.INIT_STEP = ['config','lights','sensors','groups']
+
+        self.SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
 
         return
 
@@ -124,7 +125,7 @@ class BasePlugin:
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             ENABLEMORESENSOR = True
-            SpecialDeviceList = SpecialDeviceList + ["current", "voltage"]
+            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
         try:
@@ -515,7 +516,7 @@ class BasePlugin:
                 for i in self.Devices:
                     if i == IEEE:
                         _id = self.Devices[i]['id']
-                UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' } )
+                UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' }, self.SpecialDeviceList )
             self.NeedToReset = []
 
         #Devices[27].Update(nValue=0, sValue='11;22' )
@@ -713,7 +714,7 @@ class BasePlugin:
 
             #update
             if kwarg:
-                UpdateDevice(key,Type_device,kwarg)
+                UpdateDevice(key, Type_device, kwarg, self.SpecialDeviceList)
 
         #groups
         else:
@@ -828,7 +829,7 @@ class BasePlugin:
                 Domoticz.Error("Not managed return JSON: " + str(_Data2) )
 
         if kwarg:
-            UpdateDevice(_id,_type,kwarg)
+            UpdateDevice(_id, _type ,kwarg, self.SpecialDeviceList)
 
     def ReadConfig(self,_Data):
         #trick to test is deconz is ready
@@ -986,7 +987,7 @@ class BasePlugin:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
         if kwarg:
-            UpdateDevice(_Data['id'],_Data['r'],kwarg)
+            UpdateDevice(_Data['id'], _Data['r'], kwarg, self.SpecialDeviceList)
 
     def DeleteDeviceFromdeCONZ(self,_id):
 
@@ -1252,7 +1253,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
     #Update it
     UpdateDeviceProc(kwarg2,Unit2)
 
-def UpdateDevice(_id,_type,kwarg):
+def UpdateDevice(_id, _type, kwarg, SpecList):
 
     Unit = GetDomoUnit(_id,_type)
 
@@ -1261,7 +1262,7 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
-    for d in SpecialDeviceList:
+    for d in SpecList:
         if d in kwarg:
             UpdateDevice_Special(_id, _type, kwarg, d)
 
