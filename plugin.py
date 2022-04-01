@@ -124,6 +124,7 @@ class BasePlugin:
             
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
+            global ENABLEMORESENSOR
             ENABLEMORESENSOR = True
             self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
