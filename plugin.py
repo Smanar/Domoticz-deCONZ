@@ -1326,14 +1326,16 @@ def UpdateDeviceProc(kwarg,Unit):
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
+    #Device not reacheable
+    if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and (('nValue' in kwarg) or ('sValue' in kwarg)):
+        NeedUpdate = True
+        kwarg['TimedOut'] = 0
+
     #Theses value are needed for Domoticz
     if 'nValue' not in kwarg:
         kwarg['nValue'] = Devices[Unit].nValue
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
-    if Devices[Unit].TimedOut != 0 and kwarg.get('TimedOut',0) == 0:
-        NeedUpdate = True
-        kwarg['TimedOut'] = 0
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
