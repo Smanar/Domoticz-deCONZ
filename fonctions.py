@@ -654,7 +654,7 @@ def ReturnUpdateValue(command,val,model = None):
         kwarg['voltage'] = int(val)
 
     if command == 'current':
-        kwarg['current'] = int(val)
+        kwarg['current'] = int(val) / 1000
 
     if command == 'airqualityppb':
         kwarg['nValue'] = int(val)
