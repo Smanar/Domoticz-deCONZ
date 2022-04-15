@@ -1274,6 +1274,10 @@ def UpdateDevice(_id, _type, kwarg, SpecList):
 def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
+    IsUpdate = False
+    
+    if ('nValue' in kwarg) or ('sValue' in kwarg):
+        IsUpdate = True
     
     for d in FullSpecialDeviceList:
         if d in kwarg:
@@ -1287,7 +1291,7 @@ def UpdateDeviceProc(kwarg,Unit):
     #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event
     # Only for switch > 'LevelNames' in Devices[Unit].Options
     # Only sensors >  _type == 'sensors'
-    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ( ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0) ):
+    if IsUpdate and ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0):
         NeedUpdate = True
 
     #hack to make graph more realistic, we loose the first value, but have at least a good value every hour.
@@ -1319,7 +1323,7 @@ def UpdateDeviceProc(kwarg,Unit):
         NeedUpdate = True
 
     #force update, at least 1 every 24h
-    if not NeedUpdate:
+    if (not NeedUpdate) and IsUpdate:
         LUpdate = Devices[Unit].LastUpdate
         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
         current = time.time()
@@ -1327,7 +1331,7 @@ def UpdateDeviceProc(kwarg,Unit):
             NeedUpdate = True
 
     #Device not reacheable
-    if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and (('nValue' in kwarg) or ('sValue' in kwarg)):
+    if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
         NeedUpdate = True
         kwarg['TimedOut'] = 0
 
