@@ -664,7 +664,7 @@ def ReturnUpdateValue(command,val,model = None):
         #Wh to Kwh
         kwh = round(float(val) * 1, 3)
         #Device with power and comsuption
-        if model == 'ZHEMI101':
+        if model == 'ZHEMI101' or model == 'TH1124ZB':
             if buffercommand.get('power'):
                 p = buffercommand['power']
                 buffercommand.clear()
