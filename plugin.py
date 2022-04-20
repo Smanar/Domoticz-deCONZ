@@ -84,7 +84,7 @@ class BasePlugin:
     #enabled = False
 
     def __init__(self):
-        self.Devices = {} # id, type, state (banned/missing/working) , model
+        self.Devices = {} # id, type, state (banned/missing/working) , model, option (1 = Power+Consumption)
         self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
@@ -568,8 +568,6 @@ class BasePlugin:
             Manuf = str(_Data.get('manufacturername',''))
             StateList = _Data.get('state',[])
             ConfigList = _Data.get('config',[])
-            if not Model:
-                Model = ''
 
             Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(ConfigList) )
 
@@ -598,7 +596,7 @@ class BasePlugin:
             #Get some infos
             kwarg = {}
             if StateList:
-                kwarg.update(ProcessAllState(StateList,Model))
+                kwarg.update(ProcessAllState(StateList,Model,0))
                 if 'colormode' in StateList:
                     cm = StateList['colormode']
                     if (cm == 'xy') and ('hue' in StateList):
@@ -699,6 +697,7 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
             # power and consumption on the same endpoint
             elif Model == 'ZHEMI101' or Model == 'TH1124ZB':
+                self.Devices[IEEE]['option'] = 1
                 self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
@@ -921,7 +920,7 @@ class BasePlugin:
         #MAJ State : _Data['e'] == 'changed'
         if 'state' in _Data:
             state = _Data['state']
-            kwarg.update(ProcessAllState(state , model))
+            kwarg.update(ProcessAllState(state , model, self.Devices[IEEE].get('option',0)))
 
             if 'buttonevent' in state:
                 if model == 'XCube_C':
