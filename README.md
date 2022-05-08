@@ -106,6 +106,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 08/05/22 : 1.0.24 > This version contain various correctives for consumption/power sensors.   
 - 15/03/22 : 1.0.23 > Can create tension and current widget (need to be enabled in hardware panel), new path system for docker installation (to correct front end issue), Add new field in config, to be used as special setting later, somes change on covering support.
 - 29/12/21 : 1.0.22 > Add specific widget for the Ikea Styrbar, optimisation/update for covering, some devices correctives, thx to @veitk, @RDols and @sonar98.   
 - 20/09/21 : 1.0.21 > Warning device use now a selector switch instead of a 2 position one, add some new value for ZGP switches, repair the front end to be able to set "0" value, add a tool to clean the API key list.    
