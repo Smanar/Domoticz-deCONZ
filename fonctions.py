@@ -357,7 +357,7 @@ def ProcessAllConfig(data):
 
     return kwarg
 
-def ProcessAllState(data,model):
+def ProcessAllState(data,model,option):
     # Lux need to be > lightlevel > daylight > dark
     # xy > ct > bri > on/off
     # consumption > power
@@ -401,7 +401,7 @@ def ProcessAllState(data,model):
     if 'power' in data:
         kwarg.update(ReturnUpdateValue('power', data['power']))
     if 'consumption' in data:
-        kwarg.update(ReturnUpdateValue('consumption', data['consumption']))
+        kwarg.update(ReturnUpdateValue('consumption', data['consumption'], option))
     if 'battery' in data:
         kwarg.update(ReturnUpdateValue('battery', data['battery']))
     if 'buttonevent' in data:
@@ -444,7 +444,7 @@ def ProcessAllState(data,model):
 
     return kwarg
 
-def ReturnUpdateValue(command,val,model = None):
+def ReturnUpdateValue(command, val ,option = None):
 
     if not val:
         val = 0
@@ -458,13 +458,13 @@ def ReturnUpdateValue(command,val,model = None):
     if command == 'on':
         if val == 'True':
             kwarg['nValue'] = 1
-            if model == 'Window covering device':
+            if option == 'Window covering device':
                 kwarg['sValue'] = '100'
             else:
                 kwarg['sValue'] = 'on'
         else:
             kwarg['nValue'] = 0
-            if model == 'Window covering device':
+            if option == 'Window covering device':
                 kwarg['sValue'] = '0'
             else:
                 kwarg['sValue'] = 'off'
@@ -498,8 +498,8 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'bri':
         #kwarg['nValue'] = 1
-        val = int(int(val) * 100 / 255 )
-        if model == 'Window covering device':
+        val = int(float(val) * 100 / 255 )
+        if option == 'Window covering device':
             if val < 2:
                 kwarg['sValue'] = '0'
                 kwarg['nValue'] = 0
@@ -577,7 +577,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'temperature':
         kwarg['nValue'] = 0
-        val = round( int(val) / 100, 2  )
+        val = round(float(val) / 100, 2  )
         kwarg['sValue'] = str(val)
 
     if command == 'heatsetpoint':
@@ -615,7 +615,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['preset'] = 80
 
     if command == 'status':
-        if int(val) == 0:
+        if int(float(val)) == 0:
             kwarg['nValue'] = 0
             kwarg['sValue'] = str(val)
         else:
@@ -623,7 +623,7 @@ def ReturnUpdateValue(command,val,model = None):
             kwarg['sValue'] = str(val)
 
     if command == 'pressure':
-        val = int(val)
+        val = int(float(val))
         if val < 1000:
             Bar_forecast = 4
         elif val < 1020:
@@ -637,7 +637,7 @@ def ReturnUpdateValue(command,val,model = None):
 
     # 0=Normal, 1=Comfortable, 2=Dry, 3=Wet
     if command == 'humidity':
-        val = int( int(val) / 100)
+        val = int(float(val) / 100)
         kwarg['nValue'] = val
         if val <= 40:
             kwarg['sValue'] = '2'
@@ -662,13 +662,14 @@ def ReturnUpdateValue(command,val,model = None):
 
     if command == 'consumption':
         #Wh to Kwh
-        kwh = round( float(val) * 1, 3)
+        kwh = round(float(val) * 1, 3)
         #Device with power and comsuption
-        if buffercommand.get('power'):
-            p = buffercommand['power']
-            buffercommand.clear()
-            kwarg['nValue'] = 0
-            kwarg['sValue'] = str(p) + ';' + str(kwh)
+        if option == 1:
+            if buffercommand.get('power'):
+                p = buffercommand['power']
+                buffercommand.clear()
+                kwarg['nValue'] = 0
+                kwarg['sValue'] = str(p) + ';' + str(kwh)
         #device with only consumption
         else:
             kwarg['nValue'] = 0

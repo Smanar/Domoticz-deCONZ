@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.23" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.24" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -74,7 +74,7 @@ LIGHTLOG = True #To disable some activation, log will be lighter, but less infor
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
 
-SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
+FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
@@ -84,7 +84,7 @@ class BasePlugin:
     #enabled = False
 
     def __init__(self):
-        self.Devices = {} # id, type, state (banned/missing/working) , model
+        self.Devices = {} # id, type, state (banned/missing/working) , model, option (1 = Power+Consumption)
         self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
@@ -97,6 +97,8 @@ class BasePlugin:
         self.IDGateway = -1
 
         self.INIT_STEP = ['config','lights','sensors','groups']
+
+        self.SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
 
         return
 
@@ -122,7 +124,9 @@ class BasePlugin:
             
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
+            global ENABLEMORESENSOR
             ENABLEMORESENSOR = True
+            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
         try:
@@ -513,7 +517,7 @@ class BasePlugin:
                 for i in self.Devices:
                     if i == IEEE:
                         _id = self.Devices[i]['id']
-                UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' } )
+                UpdateDevice(_id,'sensors', { 'nValue' : 0 , 'sValue' : 'Off' }, self.SpecialDeviceList )
             self.NeedToReset = []
 
         #Devices[27].Update(nValue=0, sValue='11;22' )
@@ -564,8 +568,6 @@ class BasePlugin:
             Manuf = str(_Data.get('manufacturername',''))
             StateList = _Data.get('state',[])
             ConfigList = _Data.get('config',[])
-            if not Model:
-                Model = ''
 
             Domoticz.Log("### Device > " + str(key) + ' Name:' + Name + ' Type:' + Type + ' Details:' + str(StateList) + ' and ' + str(ConfigList) )
 
@@ -594,7 +596,7 @@ class BasePlugin:
             #Get some infos
             kwarg = {}
             if StateList:
-                kwarg.update(ProcessAllState(StateList,Model))
+                kwarg.update(ProcessAllState(StateList,Model,0))
                 if 'colormode' in StateList:
                     cm = StateList['colormode']
                     if (cm == 'xy') and ('hue' in StateList):
@@ -693,7 +695,9 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
-            elif Model == 'ZHEMI101': # power and consumption on the same endpoint
+            # power and consumption on the same endpoint
+            elif Model == 'ZHEMI101' or Model == 'TH1124ZB':
+                self.Devices[IEEE]['option'] = 1
                 self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
@@ -711,7 +715,7 @@ class BasePlugin:
 
             #update
             if kwarg:
-                UpdateDevice(key,Type_device,kwarg)
+                UpdateDevice(key, Type_device, kwarg, self.SpecialDeviceList)
 
         #groups
         else:
@@ -826,7 +830,7 @@ class BasePlugin:
                 Domoticz.Error("Not managed return JSON: " + str(_Data2) )
 
         if kwarg:
-            UpdateDevice(_id,_type,kwarg)
+            UpdateDevice(_id, _type ,kwarg, self.SpecialDeviceList)
 
     def ReadConfig(self,_Data):
         #trick to test is deconz is ready
@@ -916,7 +920,7 @@ class BasePlugin:
         #MAJ State : _Data['e'] == 'changed'
         if 'state' in _Data:
             state = _Data['state']
-            kwarg.update(ProcessAllState(state , model))
+            kwarg.update(ProcessAllState(state , model, self.Devices[IEEE].get('option',0)))
 
             if 'buttonevent' in state:
                 if model == 'XCube_C':
@@ -984,7 +988,7 @@ class BasePlugin:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
         if kwarg:
-            UpdateDevice(_Data['id'],_Data['r'],kwarg)
+            UpdateDevice(_Data['id'], _Data['r'], kwarg, self.SpecialDeviceList)
 
     def DeleteDeviceFromdeCONZ(self,_id):
 
@@ -1244,13 +1248,13 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         kwarg2['sValue'] = str(value)
 
     if not Unit2 :
-        Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
+        Domoticz.Debug("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') Special part' )
         return
 
     #Update it
     UpdateDeviceProc(kwarg2,Unit2)
 
-def UpdateDevice(_id,_type,kwarg):
+def UpdateDevice(_id, _type, kwarg, SpecList):
 
     Unit = GetDomoUnit(_id,_type)
 
@@ -1259,7 +1263,7 @@ def UpdateDevice(_id,_type,kwarg):
         return
 
     #Check for special device, and remove special kwarg
-    for d in SpecialDeviceList:
+    for d in SpecList:
         if d in kwarg:
             UpdateDevice_Special(_id, _type, kwarg, d)
 
@@ -1269,8 +1273,12 @@ def UpdateDevice(_id,_type,kwarg):
 def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
+    IsUpdate = False
     
-    for d in SpecialDeviceList:
+    if ('nValue' in kwarg) or ('sValue' in kwarg):
+        IsUpdate = True
+    
+    for d in FullSpecialDeviceList:
         if d in kwarg:
             kwarg.pop(d)
         
@@ -1282,7 +1290,7 @@ def UpdateDeviceProc(kwarg,Unit):
     #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event
     # Only for switch > 'LevelNames' in Devices[Unit].Options
     # Only sensors >  _type == 'sensors'
-    if (('nValue' in kwarg) or ('sValue' in kwarg)) and ( ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0) ):
+    if IsUpdate and ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0):
         NeedUpdate = True
 
     #hack to make graph more realistic, we loose the first value, but have at least a good value every hour.
@@ -1314,21 +1322,23 @@ def UpdateDeviceProc(kwarg,Unit):
         NeedUpdate = True
 
     #force update, at least 1 every 24h
-    if not NeedUpdate:
+    if (not NeedUpdate) and IsUpdate:
         LUpdate = Devices[Unit].LastUpdate
         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
         current = time.time()
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
+    #Device not reacheable
+    if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
+        NeedUpdate = True
+        kwarg['TimedOut'] = 0
+
     #Theses value are needed for Domoticz
     if 'nValue' not in kwarg:
         kwarg['nValue'] = Devices[Unit].nValue
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
-    if Devices[Unit].TimedOut != 0 and kwarg.get('TimedOut',0) == 0:
-        NeedUpdate = True
-        kwarg['TimedOut'] = 0
 
     if NeedUpdate or not LIGHTLOG:
         Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
