@@ -344,8 +344,8 @@ def ProcessAllConfig(data):
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
         if 'mode' in data:
-            if not (data['mode'] == 'off' and data['on'] == True):
-                kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+            #if not (data['mode'] == 'off' and data['on'] == True):
+            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'preset' in data:
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
