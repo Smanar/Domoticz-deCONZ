@@ -279,6 +279,8 @@ def JSON_Repair(data):
 #
 #*********************************
 
+DevelcoModuleTable = ['1003','1001']
+
 XiaomiSingleGangButtonSwitchTable = ['1002','1004','1001']
 
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
@@ -876,6 +878,11 @@ def ButtonConvertion(val,model = 0):
         if model == 6:
             if val in IkeaStyrbarButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + IkeaStyrbarButtonSwitchTable.index(val))
+
+        #Develco Module
+        if model == 7:
+            if val in DevelcoModuleTable:
+                kwarg['nValue'] = 10 * (1 + DevelcoModuleTable.index(val))
 
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
