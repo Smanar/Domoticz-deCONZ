@@ -121,7 +121,7 @@ class BasePlugin:
         if Parameters["Mode3"] != "0":
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
-            
+
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
@@ -644,6 +644,10 @@ class BasePlugin:
                 #used by ikea Stybar
                 elif 'Remote Control N2' in Model:
                     Type = 'Styrbar_remote'
+                #used by Develco
+                elif 'IOMZB-110' in Model:
+                    Type = 'Binary_module'
+
                 else:
                     Type = 'Switch_Generic'
 
@@ -943,6 +947,8 @@ class BasePlugin:
                     kwarg.update(ButtonConvertion(state['buttonevent'], 5) )
                 elif model == "Styrbar_remote":
                     kwarg.update(ButtonConvertion(state['buttonevent'], 6) )
+                elif model == "Binary_module":
+                    kwarg.update(ButtonConvertion(state['buttonevent'], 7) )
                 else:
                     kwarg.update(ButtonConvertion(state['buttonevent']) )
                 if IEEE not in self.NeedToReset:
@@ -1274,14 +1280,14 @@ def UpdateDeviceProc(kwarg,Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
     IsUpdate = False
-    
+
     if ('nValue' in kwarg) or ('sValue' in kwarg):
         IsUpdate = True
-    
+
     for d in FullSpecialDeviceList:
         if d in kwarg:
             kwarg.pop(d)
-        
+
     for a in kwarg:
         if kwarg[a] != getattr(Devices[Unit], a ):
             NeedUpdate = True
@@ -1559,6 +1565,13 @@ def CreateDevice(IEEE, _Name, _Type, opt = 0):
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
+    elif _Type == 'Binary_module':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Unknow|On|Off", "LevelOffHidden": "true", "SelectorStyle": "1"}
+
     elif _Type == 'Styrbar_remote':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
