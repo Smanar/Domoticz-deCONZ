@@ -951,7 +951,7 @@ class BasePlugin:
                     kwarg.update(ButtonConvertion(state['buttonevent'], 7) )
                 else:
                     kwarg.update(ButtonConvertion(state['buttonevent']) )
-                if IEEE not in self.NeedToReset:
+                if (IEEE not in self.NeedToReset) and (model != "Binary_module"):
                     self.NeedToReset.append(IEEE)
 
             if 'vibration' in state:
