@@ -279,6 +279,8 @@ def JSON_Repair(data):
 #
 #*********************************
 
+DevelcoModuleTable = ['1003','1001']
+
 XiaomiSingleGangButtonSwitchTable = ['1002','1004','1001']
 
 XiaomiDoubleGangButtonSwitchTable = ['1002','2002','3002','1004','2004','3004','1001','2001','3001']
@@ -344,8 +346,8 @@ def ProcessAllConfig(data):
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
         if 'mode' in data:
-            if not (data['mode'] == 'off' and data['on'] == True):
-                kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+            #if not (data['mode'] == 'off' and data['on'] == True):
+            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'preset' in data:
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
@@ -877,6 +879,11 @@ def ButtonConvertion(val,model = 0):
             if val in IkeaStyrbarButtonSwitchTable:
                 kwarg['nValue'] = 10 * (1 + IkeaStyrbarButtonSwitchTable.index(val))
 
+        #Develco Module
+        if model == 7:
+            if val in DevelcoModuleTable:
+                kwarg['nValue'] = 10 * (1 + DevelcoModuleTable.index(val))
+
     if kwarg['nValue'] == 0:
         kwarg['sValue'] = 'Off'
     else:
@@ -934,7 +941,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8967:
+    if fs == 8988:
         Domoticz.Status('Plugin custom pages in date')
         return
 

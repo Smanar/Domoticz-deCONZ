@@ -58,7 +58,7 @@ elif action == 'clean':
         j2 = j['whitelist']
         for i in j2:
             print ('KEY : ' + i + ' Name : ' + j2[i]['name'] + ' Last used : ' + j2[i]['last use date'] )
-            if 'deCONZ WebApp' in j2[i]['name'] or 'Phoscon#' in j2[i]['name'] or 'homebridge-hue#' in j2[i]['name']:
+            if 'deCONZ WebApp' in j2[i]['name'] or 'Phoscon#' in j2[i]['name'] or 'homebridge-hue#' in j2[i]['name'] or 'Hue Essentials#' in j2[i]['name']:
                 req = request.Request('http://' + ip + '/api/' + data[0] + '/config/whitelist/' + i , method='DELETE')
                 response = request.urlopen(req).read()
                 print ('Deleted : '  + str(response) )
