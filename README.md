@@ -1,4 +1,4 @@
-# deCONZ bridge, a Zigbee plugin for Domoticz, 
+# deCONZ bridge, a Zigbee plugin for Domoticz.   
 It's a python plugin for Domoticz (home automation application).   
 It uses the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway and their application.   
 
