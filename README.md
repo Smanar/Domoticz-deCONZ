@@ -1,10 +1,10 @@
-# Domoticz-deCONZ
+# deCONZ bridge, a Zigbee plugin for Domoticz, 
 It's a python plugin for Domoticz (home automation application).   
-It uses the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
+It uses the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway and their application.   
 
 ## Description
 To resume:
-- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
+- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, Tuya, ect ....   
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
 - You also need deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify:
@@ -14,12 +14,17 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 
 - You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
-![deconz7](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
+![phoscon](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
+
+
+- You can use too some android application like Hue essential compatible with deconz ... https://play.google.com/store/apps/dev?id=7433470895643453779
+
+![hue](https://user-images.githubusercontent.com/20152487/189486132-bf16261f-e4d3-40c1-bc9e-23f909c2b166.png)
 
 
 - And use this plugin to bridge between the deCONZ server and domoticz. The plugin have now a Frontend for some actions (thx to @JayPearlman). To use it, just go in "Custom"/"DeCONZ".   
 
-![sshot-1](https://user-images.githubusercontent.com/20152487/102008804-7e81e300-3d33-11eb-8ad4-5949f1eb189e.jpg)   
+![domoticz](https://user-images.githubusercontent.com/20152487/102008804-7e81e300-3d33-11eb-8ad4-5949f1eb189e.jpg)   
 
 
 ## Requirement.
@@ -106,6 +111,8 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 10/09/22 : 1.0.25 > It's now possible to clean the unused API key used for Hue Essentials, add support for binary module, with the develco one, add "pulseconfiguration" as possible setting in the GUI, thx @Jemand .   
+- Correct an issue for thermostat with "mode" not updated.
 - 08/05/22 : 1.0.24 > This version contain various correctives for consumption/power sensors.   
 - 15/03/22 : 1.0.23 > Can create tension and current widget (need to be enabled in hardware panel), new path system for docker installation (to correct front end issue), Add new field in config, to be used as special setting later, somes change on covering support.
 - 29/12/21 : 1.0.22 > Add specific widget for the Ikea Styrbar, optimisation/update for covering, some devices correctives, thx to @veitk, @RDols and @sonar98.   
