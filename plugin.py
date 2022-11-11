@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.24" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.26" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -278,7 +278,7 @@ class BasePlugin:
                 if _type == 'config':
                     if Devices[Unit].DeviceID.endswith('_lock'):
                         _json = {'lock':True}
-        if Command == 'Off':
+        elif Command == 'Off':
             if device_type == 'Warning device':
                 _json['alert'] = 'none'
                 #Force Update using domoticz, because some device don't have return
@@ -387,8 +387,12 @@ class BasePlugin:
             _json.pop('bri')
             _json['transitiontime'] = 0
 
-        #Stop for shutter
-        if Command == 'Stop':
+        #covering
+        if Command == 'Open':
+            _json['open'] = False
+        elif Command == 'Close':
+            _json['open'] = True
+        elif Command == 'Stop':
             _json = {'stop':True}
 
         #color
