@@ -111,6 +111,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 12/06/22 : 1.0.26 > Make the widget for covering work again, following the Domoticz update. Create a widget with consumption and power for some devices that are able to support it, (thx @BabaIsYou)
 - 10/09/22 : 1.0.25 > It's now possible to clean the unused API key used for Hue Essentials, add support for binary module, with the develco one, add "pulseconfiguration" as possible setting in the GUI, thx @Jemand .   
 - Correct an issue for thermostat with "mode" not updated.
 - 08/05/22 : 1.0.24 > This version contain various correctives for consumption/power sensors.   
