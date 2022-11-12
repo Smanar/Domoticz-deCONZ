@@ -1,10 +1,10 @@
-# Domoticz-deCONZ
+# deCONZ bridge, a Zigbee plugin for Domoticz.   
 It's a python plugin for Domoticz (home automation application).   
-It uses the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway.
+It uses the deCONZ REST API to make a bridge beetween your zigbee network and Domoticz using a Dresden Elektronik gateway and their application.   
 
 ## Description
 To resume:
-- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, ect ....   
+- you need a Dresden Elektronik gateway, a Raspbee (for raspberry) or Conbee (USB key), it support a lot of Zigbee devices, Xiaomi, Heiman, Ikea, Philips, Osram, Tuya, ect ....   
 Official compatibility list https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
 - You also need deCONZ (their application to control and set up ZigBee network). It can work with an headless mode but you can use their GUI, for maintenance, support, look at traffic, set attributes, manage router, use command like identify:
@@ -14,12 +14,17 @@ Official compatibility list https://github.com/dresden-elektronik/deconz-rest-pl
 
 - You can use their Web app, for devices management, pairing, groups, scenes, events, ect ... https://phoscon.de/en/app/doc
 
-![deconz7](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
+![phoscon](https://user-images.githubusercontent.com/20152487/73598455-f3439880-4538-11ea-9c56-0fb18576a44b.png)
+
+
+- You can use too some android application like Hue essential compatible with deconz ... https://play.google.com/store/apps/dev?id=7433470895643453779
+
+![hue](https://user-images.githubusercontent.com/20152487/189486132-bf16261f-e4d3-40c1-bc9e-23f909c2b166.png)
 
 
 - And use this plugin to bridge between the deCONZ server and domoticz. The plugin have now a Frontend for some actions (thx to @JayPearlman). To use it, just go in "Custom"/"DeCONZ".   
 
-![sshot-1](https://user-images.githubusercontent.com/20152487/102008804-7e81e300-3d33-11eb-8ad4-5949f1eb189e.jpg)   
+![domoticz](https://user-images.githubusercontent.com/20152487/102008804-7e81e300-3d33-11eb-8ad4-5949f1eb189e.jpg)   
 
 
 ## Requirement.
@@ -44,12 +49,15 @@ You can later update the plugin
 - With command line, go to the plugin directory (domoticz/plugin/Domoticz-deCONZ).   
 - Run:   
 ```git pull```
-- Just restart the plugin, (hardware page, select deconz plugin, clic "update").    
+- Restart Domoticz.    
 
-To test the beta branch :   
-```git pull```   
-```git checkout beta```   
-```git pull```   
+To test the beta branch :
+```
+git pull
+git checkout beta
+git pull
+```
+
 
 ## Configuration.
 - The plugin works better with websocketnotifyall option set to true (it's the configuration by default).   
@@ -67,7 +75,10 @@ If using default settings you might be able to obtain the API key using:
 ```
 python3 API_KEY.py 127.0.0.1:80 create
 ```
-And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/configuration/#aquireapikey
+And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/getting_started/#acquire-an-api-key    
+Or you can just use the Front End in Domoticz/Custom/Deconz.   
+
+- By defaut the plugin use standard setting, you can use special one in the field "specials settings" on the hardware panel, for exemple ENABLEMORESENSOR will enable tension and current sensors.   
 
 ## Remark.
 - There is a deconz Discord channel https://discord.gg/QFhTxqN
@@ -100,6 +111,16 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 10/09/22 : 1.0.25 > It's now possible to clean the unused API key used for Hue Essentials, add support for binary module, with the develco one, add "pulseconfiguration" as possible setting in the GUI, thx @Jemand .   
+- Correct an issue for thermostat with "mode" not updated.
+- 08/05/22 : 1.0.24 > This version contain various correctives for consumption/power sensors.   
+- 15/03/22 : 1.0.23 > Can create tension and current widget (need to be enabled in hardware panel), new path system for docker installation (to correct front end issue), Add new field in config, to be used as special setting later, somes change on covering support.
+- 29/12/21 : 1.0.22 > Add specific widget for the Ikea Styrbar, optimisation/update for covering, some devices correctives, thx to @veitk, @RDols and @sonar98.   
+- 20/09/21 : 1.0.21 > Warning device use now a selector switch instead of a 2 position one, add some new value for ZGP switches, repair the front end to be able to set "0" value, add a tool to clean the API key list.    
+- 03/07/21 : 1.0.20 > add primary support for ZHAAirQuality, repair of frontend, now it s possible again to configure device.   
+- 15/06/21 : 1.0.19 > Make special widget for Tuya switches and philips RWL02 one. Starting to repair siren. Increase Websocket buffer to prevent message "Incomplete JSON keep it for later". Add the possibility to see the deconz config on the front-end.    
+- 18/04/21 : 1.0.18 > Set light state to off if detected off line (thx @nonolk), starting to implement ZHADoorlock.   
+- 14/03/21 : 1.0.17 > Grammar corrections, corrective for power sensor, can retreive raw data from Xiaomi cube (to get side), improve widget for extended color light, adding remote covering devices.
 - 13/12/20 : 1.0.16 > Correction to support Ally thermostat (@johnsprogs), the Xiaomi sensor return the 3 angles (@flopp999), the xiaomi cube can give complete information (@kispalsz ), Color correction for devices that don't support XY, the frontend (@JayPearlman), support of the Lidl Melinera Smart XMAS LED string lights (@sonar98), can specify type for group (@Plantje).   
 - 01/08/20 : 1.0.15 > Better support for Friend of HUE device. Disable error message about the gateway.
 - 25/06/20 : 1.0.14 > Handle the new websocket "attr", special widget for Xiaomi Aqara single gang (thx to @markiboy2all).

@@ -24,7 +24,7 @@ if action == 'create':
     try:
         response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
-        j = eval(response)
+        j = json.loads(response)
         print ("Your new API key is : " + j[0]["success"]['username'])
 
     except urllib.error.URLError as e:
@@ -84,10 +84,13 @@ elif action == 'info':
         response = request.urlopen(req,timeout=3).read()
         response = response.decode("utf-8", "ignore")
         j = json.loads(response)
-        print ("Webscoket Port : " + str(j['websocketport']) )
-        print ("IP adress: " + j['ipaddress'] )
-        print ("Firmware version : " + j['fwversion'] )
-        print ("Websocketnotifyall : " + str(j['websocketnotifyall']) )
+        if 'websocketport' in j:
+            print ("Websocket Port : " + str(j['websocketport']) )
+            print ("IP adress: " + j['ipaddress'] )
+            print ("Firmware version : " + j['fwversion'] )
+            print ("Websocketnotifyall : " + str(j['websocketnotifyall']) )
+        else:
+            print ("Bad API Key")
 
 
 else:
