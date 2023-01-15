@@ -34,6 +34,35 @@ function(app) {
         }
     };
 
+    var includeDeviceModal = {
+        templateUrl: 'app/deCONZ/IncludeModal.html',
+        controllerAs: '$ctrl',
+        controller: function($scope, $rootScope, apiDeCONZ) {
+            var $ctrl = this;
+
+            $ctrl.isUnchanged = true;
+            $ctrl.device = Object.assign($scope.device);
+            $ctrl.myname = "XX:XX:XX:XX:XX:XX:XX:XX-XX-XXXX"
+            $ctrl.includeDevice = function() {
+
+                $ctrl.isSaving = true;
+
+                // Make api call here
+                payload = new Object()
+                JSONpayload = angular.toJson(payload)
+
+                // console.log('Renaming -> ' + 'deviceclass: ' + $ctrl.device.deviceclass + '\nDevice ID: ' + $ctrl.device.id + '\nBody: ' + JSONpayload);
+
+                apiDeCONZ.setDeCONZdata($ctrl.device.deviceclass, 'PUT', '1', JSONpayload,'device/' + $ctrl.myname)
+                .then(function() {
+                    // console.log('Device name updated')
+                    $scope.$emit("refreshDeCONZfunc", $ctrl.device.deviceclass);
+                })
+                .then($scope.$close())
+            }
+        }
+    };
+
     var configDeviceModal = {
         templateUrl: 'app/deCONZ/ConfigModal.html',
         controllerAs: '$ctrl',
@@ -239,6 +268,24 @@ function(app) {
                             $scope.configOutput1 = response
                         })
                     }
+                    
+                    $mctrl.setcode0 = function() {
+
+                        payload = new Object()
+                        payload.code0 = $mctrl.gwPassword
+                        JSONpayload = angular.toJson(payload)
+                        apiDeCONZ.setDeCONZdata('alarmsystems', 'PUT', "1", JSONpayload,'config').then(function(response) {
+                            // console.log('Response was: ' + angular.toJson(response, true))
+                            if ("success" in response[0]) {
+                                response[0].Response = "Code 0 Updated"
+                                delete response[0].success;
+                                $scope.apiShowGet = false
+                                $scope.apiCancelButton = $.t('Close')
+                            }
+
+                            $scope.configOutput1 = response
+                        })
+                    }
 
                     $mctrl.cleanAPIkey = function() {
 
@@ -385,7 +432,24 @@ function(app) {
                         // As there is no IDX and the API requires an ID, we must add back the ID to the array
                         keys = Object.keys(response.data)
 
-                        if (deviceClass != "config") {
+                        if (deviceClass == "alarmsystems") {
+                            // Make header
+                            response.data['1'].id = keys[i]
+                            response.data['1'].uniqueid = 'Master'
+                            response.data['1'].name = 'Alarm System ' + 'Master'
+                            response.data['1'].deviceclass = deviceClass
+                            response.data['1'].type = 'Alarm System Control'
+                            // Make fields
+                            keys = Object.keys(response.data['1']['devices'])
+                            for (i = 0; i < keys.length; i++) {
+                                response.data[keys[i]].id = keys[i]
+                                response.data[keys[i]].uniqueid = keys[i]
+                                response.data[keys[i]].name = 'Alarm System ' + keys[i]
+                                response.data[keys[i]].deviceclass = keys[i].armmask
+                                response.data[keys[i]].type = 'Alarm System'
+                            }
+                        }
+                        else if (deviceClass != "config") {
                             // loop through count
                             for (i = 0; i < keys.length; i++) {
                                 // add id to each object
@@ -394,6 +458,7 @@ function(app) {
                                 response.data[keys[i]].deviceclass = deviceClass
                             }
                         }
+
                         deferred.resolve(response.data)
                         },function errorCallback(response) {
                         // console.log('Error getting deCONZ data:' + response )
@@ -570,6 +635,28 @@ function(app) {
                 $scope.$apply();
 
             });
+            
+            table.on('click', '.js-include-device', function() {
+                var row = table.api().row($(this).closest('tr')).data();
+                var scope = $scope.$new(true);
+                scope.device = row;
+
+                $uibModal
+                    .open(Object.assign({ scope: scope }, includeDeviceModal)).result.then(closedCallback, dismissedCallback);
+
+                    function closedCallback(){
+                      // Do something when the modal is closed
+                    //   console.log('closed callback')
+                    }
+
+                    function dismissedCallback(){
+                      // Do something when the modal is dismissed
+                    //   console.log('cancelled callback')
+                    }
+
+                $scope.$apply();
+
+            });
 
             table.on('click', '.js-config-device', function() {
                 var row = table.api().row($(this).closest('tr')).data();
@@ -633,9 +720,13 @@ function(app) {
         function actionsRenderer(value, type, device) {
             var actions = [];
             var delimiter = '<img src="../../images/empty16.png" width="16" height="16" />';
-
-            actions.push('<button class="btn btn-icon js-rename-device" title="' + $.t('Rename Device') + '"><img src="images/rename.png" /></button>');
-            if (device.deviceclass == 'sensors'){
+            if (device.deviceclass == 'alarmsystems') {
+                actions.push('<button class="btn btn-icon js-include-device" title="' + $.t('Add Device') + '"><img src="images/add.png" /></button>');
+            }
+            else {
+                actions.push('<button class="btn btn-icon js-rename-device" title="' + $.t('Rename Device') + '"><img src="images/rename.png" /></button>');
+            }
+            if (device.deviceclass == 'sensors' || device.deviceclass == 'alarmsystems') {
                 actions.push('<button class="btn btn-icon js-config-device" title="' + $.t('Configure Device') + '"><img src="images/devices.png" /></button>');
             }
             actions.push('<button class="btn btn-icon js-device-data" title="' + $.t('Device Data') + '"><img src="images/log.png" /></button>');
