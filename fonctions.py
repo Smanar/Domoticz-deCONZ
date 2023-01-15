@@ -430,6 +430,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue( 'voltage' , data['voltage'], model) )
     if 'current' in data:
         kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
+    if 'action' in data:
+        kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -660,6 +662,10 @@ def ReturnUpdateValue(command, val ,option = None):
 
     if command == 'airqualityppb':
         kwarg['nValue'] = int(val)
+        kwarg['sValue'] = str(val)
+
+    if command == 'action':
+        kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
     if command == 'consumption':
@@ -941,7 +947,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8988:
+    if fs == 10910:
         Domoticz.Status('Plugin custom pages in date')
         return
 
