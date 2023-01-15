@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding: utf-8 -*-
+
 def Createdatawidget(IEEE, _Name, _Type, opt = 0):
     
     kwarg = {}
