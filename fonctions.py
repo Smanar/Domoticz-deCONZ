@@ -595,7 +595,7 @@ def ReturnUpdateValue(command, val ,option = None):
     if command == 'mode':
         if val == 'off':
             kwarg['mode'] = 0
-        if option == 'Purifier_Mode':
+        if option == 'ZHAAirPurifier':
             #ventilator
             if val == 'auto':
                 kwarg['mode'] = 10
