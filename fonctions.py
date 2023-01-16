@@ -422,6 +422,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
+    if 'pm2_5' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'bri' in data:
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
