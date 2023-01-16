@@ -135,7 +135,7 @@ def Createdatawidget(IEEE, _Name, _Type, opt = 0):
             kwarg['Type'] = 243
             kwarg['Subtype'] = 23
 
-    elif _type == 'ZHAAncillaryControl':
+    elif _Type == 'ZHAAncillaryControl':
         kwarg['Type'] = 243
         kwarg['Subtype'] = 22
 
