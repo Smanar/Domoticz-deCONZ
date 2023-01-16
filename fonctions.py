@@ -593,10 +593,26 @@ def ReturnUpdateValue(command, val ,option = None):
     if command == 'mode':
         if val == 'off':
             kwarg['mode'] = 0
-        if val == 'heat':
-            kwarg['mode'] = 10
-        if val == 'auto':
-            kwarg['mode'] = 20
+        if option == 'Purifier_Mode':
+            #ventilator
+            if val == 'auto':
+                kwarg['mode'] = 10
+            if val == 'speed_1':
+                kwarg['mode'] = 20
+            if val == 'speed_2':
+                kwarg['mode'] = 30
+            if val == 'speed_3':
+                kwarg['mode'] = 40
+            if val == 'speed_4':
+                kwarg['mode'] = 50
+            if val == 'speed_5':
+                kwarg['mode'] = 26
+        else:
+            #thermostat
+            if val == 'heat':
+                kwarg['mode'] = 10
+            if val == 'auto':
+                kwarg['mode'] = 20
 
     if command == 'preset':
         if val == 'off':
