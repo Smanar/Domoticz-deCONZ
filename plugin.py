@@ -319,33 +319,25 @@ class BasePlugin:
                         if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
                             _json['mode'] = "auto"
                     elif Devices[Unit].DeviceID.endswith('_preset'):
-                        if Level == 10:
-                            _json['preset'] = "holiday"
-                        if Level == 20:
-                            _json['preset'] = "auto"
-                        if Level == 30:
-                            _json['preset'] = "manual"
-                        if Level == 40:
-                            _json['preset'] = "comfort"
-                        if Level == 50:
-                            _json['preset'] = "eco"
-                        if Level == 60:
-                            _json['preset'] = "boost"
-                        if Level == 70:
-                            _json['preset'] = "complex"
-                        if Level == 80:
-                            _json['preset'] = "program"
+                        v = ["off","holiday","auto","manual","comfort","eco","boost","complex","program"][int(Level/10)]
+                        _json['preset'] = v
                     elif Devices[Unit].DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                        if Level == 10:
-                            _json['mode'] = "heat"
-                        if Level == 20:
-                            _json['mode'] = "auto"
-                            #retreive previous value from domoticz
-                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                            _json['heatsetpoint'] = Hp
+                        #Ventilator
+                        if device_type == 'Purifier_Mode':
+                            v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
+                            _json['mode'] = v
+                        else:
+                            #Thermostat
+                            if Level == 10:
+                                _json['mode'] = "heat"
+                            if Level == 20:
+                                _json['mode'] = "auto"
+                                #retreive previous value from domoticz
+                                IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                                Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                                _json['heatsetpoint'] = Hp
                     #Chritsmas tree
                     elif Devices[Unit].DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
@@ -697,6 +689,13 @@ class BasePlugin:
                         self.CreateIfnotExist(IEEE + "_preset",'Thermostat_Preset',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            elif Type == 'ZHAAirPurifier':
+                    #Create a mode device
+                    if 'mode' in ConfigList:
+                        self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Purifier_Mode' }
+                        self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
+                    #Create the current device but as temperature device
+                    self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
             elif Type == 'ZHAVibration':
                 #Create a Angle device
                 self.Devices[IEEE + "_orientation"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Vibration_Orientation' }
@@ -794,7 +793,7 @@ class BasePlugin:
                             UpdatelarmSystemControl(_Data[i]['state']['armstate'])
                         else:
                             self.InitDomoticzDB(i,_Data[i],self.INIT_STEP[0])
- 
+
                     #Update initialisation
                     self.ManageInit(True)
             else:
@@ -1392,17 +1391,17 @@ def UpdatelarmSystemControl(etat):
         UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, Unit)
     except:
         pass
-        
+
 
 def CreateAlarmSystemControl():
-    
+
     if GetDomoDeviceInfo('Alarm_System_1') != False:
         return
-    
+
     kwarg = {}
     Unit = FreeUnit()
     TypeName = ''
-    
+
     kwarg['Type'] = 244
     kwarg['Subtype'] = 62
     kwarg['Switchtype'] = 18
