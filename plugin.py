@@ -294,7 +294,7 @@ class BasePlugin:
             else:
                 _json['on'] = False
                 if _type == 'config':
-                    if Devices[Unit].DeviceID.endswith('_mode'):
+                    if Devices[Unit].DeviceID.endswith('_mode') or device_type == 'ZHAAirPurifier':
                         _json = {'mode':'off'}
                     elif Devices[Unit].DeviceID.endswith('_lock'):
                         _json = {'lock':False}
@@ -312,8 +312,12 @@ class BasePlugin:
                 #Special situation
                 if _type == 'config':
                     _json.clear()
+                    #Ventilator
+                    if device_type == 'ZHAAirPurifier':
+                        v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
+                        _json['mode'] = v
                     #Thermostat
-                    if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                    elif Devices[Unit].DeviceID.endswith('_heatsetpoint'):
                         _json['heatsetpoint'] = int(Level * 100)
                         dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
                         if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
@@ -324,12 +328,6 @@ class BasePlugin:
                     elif Devices[Unit].DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                        #Ventilator
-                        if device_type == 'Purifier_Mode':
-                            v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
-                            _json['mode'] = v
-                        else:
-                            #Thermostat
                             if Level == 10:
                                 _json['mode'] = "heat"
                             if Level == 20:
@@ -544,7 +542,8 @@ class BasePlugin:
             # Compare devices bases
             for i in Devices:
                 if Devices[i].DeviceID not in self.Devices:
-                    Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+                    if Devices[i].DeviceID != "Alarm_System_1":
+                        Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
 
@@ -690,11 +689,12 @@ class BasePlugin:
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAAirPurifier':
-                    #Create a mode device
-                    if 'mode' in ConfigList:
-                        self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Purifier_Mode' }
-                        self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
-                    #Create the current device but as temperature device
+                self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
+                self.Devices[IEEE]['type'] = 'config'
+            elif Type == 'ZHAAirQuality':
+                if 'pm2_5' in StateList:
+                    self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name,1)
+                else:
                     self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
             elif Type == 'ZHAVibration':
                 #Create a Angle device
