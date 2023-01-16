@@ -2,9 +2,9 @@
 # coding: utf-8 -*-
 
 def Createdatawidget(IEEE, _Name, _Type, opt = 0):
-    
+
     kwarg = {}
-    
+
     #Operator
     if _Type == 'Color light' or _Type == 'Color dimmable light':
         kwarg['Type'] = 241
@@ -98,10 +98,13 @@ def Createdatawidget(IEEE, _Name, _Type, opt = 0):
     elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
 
-    elif _Type == 'ZHAAirQuality' or _Type == 'ZHAAirPurifier':
+    elif _Type == 'ZHAAirQuality':
         #kwarg['TypeName'] = 'Air Quality'
         kwarg['TypeName'] = 'Custom'
-        kwarg['Options'] = {"Custom": ("1;ppb")}
+        if opt == 1:
+            kwarg['Options'] = {"Custom": ("1;µg/m3")}
+        else:
+            kwarg['Options'] = {"Custom": ("1;ppb")}
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
         kwarg['Type'] = 244
@@ -253,13 +256,13 @@ def Createdatawidget(IEEE, _Name, _Type, opt = 0):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
-    elif _Type == 'Purifier_Mode':
+    elif _Type == 'ZHAAirPurifier':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 7
         kwarg['Options'] = {"LevelActions": "|||||||", "LevelNames": "Off|Auto|S1|S2|S3|S4|S5", "LevelOffHidden": "false", "SelectorStyle": "0"}
- 
+
     elif _Type == 'Thermostat_Preset':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
