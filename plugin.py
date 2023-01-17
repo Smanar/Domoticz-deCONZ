@@ -605,7 +605,7 @@ class BasePlugin:
                     self.Devices[IEEE]['colormode'] = StateList['colormode']
 
             if ConfigList:
-                kwarg.update(ProcessAllConfig(ConfigList))
+                kwarg.update(ProcessAllConfig(ConfigList,Model,0))
 
             #It's a switch ? Need special process
             if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
@@ -1009,7 +1009,7 @@ class BasePlugin:
         #MAJ config
         elif 'config' in _Data:
             config = _Data['config']
-            kwarg.update(ProcessAllConfig(config))
+            kwarg.update(ProcessAllConfig(config,model,0))
 
         #MAJ attr, not used yet
         elif 'attr' in _Data:
