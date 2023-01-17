@@ -345,9 +345,9 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
-        if 'mode' in data:
-            #if not (data['mode'] == 'off' and data['on'] == True):
-            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+    if 'mode' in data:
+        #if not (data['mode'] == 'off' and data['on'] == True):
+        kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
     if 'preset' in data:
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
@@ -434,6 +434,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
     if 'action' in data:
         kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
+    if 'speed' in data:
+        kwarg.update(ReturnUpdateValue( 'speed' , data['speed'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -685,6 +687,10 @@ def ReturnUpdateValue(command, val ,option = None):
     if command == 'action':
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
+
+    if command == 'speed':
+        kwarg['speed'] = 0
+        kwarg['speed'] = str(val)
 
     if command == 'consumption':
         #Wh to Kwh
