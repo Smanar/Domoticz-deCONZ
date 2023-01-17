@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8 -*-
 
-def Createdatawidget(IEEE, _Name, _Type, opt = 0):
+def Createdatawidget(IEEE, _Name, _Type, opt):
 
     kwarg = {}
 
@@ -105,6 +105,11 @@ def Createdatawidget(IEEE, _Name, _Type, opt = 0):
             kwarg['Options'] = {"Custom": ("1;µg/m3")}
         else:
             kwarg['Options'] = {"Custom": ("1;ppb")}
+
+    elif _Type == 'ZHAAirPurifier':
+        kwarg['TypeName'] = 'Custom'
+        kwarg['Image'] = 7
+        kwarg['Options'] = {"Custom": ("1;m/s")}
 
     elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
         kwarg['Type'] = 244
@@ -256,7 +261,7 @@ def Createdatawidget(IEEE, _Name, _Type, opt = 0):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
-    elif _Type == 'ZHAAirPurifier':
+    elif _Type == 'Purifier_Mode':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
