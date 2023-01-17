@@ -336,7 +336,7 @@ PhilipsRWL02ButtonSwitchTable = ['1002','1003','2002','2003','3002','3003','4002
 #
 #https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
-def ProcessAllConfig(data):
+def ProcessAllConfig(data,model,option):
     kwarg = {}
 
     buffercommand.clear()
@@ -347,7 +347,7 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
     if 'mode' in data:
         #if not (data['mode'] == 'off' and data['on'] == True):
-        kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+        kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] , model ) )
     if 'preset' in data:
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
