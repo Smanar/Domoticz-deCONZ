@@ -294,7 +294,7 @@ class BasePlugin:
             else:
                 _json['on'] = False
                 if _type == 'config':
-                    if Devices[Unit].DeviceID.endswith('_mode') or device_type == 'ZHAAirPurifier':
+                    if Devices[Unit].DeviceID.endswith('_mode'):
                         _json = {'mode':'off'}
                     elif Devices[Unit].DeviceID.endswith('_lock'):
                         _json = {'lock':False}
@@ -313,7 +313,7 @@ class BasePlugin:
                 if _type == 'config':
                     _json.clear()
                     #Ventilator
-                    if device_type == 'ZHAAirPurifier':
+                    if device_type == 'Purifier_Mode':
                         v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
                         _json['mode'] = v
                     #Thermostat
@@ -689,8 +689,12 @@ class BasePlugin:
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
             elif Type == 'ZHAAirPurifier':
+                #Create a mode fan
+                if 'mode' in ConfigList:
+                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Purifier_Mode' }
+                    self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
+                #Create fan speed
                 self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
-                self.Devices[IEEE]['type'] = 'config'
             elif Type == 'ZHAAirQuality':
                 if 'pm2_5' in StateList:
                     self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name,1)
