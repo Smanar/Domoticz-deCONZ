@@ -689,8 +689,8 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['sValue'] = str(val)
 
     if command == 'speed':
-        kwarg['speed'] = 0
-        kwarg['speed'] = str(val)
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
 
     if command == 'consumption':
         #Wh to Kwh
