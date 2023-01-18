@@ -102,7 +102,7 @@ def Createdatawidget(IEEE, _Name, _Type, opt):
         #kwarg['TypeName'] = 'Air Quality'
         kwarg['TypeName'] = 'Custom'
         if opt == 1:
-            kwarg['Options'] = {"Custom": ("1;abcdef")}
+            kwarg['Options'] = {"Custom": ("1;μg/m³")}
         else:
             kwarg['Options'] = {"Custom": ("1;ppb")}
 
