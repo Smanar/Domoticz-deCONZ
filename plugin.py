@@ -697,9 +697,9 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
             elif Type == 'ZHAAirQuality':
                 if 'pm2_5' in StateList:
-                    self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name,1)
+                    self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name,1)
                 else:
-                    self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
+                    self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name)
             elif Type == 'ZHAVibration':
                 #Create a Angle device
                 self.Devices[IEEE + "_orientation"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Vibration_Orientation' }
