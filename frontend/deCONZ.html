@@ -91,9 +91,49 @@
     </div>
 </script>
 
+<script type="text/ng-template" id="app/deCONZ/IncluderemModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Device UniqueID to remove' | translate }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" name="modalForm">
+            <div class="control-group">
+                <label class="control-label" for="device-name">{{:: 'Unique ID' | translate }}:</label>
+                <div class="controls">
+                    <input type="text"
+                        id="device-name"
+                        class="form-control"
+                        minlength="1"
+                        maxlength="100"
+                        ng-model="$ctrl.myname"
+                        ng-disabled="$ctrl.isSaving"
+                        ng-change="$ctrl.isUnchanged = false"
+                        name="deviceName"
+                        size="50"
+                    />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button"
+            class="btn btn-primary"
+            ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
+            ng-click="$ctrl.includeremDevice()">
+            {{:: 'Remove' | translate }}
+        </button>
+
+        <button type="button"
+            class="btn btn-default"
+            ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>
+    </div>
+</script>
+
 <script type="text/ng-template" id="app/deCONZ/IncludeModal.html">
     <div class="modal-header">
-        <h3 class="modal-title">{{:: 'UniqueID to add' | translate }}</h3>
+        <h3 class="modal-title">{{:: 'Device UniqueID to add' | translate }}</h3>
     </div>
     <div class="modal-body">
         <form class="form-horizontal" name="modalForm">
@@ -249,7 +289,7 @@
             </table>
         </p>
         <hr>
-         
+
         <p>
             <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.ConfPlugin()">
                 {{:: 'Config Plugin' | translate }}
