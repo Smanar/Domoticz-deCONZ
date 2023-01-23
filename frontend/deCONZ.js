@@ -63,6 +63,36 @@ function(app) {
         }
     };
 
+    var includeremDeviceModal = {
+        templateUrl: 'app/deCONZ/IncluderemModal.html',
+        controllerAs: '$ctrl',
+        controller: function($scope, $rootScope, apiDeCONZ) {
+            var $ctrl = this;
+
+            $ctrl.isUnchanged = true;
+            $ctrl.device = Object.assign($scope.device);
+            $ctrl.myname = "XX:XX:XX:XX:XX:XX:XX:XX-XX-XXXX"
+            $ctrl.includeremDevice = function() {
+
+                $ctrl.isSaving = true;
+
+                // Make api call here
+                payload = new Object()
+                payload.name = $ctrl.myname
+                JSONpayload = angular.toJson(payload)
+
+                // console.log('Renaming -> ' + 'deviceclass: ' + $ctrl.device.deviceclass + '\nDevice ID: ' + $ctrl.device.id + '\nBody: ' + JSONpayload);
+
+                apiDeCONZ.setDeCONZdata($ctrl.device.deviceclass, 'DELETE', $ctrl.device.id, JSONpayload,'')
+                .then(function() {
+                    // console.log('Device name updated')
+                    $scope.$emit("refreshDeCONZfunc", $ctrl.device.deviceclass);
+                })
+                .then($scope.$close())
+            }
+        }
+    };
+
     var configDeviceModal = {
         templateUrl: 'app/deCONZ/ConfigModal.html',
         controllerAs: '$ctrl',
@@ -268,7 +298,7 @@ function(app) {
                             $scope.configOutput1 = response
                         })
                     }
-                    
+
                     $mctrl.setcode0 = function() {
 
                         payload = new Object()
@@ -297,7 +327,7 @@ function(app) {
                             // console.log('Returned Data Zigbee Devices')
                             key_list = angular.toJson(response, true)
                             key_list = response["whitelist"]
-                            
+
 
                             for(var k in key_list) {
                                  if ((key_list[k]["name"].indexOf("Phoscon#") != -1) ||
@@ -310,7 +340,7 @@ function(app) {
                                     })
                                  }
                             }
-                            
+
                         })
 
                     }
@@ -433,20 +463,24 @@ function(app) {
                         keys = Object.keys(response.data)
 
                         if (deviceClass == "alarmsystems") {
+                            //hack
+                            // response.data['1'].devices = {"ec:1b:bd:ff:fe:6f:c3:4d-01-0501": {"armmask": "none"}};
                             // Make header
                             response.data['1'].id = keys[i]
                             response.data['1'].uniqueid = 'Master'
                             response.data['1'].name = 'Alarm System ' + 'Master'
                             response.data['1'].deviceclass = deviceClass
                             response.data['1'].type = 'Alarm System Control'
-                            // Make fields
-                            keys = Object.keys(response.data['1']['devices'])
-                            for (i = 0; i < keys.length; i++) {
-                                response.data[keys[i]].id = keys[i]
-                                response.data[keys[i]].uniqueid = keys[i]
-                                response.data[keys[i]].name = 'Alarm System ' + keys[i]
-                                response.data[keys[i]].deviceclass = keys[i].armmask
-                                response.data[keys[i]].type = 'Alarm System'
+                            // Make fields, disabled
+                            if (false) {
+                                keys = Object.keys(response.data['1']['devices'])
+                                for (i = 0; i < keys.length; i++) {
+                                    response.data[keys[i]].id = keys[i]
+                                    response.data[keys[i]].uniqueid = keys[i]
+                                    response.data[keys[i]].name = 'Alarm System ' + keys[i]
+                                    response.data[keys[i]].deviceclass = keys[i].armmask
+                                    response.data[keys[i]].type = 'Alarm System'
+                                }
                             }
                         }
                         else if (deviceClass != "config") {
@@ -635,7 +669,7 @@ function(app) {
                 $scope.$apply();
 
             });
-            
+
             table.on('click', '.js-include-device', function() {
                 var row = table.api().row($(this).closest('tr')).data();
                 var scope = $scope.$new(true);
@@ -643,6 +677,28 @@ function(app) {
 
                 $uibModal
                     .open(Object.assign({ scope: scope }, includeDeviceModal)).result.then(closedCallback, dismissedCallback);
+
+                    function closedCallback(){
+                      // Do something when the modal is closed
+                    //   console.log('closed callback')
+                    }
+
+                    function dismissedCallback(){
+                      // Do something when the modal is dismissed
+                    //   console.log('cancelled callback')
+                    }
+
+                $scope.$apply();
+
+            });
+
+            table.on('click', '.js-includerem-device', function() {
+                var row = table.api().row($(this).closest('tr')).data();
+                var scope = $scope.$new(true);
+                scope.device = row;
+
+                $uibModal
+                    .open(Object.assign({ scope: scope }, includeremDeviceModal)).result.then(closedCallback, dismissedCallback);
 
                     function closedCallback(){
                       // Do something when the modal is closed
@@ -730,7 +786,12 @@ function(app) {
                 actions.push('<button class="btn btn-icon js-config-device" title="' + $.t('Configure Device') + '"><img src="images/devices.png" /></button>');
             }
             actions.push('<button class="btn btn-icon js-device-data" title="' + $.t('Device Data') + '"><img src="images/log.png" /></button>');
-            actions.push('<button class="btn btn-icon js-remove-device" title="' + $.t('Remove') + '"><img src="images/delete.png" /></button>');
+            if (device.deviceclass == 'alarmsystems') {
+                actions.push('<button class="btn btn-icon js-includerem-device" title="' + $.t('Remove Device') + '"><img src="images/delete.png" /></button>');
+            }
+            else {
+                actions.push('<button class="btn btn-icon js-remove-device" title="' + $.t('Remove') + '"><img src="images/delete.png" /></button>');
+            }
 
             return actions.join('&nbsp;');
         }
