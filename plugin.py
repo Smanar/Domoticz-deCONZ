@@ -252,8 +252,11 @@ class BasePlugin:
         if not deCONZ_ID:
             # Not in deconz but Alarm System ?
             if Devices[Unit].DeviceID == 'Alarm_System_1':
-                url = '/api/' + Parameters["Mode2"] + '/alarmsystems/1/' + ['disarm','arm_away','arm_stay','arm_night'][int(Level/10)]
-                self.SendCommand(url,{'code0':str(Devices[Unit].Description)})
+                if Devices[Unit].Description:
+                    url = '/api/' + Parameters["Mode2"] + '/alarmsystems/1/' + ['disarm','arm_away','arm_stay','arm_night'][int(Level/10)]
+                    self.SendCommand(url,{'code0':str(Devices[Unit].Description)})
+                else:
+                    Domoticz.Error("Missing code0 in alamr system widget description")
             else:
                 Domoticz.Error("Device not ready : " + str(Unit) )
             return
