@@ -13,9 +13,9 @@
         <ul style="list-style-type:square">
             <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port.</li>
             <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin.</li>
-            <li>If you want the plugin works without connection, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
+            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
             <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only).</li>
-            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key, configure sensors or alarm system.</li>
+            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key or configure sensors.</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
@@ -74,6 +74,7 @@ DOMOTICZ_IP = '127.0.0.1'
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
+ENABLEBATTERYWIDGET = False #Create 1 more widget by battery devices
 
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
@@ -127,6 +128,12 @@ class BasePlugin:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
             ENABLEMORESENSOR = True
+            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
+
+        if "ENABLEBATTERYWIDGET" in Parameters["Mode4"]:
+            Domoticz.Status("Enabling special setting ENABLEBATTERYWIDGET")
+            global ENABLEBATTERYWIDGET
+            ENABLEBATTERYWIDGET = True
             self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
@@ -256,7 +263,7 @@ class BasePlugin:
                     url = '/api/' + Parameters["Mode2"] + '/alarmsystems/1/' + ['disarm','arm_away','arm_stay','arm_night'][int(Level/10)]
                     self.SendCommand(url,{'code0':str(Devices[Unit].Description)})
                 else:
-                    Domoticz.Error("Missing code0 in alarm system widget description")
+                    Domoticz.Error("Missing code0 in alamr system widget description")
             else:
                 Domoticz.Error("Device not ready : " + str(Unit) )
             return
@@ -732,6 +739,14 @@ class BasePlugin:
                 if 'current' in StateList:
                     self.Devices[IEEE + "_current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
                     self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
+            if ENABLEBATTERYWIDGET:
+                # Battery sensor ?
+                if 'battery' in ConfigList:
+                    #But only 1 by device
+                    NewIEE = IEEE.split("-")[0]
+                    if NewIEE + "_battery" not in self.Devices:
+                        self.Devices[NewIEE + "_battery"] = {'id' : key , 'type' : 'state' , 'state' : 'working' , 'model' : 'ZHABattery' }
+                        self.CreateIfnotExist(NewIEE + "_battery",'ZHABattery',Name)
 
             #update
             if kwarg:
@@ -1351,7 +1366,7 @@ def UpdateDeviceProc(kwarg,Unit):
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
 
-    #Always update for Color Bulb
+    #Alaways update for Color Bulb
     if 'Color' in kwarg:
         NeedUpdate = True
 
@@ -1385,8 +1400,19 @@ def UpdateDeviceProc(kwarg,Unit):
                kwarg['sValue'] = 'Off'
 
         Devices[Unit].Update(**kwarg)
+
+        #Do we need to update the special battery sensor ?
+        if ENABLEBATTERYWIDGET:
+            if 'BatteryLevel' in kwarg and kwarg['BatteryLevel'] != 255:
+                NewIEE = Devices[Unit].DeviceID.split("-")[0]
+                Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
+                if Unit2:
+                    kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"])}
+                    Devices[Unit2].Update(**kwarg2)
+                    Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
+
     else:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
+        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
 def UpdatelarmSystemControl(etat):
     Unit = GetDomoDeviceInfo('Alarm_System_1')
