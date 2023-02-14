@@ -118,6 +118,7 @@ function(app) {
                       {
                         newvalue = parseInt(newvalue);
                       }
+                      if(value[0] == "'") { newvalue = value.slice(1, -1);}
                       if (newvalue == 'false') { newvalue = false; }
                       if (newvalue == 'true') { newvalue = true; }
                       payload[key] = newvalue;
