@@ -74,6 +74,7 @@ DOMOTICZ_IP = '127.0.0.1'
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
+ENABLEBATTERYWIDGET = False #Create 1 more widget by battery devices
 
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
@@ -127,6 +128,12 @@ class BasePlugin:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
             ENABLEMORESENSOR = True
+            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
+
+        if "ENABLEBATTERYWIDGET" in Parameters["Mode4"]:
+            Domoticz.Status("Enabling special setting ENABLEBATTERYWIDGET")
+            global ENABLEBATTERYWIDGET
+            ENABLEBATTERYWIDGET = True
             self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
@@ -732,6 +739,14 @@ class BasePlugin:
                 if 'current' in StateList:
                     self.Devices[IEEE + "_current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
                     self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
+            if ENABLEBATTERYWIDGET:
+                # Battery sensor ?
+                if 'battery' in ConfigList:
+                    #But only 1 by device
+                    NewIEE = IEEE.split("-")[0]
+                    if NewIEE + "_battery" not in self.Devices:
+                        self.Devices[NewIEE + "_battery"] = {'id' : key , 'type' : 'state' , 'state' : 'working' , 'model' : 'ZHABattery' }
+                        self.CreateIfnotExist(NewIEE + "_battery",'ZHABattery',Name)
 
             #update
             if kwarg:
@@ -1017,10 +1032,6 @@ class BasePlugin:
         #MAJ attr, not used yet
         elif 'attr' in _Data:
             attr = _Data['attr']
-
-        #MAJ capabilities, not used yet
-        elif 'capabilities' in _Data:
-            capabilities = _Data['capabilities']
 
         else:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
@@ -1378,8 +1389,18 @@ def UpdateDeviceProc(kwarg,Unit):
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
 
+    #Do we need to update the special battery sensor ?
+    if ENABLEBATTERYWIDGET:
+        if 'BatteryLevel' in kwarg and kwarg['BatteryLevel'] != 255:
+            NewIEE = Devices[Unit].DeviceID.split("-")[0]
+            Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
+            if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
+                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"])}
+                Devices[Unit2].Update(**kwarg2)
+                Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
+
     if NeedUpdate or not LIGHTLOG:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg))
 
         #Disable offline light ?
         if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
@@ -1389,8 +1410,9 @@ def UpdateDeviceProc(kwarg,Unit):
                kwarg['sValue'] = 'Off'
 
         Devices[Unit].Update(**kwarg)
+
     else:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
+        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
 def UpdatelarmSystemControl(etat):
     Unit = GetDomoDeviceInfo('Alarm_System_1')
