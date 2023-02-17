@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.27" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.28" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
