@@ -1033,6 +1033,10 @@ class BasePlugin:
         elif 'attr' in _Data:
             attr = _Data['attr']
 
+        #MAJ capabilities, not used yet
+        elif 'capabilities' in _Data:
+            capabilities = _Data['capabilities']
+
         else:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
