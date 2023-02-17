@@ -336,7 +336,7 @@ PhilipsRWL02ButtonSwitchTable = ['1002','1003','2002','2003','3002','3003','4002
 #
 #https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Supported-Devices
 
-def ProcessAllConfig(data):
+def ProcessAllConfig(data,model,option):
     kwarg = {}
 
     buffercommand.clear()
@@ -345,9 +345,9 @@ def ProcessAllConfig(data):
         kwarg.update(ReturnUpdateValue( 'battery' , data['battery'] ) )
     if 'heatsetpoint' in data:
         kwarg.update(ReturnUpdateValue( 'heatsetpoint' , data['heatsetpoint'] ) )
-        if 'mode' in data:
-            #if not (data['mode'] == 'off' and data['on'] == True):
-            kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] ) )
+    if 'mode' in data:
+        #if not (data['mode'] == 'off' and data['on'] == True):
+        kwarg.update(ReturnUpdateValue( 'mode' , data['mode'] , model ) )
     if 'preset' in data:
         kwarg.update(ReturnUpdateValue( 'preset' , data['preset'] ) )
     if 'lock' in data:
@@ -422,6 +422,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
+    if 'pm2_5' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'bri' in data:
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
@@ -430,6 +432,10 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue( 'voltage' , data['voltage'], model) )
     if 'current' in data:
         kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
+    if 'action' in data:
+        kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
+    if 'speed' in data:
+        kwarg.update(ReturnUpdateValue( 'speed' , data['speed'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -591,10 +597,26 @@ def ReturnUpdateValue(command, val ,option = None):
     if command == 'mode':
         if val == 'off':
             kwarg['mode'] = 0
-        if val == 'heat':
-            kwarg['mode'] = 10
-        if val == 'auto':
-            kwarg['mode'] = 20
+        if option == 'ZHAAirPurifier':
+            #ventilator
+            if val == 'auto':
+                kwarg['mode'] = 10
+            if val == 'speed_1':
+                kwarg['mode'] = 20
+            if val == 'speed_2':
+                kwarg['mode'] = 30
+            if val == 'speed_3':
+                kwarg['mode'] = 40
+            if val == 'speed_4':
+                kwarg['mode'] = 50
+            if val == 'speed_5':
+                kwarg['mode'] = 26
+        else:
+            #thermostat
+            if val == 'heat':
+                kwarg['mode'] = 10
+            if val == 'auto':
+                kwarg['mode'] = 20
 
     if command == 'preset':
         if val == 'off':
@@ -660,6 +682,14 @@ def ReturnUpdateValue(command, val ,option = None):
 
     if command == 'airqualityppb':
         kwarg['nValue'] = int(val)
+        kwarg['sValue'] = str(val)
+
+    if command == 'action':
+        kwarg['nValue'] = 0
+        kwarg['sValue'] = str(val)
+
+    if command == 'speed':
+        kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
     if command == 'consumption':
@@ -941,7 +971,7 @@ def installFE():
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 8988:
+    if fs == 12381:
         Domoticz.Status('Plugin custom pages in date')
         return
 

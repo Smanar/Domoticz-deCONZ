@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.26" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.27" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -13,9 +13,9 @@
         <ul style="list-style-type:square">
             <li>You can use the file API_KEY.py if you have problems to get your API Key or your Websocket Port.</li>
             <li>You can find updated files for deCONZ on their github : https://github.com/dresden-elektronik/deconz-rest-plugin.</li>
-            <li>If you want the plugin works without connexion, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
+            <li>If you want the plugin works without connection, use as IP 127.0.0.1 (if deCONZ and domoticz are on same machine).</li>
             <li>If you are running the plugin for the first time, better to enable debug log (Take Debug info Only).</li>
-            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key or configure sensors.</li>
+            <li>You can find a front-end on the Domoticz menu "Custom" > "Deconz", you can use it to get the API key, configure sensors or alarm system.</li>
         </ul>
         <h3>Supported Devices</h3>
         <ul style="list-style-type:square">
@@ -66,6 +66,7 @@ from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json,
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
+from widget import Createdatawidget
 
 #Better to use 'localhost' ?
 DOMOTICZ_IP = '127.0.0.1'
@@ -73,6 +74,7 @@ DOMOTICZ_IP = '127.0.0.1'
 LIGHTLOG = True #To disable some activation, log will be lighter, but less informations.
 SETTODEFAULT = False #To set device in default state after a rejoin
 ENABLEMORESENSOR = False #Create more sensors, like tension and current
+ENABLEBATTERYWIDGET = False #Create 1 more widget by battery devices
 
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
@@ -96,7 +98,7 @@ class BasePlugin:
 
         self.IDGateway = -1
 
-        self.INIT_STEP = ['config','lights','sensors','groups']
+        self.INIT_STEP = ['config', 'lights', 'sensors', 'groups', 'alarmsystems']
 
         self.SpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"]
 
@@ -126,6 +128,12 @@ class BasePlugin:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
             ENABLEMORESENSOR = True
+            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
+
+        if "ENABLEBATTERYWIDGET" in Parameters["Mode4"]:
+            Domoticz.Status("Enabling special setting ENABLEBATTERYWIDGET")
+            global ENABLEBATTERYWIDGET
+            ENABLEBATTERYWIDGET = True
             self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
         #Read banned devices
@@ -249,7 +257,15 @@ class BasePlugin:
         _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
 
         if not deCONZ_ID:
-            Domoticz.Error("Device not ready : " + str(Unit) )
+            # Not in deconz but Alarm System ?
+            if Devices[Unit].DeviceID == 'Alarm_System_1':
+                if Devices[Unit].Description:
+                    url = '/api/' + Parameters["Mode2"] + '/alarmsystems/1/' + ['disarm','arm_away','arm_stay','arm_night'][int(Level/10)]
+                    self.SendCommand(url,{'code0':str(Devices[Unit].Description)})
+                else:
+                    Domoticz.Error("Missing code0 in alarm system widget description")
+            else:
+                Domoticz.Error("Device not ready : " + str(Unit) )
             return
 
         if _type == 'sensors':
@@ -306,40 +322,30 @@ class BasePlugin:
                 #Special situation
                 if _type == 'config':
                     _json.clear()
+                    #Ventilator
+                    if device_type == 'Purifier_Mode':
+                        v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
+                        _json['mode'] = v
                     #Thermostat
-                    if Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                    elif Devices[Unit].DeviceID.endswith('_heatsetpoint'):
                         _json['heatsetpoint'] = int(Level * 100)
                         dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
                         if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
                             _json['mode'] = "auto"
                     elif Devices[Unit].DeviceID.endswith('_preset'):
-                        if Level == 10:
-                            _json['preset'] = "holiday"
-                        if Level == 20:
-                            _json['preset'] = "auto"
-                        if Level == 30:
-                            _json['preset'] = "manual"
-                        if Level == 40:
-                            _json['preset'] = "comfort"
-                        if Level == 50:
-                            _json['preset'] = "eco"
-                        if Level == 60:
-                            _json['preset'] = "boost"
-                        if Level == 70:
-                            _json['preset'] = "complex"
-                        if Level == 80:
-                            _json['preset'] = "program"
+                        v = ["off","holiday","auto","manual","comfort","eco","boost","complex","program"][int(Level/10)]
+                        _json['preset'] = v
                     elif Devices[Unit].DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                        if Level == 10:
-                            _json['mode'] = "heat"
-                        if Level == 20:
-                            _json['mode'] = "auto"
-                            #retreive previous value from domoticz
-                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                            _json['heatsetpoint'] = Hp
+                            if Level == 10:
+                                _json['mode'] = "heat"
+                            if Level == 20:
+                                _json['mode'] = "auto"
+                                #retreive previous value from domoticz
+                                IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                                Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                                _json['heatsetpoint'] = Hp
                     #Chritsmas tree
                     elif Devices[Unit].DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
@@ -546,7 +552,8 @@ class BasePlugin:
             # Compare devices bases
             for i in Devices:
                 if Devices[i].DeviceID not in self.Devices:
-                    Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+                    if Devices[i].DeviceID != "Alarm_System_1":
+                        Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
 
@@ -608,7 +615,7 @@ class BasePlugin:
                     self.Devices[IEEE]['colormode'] = StateList['colormode']
 
             if ConfigList:
-                kwarg.update(ProcessAllConfig(ConfigList))
+                kwarg.update(ProcessAllConfig(ConfigList,Model,0))
 
             #It's a switch ? Need special process
             if Type == 'ZHASwitch' or Type == 'ZGPSwitch' or Type == 'CLIPSwitch':
@@ -691,6 +698,18 @@ class BasePlugin:
                         self.CreateIfnotExist(IEEE + "_preset",'Thermostat_Preset',Name)
                     #Create the current device but as temperature device
                     self.CreateIfnotExist(IEEE,'ZHATemperature',Name)
+            elif Type == 'ZHAAirPurifier':
+                #Create a mode fan
+                if 'mode' in ConfigList:
+                    self.Devices[IEEE + "_mode"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Purifier_Mode' }
+                    self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
+                #Create fan speed
+                self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
+            elif Type == 'ZHAAirQuality':
+                if 'pm2_5' in StateList:
+                    self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name,1)
+                else:
+                    self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name)
             elif Type == 'ZHAVibration':
                 #Create a Angle device
                 self.Devices[IEEE + "_orientation"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'Vibration_Orientation' }
@@ -720,6 +739,14 @@ class BasePlugin:
                 if 'current' in StateList:
                     self.Devices[IEEE + "_current"] = {'id' : key , 'type' : 'config' , 'state' : 'working' , 'model' : 'ZHAPower_current' }
                     self.CreateIfnotExist(IEEE + "_current",'ZHAPower_current',Name)
+            if ENABLEBATTERYWIDGET:
+                # Battery sensor ?
+                if 'battery' in ConfigList:
+                    #But only 1 by device
+                    NewIEE = IEEE.split("-")[0]
+                    if NewIEE + "_battery" not in self.Devices:
+                        self.Devices[NewIEE + "_battery"] = {'id' : key , 'type' : 'state' , 'state' : 'working' , 'model' : 'ZHABattery' }
+                        self.CreateIfnotExist(NewIEE + "_battery",'ZHABattery',Name)
 
             #update
             if kwarg:
@@ -774,10 +801,20 @@ class BasePlugin:
                         self.ReadConfig(_Data)
                     else:
                         Domoticz.Error("Incorrect or unknown API KEY!")
+
                 else:
                     #JSON with device info like {'1': {'data:1}}
                     for i in _Data:
-                        self.InitDomoticzDB(i,_Data[i],self.INIT_STEP[0])
+                        if 'config' in _Data[i] and 'disarmed_entry_delay' in _Data[i]['config']:
+                            # Alarm System
+                            Domoticz.Status("Alarm System configured :" + str(_Data[i]['config']['configured']))
+                            nbre = len(_Data[i]['devices'])
+                            if nbre > 0 :
+                                CreateAlarmSystemControl()
+                            Domoticz.Status("Number of devices inside :" + str(nbre))
+                            UpdatelarmSystemControl(_Data[i]['state']['armstate'])
+                        else:
+                            self.InitDomoticzDB(i,_Data[i],self.INIT_STEP[0])
 
                     #Update initialisation
                     self.ManageInit(True)
@@ -793,7 +830,6 @@ class BasePlugin:
                     typ,_id = self.GetDevicedeCONZ(_Data.get('uniqueid','') )
                     if _id:
                         self.InitDomoticzDB(_id,_Data,typ)
-
 
     def ReadReturn(self,_Data):
         kwarg = {}
@@ -895,20 +931,23 @@ class BasePlugin:
 
         if not IEEE:
             if 'uniqueid' in _Data:
-
                 Domoticz.Error("Websocket error, unknown device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ') Asking for information')
                 IEEE = str(_Data['uniqueid'])
                 #Try getting informations
                 self.Devices[IEEE] = {'id' : str(_Data['id']) , 'type' : str(_Data['r']) , 'state' : 'missing'}
                 self.SendCommand('/api/' + Parameters["Mode2"] + '/' + str(_Data['r']) + '/' + str(_Data['id']) )
             else:
-                Domoticz.Error("Websocket error, unknown device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
-                #Try getting informations
-                if str(_Data['r']) == 'groups':
-                    #Name = str(_Data['name'])
-                    #Dev_name = 'GROUP_' + Name.replace(' ','_')
-                    #self.Devices[Dev_name] = {'id' : str(_Data['id']) , 'type' : 'groups' , 'model' : 'groups', 'state' : 'missing'}
-                    self.SendCommand('/api/' + Parameters["Mode2"] + '/groups/' + str(_Data['id']) )
+                if str(_Data['r']) == 'alarmsystems':
+                    if 'state' in _Data:
+                        UpdatelarmSystemControl(_Data['state']['armstate'])
+                else:
+                    Domoticz.Error("Websocket error, unknown device > " + str(_Data['id']) + ' (' + str(_Data['r']) + ')')
+                    #Try getting informations
+                    if str(_Data['r']) == 'groups':
+                        #Name = str(_Data['name'])
+                        #Dev_name = 'GROUP_' + Name.replace(' ','_')
+                        #self.Devices[Dev_name] = {'id' : str(_Data['id']) , 'type' : 'groups' , 'model' : 'groups', 'state' : 'missing'}
+                        self.SendCommand('/api/' + Parameters["Mode2"] + '/groups/' + str(_Data['id']) )
 
             return
         if state == 'banned':
@@ -988,7 +1027,7 @@ class BasePlugin:
         #MAJ config
         elif 'config' in _Data:
             config = _Data['config']
-            kwarg.update(ProcessAllConfig(config))
+            kwarg.update(ProcessAllConfig(config,model,0))
 
         #MAJ attr, not used yet
         elif 'attr' in _Data:
@@ -1327,7 +1366,7 @@ def UpdateDeviceProc(kwarg,Unit):
     #if (kwarg['nValue'] == Devices[Unit].nValue) and (kwarg['nValue'] == Devices[Unit].nValue) and ('Color' not in kwarg):
     #    kwarg['SuppressTriggers'] = True
 
-    #Alaways update for Color Bulb
+    #Always update for Color Bulb
     if 'Color' in kwarg:
         NeedUpdate = True
 
@@ -1350,8 +1389,18 @@ def UpdateDeviceProc(kwarg,Unit):
     if 'sValue' not in kwarg:
         kwarg['sValue'] = Devices[Unit].sValue
 
+    #Do we need to update the special battery sensor ?
+    if ENABLEBATTERYWIDGET:
+        if 'BatteryLevel' in kwarg and kwarg['BatteryLevel'] != 255:
+            NewIEE = Devices[Unit].DeviceID.split("-")[0]
+            Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
+            if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
+                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"])}
+                Devices[Unit2].Update(**kwarg2)
+                Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
+
     if NeedUpdate or not LIGHTLOG:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg))
 
         #Disable offline light ?
         if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
@@ -1361,296 +1410,50 @@ def UpdateDeviceProc(kwarg,Unit):
                kwarg['sValue'] = 'Off'
 
         Devices[Unit].Update(**kwarg)
-    else:
-        Domoticz.Debug("### Update  device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
-def CreateDevice(IEEE, _Name, _Type, opt = 0):
+    else:
+        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
+
+def UpdatelarmSystemControl(etat):
+    Unit = GetDomoDeviceInfo('Alarm_System_1')
+    if not Unit:
+        return
+
+    try:
+        v = 10 * ['disarmed','armed_away','armed_stay','armed_night'].index(etat)
+        UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, Unit)
+    except:
+        pass
+
+
+def CreateAlarmSystemControl():
+
+    if GetDomoDeviceInfo('Alarm_System_1') != False:
+        return
+
     kwarg = {}
     Unit = FreeUnit()
     TypeName = ''
 
-    #Operator
-    if _Type == 'Color light' or _Type == 'Color dimmable light':
-        kwarg['Type'] = 241
-        kwarg['Subtype'] = 2
-        kwarg['Switchtype'] = 7
+    kwarg['Type'] = 244
+    kwarg['Subtype'] = 62
+    kwarg['Switchtype'] = 18
+    kwarg['Image'] = 13
+    kwarg['Options'] = {"LevelActions": "||||", "LevelNames": "Disarm|Arm_away|Arm_stay|Arm_night", "LevelOffHidden": "false", "SelectorStyle": "0"}
 
-    elif _Type == 'Extended color light':
-        kwarg['Type'] = 241
-        kwarg['Subtype'] = 7
-        kwarg['Switchtype'] = 7
+    kwarg['DeviceID'] = 'Alarm_System_1'
+    kwarg['Name'] = 'Alarm System'
+    kwarg['Unit'] = Unit
+    Domoticz.Device(**kwarg).Create()
 
-    elif _Type == 'Color temperature light':
-        kwarg['Type'] = 241
-        kwarg['Subtype'] = 8
-        kwarg['Switchtype'] = 7
+    Domoticz.Status("### Create Alarm System Device as Unit " + str(Unit) )
 
-    elif _Type == 'Dimmable light' or _Type == 'Dimmable plug-in unit' or _Type == 'Dimmer switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 7
+def CreateDevice(IEEE, _Name, _Type, opt = 0):
+    kwarg = Createdatawidget(IEEE, _Name, _Type, opt)
+    Unit = FreeUnit()
+    TypeName = ''
 
-    elif _Type == 'Smart plug' or _Type == 'On/Off plug-in unit':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-        kwarg['Image'] = 1
-
-    elif _Type == 'On/Off light' or _Type == 'On/Off output' or _Type == 'On/Off light switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-
-    elif _Type == 'Level control switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-
-    elif _Type == 'Color Temperature dimmable light':
-        kwarg['Type'] = 241
-        kwarg['Subtype'] = 4
-        kwarg['Switchtype'] = 7
-
-    #Some device have unknow as type, but are full working.
-    elif _Type == 'Unknown':
-        Domoticz.Error("Unknow device : assume a light " + IEEE + " > " + _Name + ' (' + _Type +')' )
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-
-    elif _Type == 'Window covering device' or _Type == 'Window covering controller' :
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 15
-
-    elif _Type == 'Door Lock':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-
-    elif _Type == 'Fan':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-        kwarg['Image'] = 7
-
-    elif _Type == 'Range extender':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 0
-        kwarg['Image'] = 17
-
-    elif _Type == 'Warning device':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 13
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "none|select|lselect|blink", "LevelOffHidden": "false", "SelectorStyle": "0"}
-
-    #Sensors
-    elif _Type == 'Daylight':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 9
-
-    elif _Type == 'ZHATemperature' or _Type == 'CLIPTemperature':
-        kwarg['TypeName'] = 'Temperature'
-
-    elif _Type == 'ZHAHumidity' or _Type == 'CLIPHumidity':
-        kwarg['TypeName'] = 'Humidity'
-
-    elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
-        kwarg['TypeName'] = 'Barometer'
-
-    elif _Type == 'ZHAAirQuality':
-        #kwarg['TypeName'] = 'Air Quality'
-        kwarg['TypeName'] = 'Custom'
-        kwarg['Options'] = {"Custom": ("1;ppb")}
-
-    elif _Type == 'ZHAOpenClose' or _Type == 'CLIPOpenClose'  or _Type == 'ZHADoorLock':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 11
-
-    elif _Type == 'ZHAPresence' or _Type == 'CLIPPresence':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 8
-
-    elif _Type == 'ZHALightLevel' or _Type == 'CLIPLightLevel' or _Type == 'ZHALight':
-        kwarg['TypeName'] = 'Illumination'
-
-    elif _Type == 'ZHAConsumption':# in kWh
-        #Device with only comsumption
-        if opt == 0:
-            kwarg['Type'] = 113
-            kwarg['Subtype'] = 0
-            kwarg['Switchtype'] = 0
-        #Device with power and energy
-        else:
-            kwarg['TypeName'] = 'kWh'
-
-    elif _Type == 'ZHAPower':# in W
-        kwarg['TypeName'] = 'Usage'
-    elif _Type == 'ZHAPower_voltage':
-            kwarg['Type'] = 243
-            kwarg['Subtype'] = 8
-    elif _Type == 'ZHAPower_current':
-            kwarg['Type'] = 243
-            kwarg['Subtype'] = 23
-
-    elif _Type == 'ZHAVibration':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Vibrate|Rotation|Drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'ZHAThermostat' or _Type == 'CLIPThermostat':
-        kwarg['Type'] = 242
-        kwarg['Subtype'] = 1
-
-    elif _Type == 'ZHAAlarm':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 73
-        kwarg['Switchtype'] = 2
-
-    elif _Type == 'ZHAWater':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 5
-        kwarg['Image'] = 11 # Visible only on floorplan
-
-    elif _Type == 'ZHAFire' or _Type == 'ZHACarbonMonoxide':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 5
-
-    elif _Type == 'ZHABattery':
-        kwarg['TypeName'] = 'Percentage'
-
-    elif _Type == 'CLIPGenericStatus':
-        kwarg['TypeName'] = 'Text'
-
-    elif _Type == 'CLIPGenericFlag':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 0
-        kwarg['Image'] = 9
-
-    #Switch
-    elif _Type == 'Xiaomi_single_gang':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||", "LevelNames": "Off|single press|double press|hold", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'Switch_Generic' or _Type == 'Xiaomi_double_gang':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B7|B8|B9", "LevelOffHidden": "true", "SelectorStyle": "0"}
-    elif _Type == 'Xiaomi_Opple_6_button_switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||||||||||||||", "LevelNames": "Off|B1|B2|B3|B4|B5|B6|B1L|B2L|B3L|B4L|B5L|B6L|B1RL|B2RL|B3RL|B4RL|B5RL|B6RL|B1D|B2D|B3D|B4D|B5D|B6D|B1T|B2T|B3T|B4T|B5T|B6T", "LevelOffHidden": "true", "SelectorStyle": "1"}
-    elif _Type == 'Tuya_button_switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||||||||||", "LevelNames": "Off|B1|L1|D1|B2|L2|D2|B3|L3|D3|B4|L4|D4", "LevelOffHidden": "true", "SelectorStyle": "1"}
-    elif _Type == 'Philips_button_switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|B1|L1|B2|L2|B3|L3|B4|L4", "LevelOffHidden": "true", "SelectorStyle": "1"}
-    elif _Type == 'Binary_module':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Unknow|On|Off", "LevelOffHidden": "true", "SelectorStyle": "1"}
-
-    elif _Type == 'Styrbar_remote':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||||||||||", "LevelNames": "V0|V1|V2|V3|V4|V5|V6|V7|V8|V9|V10|V11|V12", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'Tradfri_remote':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|On|+|-|<|>|L +|L -|L <|L >", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'Tradfri_on/off_switch':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|B1C|B1L|B2C|B2L", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'XCube_C':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 9
-        kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
-
-    elif _Type == 'XCube_R':
-        kwarg['TypeName'] = 'Custom'
-        kwarg['Options'] = {"Custom": ("1;degree")}
-
-    elif _Type == 'Thermostat_Mode':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||", "LevelNames": "Off|Heat|Auto", "LevelOffHidden": "false", "SelectorStyle": "0"}
-
-    elif _Type == 'Thermostat_Preset':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Options'] = {"LevelActions": "|||||||||", "LevelNames": "Off|holiday|auto|manual|comfort|eco|boost|complex|program", "LevelOffHidden": "true", "SelectorStyle": "1"}
-
-    elif _Type == 'Chrismast_E':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 18
-        kwarg['Image'] = 14
-        kwarg['Options'] = {"LevelActions": "||||||||||||||||", "LevelNames": "off|none|steady|snow|rainbow|snake|twinkle|fireworks|flag|waves|updown|vintage|fading|collide|strobe|sparkles|carnival|glow", "LevelOffHidden": "true", "SelectorStyle": "1"}
-
-    elif _Type == 'Vibration_Orientation':
-        kwarg['Type'] = 243
-        kwarg['Subtype'] = 19
-
-    #groups
-    elif _Type == 'LightGroup' or _Type == 'groups':
-        if "_dim" in _Name:
-            kwarg['Type'] = 244
-            kwarg['Subtype'] = 62
-            kwarg['Switchtype'] = 7
-        else:
-            kwarg['Type'] = 241
-            kwarg['Subtype'] = 7
-            kwarg['Switchtype'] = 7
-        #if 'bulbs_group' in Images:
-        #    kwarg['Image'] = Images['bulbs_group'].ID
-
-    #Scenes
-    elif _Type == 'Scenes':
-        kwarg['Type'] = 244
-        kwarg['Subtype'] = 62
-        kwarg['Switchtype'] = 9
-        kwarg['Image'] = 9
-
-    else:
+    if not kwarg:
         Domoticz.Error("Unknow device type " + _Type )
         return
 

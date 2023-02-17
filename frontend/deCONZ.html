@@ -10,6 +10,7 @@
                     <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'lights'}" ng-click="$ctrl.refreshDeCONZ('lights')">{{:: 'Lights' | translate}}</button>
                     <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'sensors'}" ng-click="$ctrl.refreshDeCONZ('sensors')">{{:: 'Sensors' | translate}}</button>
                     <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'groups'}" ng-click="$ctrl.refreshDeCONZ('groups')">{{:: 'Groups' | translate}}</button>
+                    <button class="btn btn-default" ng-class="{'active': $ctrl.value === 'alarmsystems'}" ng-click="$ctrl.refreshDeCONZ('alarmsystems')">{{:: 'Alarm System' | translate}}</button>
                 </device-filter-by-type>
 
                 <button class="btn btn-default pull-right ng-binding" ng-click="$ctrl.refreshDeCONZ($ctrl.value)">Refresh</button>
@@ -90,6 +91,86 @@
     </div>
 </script>
 
+<script type="text/ng-template" id="app/deCONZ/IncluderemModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Device UniqueID to remove' | translate }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" name="modalForm">
+            <div class="control-group">
+                <label class="control-label" for="device-name">{{:: 'Unique ID' | translate }}:</label>
+                <div class="controls">
+                    <input type="text"
+                        id="device-name"
+                        class="form-control"
+                        minlength="1"
+                        maxlength="100"
+                        ng-model="$ctrl.myname"
+                        ng-disabled="$ctrl.isSaving"
+                        ng-change="$ctrl.isUnchanged = false"
+                        name="deviceName"
+                        size="50"
+                    />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button"
+            class="btn btn-primary"
+            ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
+            ng-click="$ctrl.includeremDevice()">
+            {{:: 'Remove' | translate }}
+        </button>
+
+        <button type="button"
+            class="btn btn-default"
+            ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="app/deCONZ/IncludeModal.html">
+    <div class="modal-header">
+        <h3 class="modal-title">{{:: 'Device UniqueID to add' | translate }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" name="modalForm">
+            <div class="control-group">
+                <label class="control-label" for="device-name">{{:: 'Unique ID' | translate }}:</label>
+                <div class="controls">
+                    <input type="text"
+                        id="device-name"
+                        class="form-control"
+                        minlength="1"
+                        maxlength="100"
+                        ng-model="$ctrl.myname"
+                        ng-disabled="$ctrl.isSaving"
+                        ng-change="$ctrl.isUnchanged = false"
+                        name="deviceName"
+                        size="50"
+                    />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button"
+            class="btn btn-primary"
+            ng-disabled="modalForm.$invalid || $ctrl.isSaving || $ctrl.isUnchanged"
+            ng-click="$ctrl.includeDevice()">
+            {{:: 'Add' | translate }}
+        </button>
+
+        <button type="button"
+            class="btn btn-default"
+            ng-click="$dismiss()">
+            {{:: 'Cancel' | translate }}
+        </button>
+    </div>
+</script>
+
 <script type="text/ng-template" id="app/deCONZ/ConfigModal.html">
 
     <div class="modal-header">
@@ -104,7 +185,7 @@
                         <div>
                             <input type = "text"
                             ng-model = "$ctrl.deviceconfig[key]"
-                            ng-disabled = "['pulseconfiguration','duration','sensitivity','mode','offset','delay','windowopen_set','locked','preset','on'].indexOf(key) < 0"
+                            ng-disabled = "['battery','colorcapabilities','ctmax','ctmin','pending','reachable','sensitivitymax','configured','temperature','armmode','checkin','enrolled','group'].indexOf(key) > -1"
                             ng-change = "$ctrl.isUnchanged = false">
                         </div>
                     </td>
@@ -181,7 +262,7 @@
         <hr>
             <form style="text-align: center;" class="form-horizontal" name="modalGwPassForm">
                 <div class="control-group">
-                    <label class="control-label" for="gwPassword">{{:: 'Gateway Password' | translate }}:</label>
+                    <label class="control-label" for="gwPassword">{{:: 'Code 0' | translate }}:</label>
                     <div class="controls">
                         <input type="password"
                             id="gwPassword"
@@ -194,14 +275,21 @@
                     </div>
                 </div>
             </form>
+            <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.setcode0()">
+                {{:: 'Set Code 0' | translate }}
+            </button>
+        <hr>
         <p>
             <table style="border-spacing: 5px; margin-left: auto; margin-right: auto;" width="66%">
                 <tbody>
+                <br>
                     <tr ng-repeat="(key, value) in configOutput1[0]"><td>{{key}}</td><td>{{value}}</td></tr>
+                <br>
                 </tbody>
             </table>
         </p>
-         <hr>
+        <hr>
+
         <p>
             <button type="button" class="btn btn-primary" ng-show="apiShowGet" ng-click="$mctrl.ConfPlugin()">
                 {{:: 'Config Plugin' | translate }}
