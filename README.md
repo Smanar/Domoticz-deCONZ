@@ -78,7 +78,13 @@ python3 API_KEY.py 127.0.0.1:80 create
 And for those who don't know where to find the API key and don't wana use the tool: https://dresden-elektronik.github.io/deconz-rest-doc/getting_started/#acquire-an-api-key    
 Or you can just use the Front End in Domoticz/Custom/Deconz.   
 
-- By defaut the plugin use standard setting, you can use special one in the field "specials settings" on the hardware panel, for exemple ENABLEMORESENSOR will enable tension and current sensors.   
+- By defaut the plugin use standard setting, you can use special one in the field "specials settings" on the hardware panel, available setting are :   
+
+| Option 	| action |
+|---	|---	|
+| ENABLEMORESENSOR | enable tension and current sensors	|
+| ENABLEBATTERYWIDGET	| create a  special widget by device just for battery |
+
 
 ## Remark.
 - There is a deconz Discord channel https://discord.gg/QFhTxqN
@@ -111,7 +117,8 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
-- 12/06/22 : 1.0.26 > Make the widget for covering work again, following the Domoticz update. Create a widget with consumption and power for some devices that are able to support it, (thx @BabaIsYou)
+- 17/02/23 : 1.0.27 > Add special support for the Ikea Starkvind thx @arjannv , add support for the Alarm System, and the support for keypad, see https://github.com/Smanar/Domoticz-deCONZ/wiki/How-to-add-keypad-to-domoticz thx @BabaIsYou , add new option ENABLEBATTERYWIDGET ,remove "capabilities" error message.   
+- 12/11/22 : 1.0.26 > Make the widget for covering work again, following the Domoticz update. Create a widget with consumption and power for some devices that are able to support it, (thx @BabaIsYou)
 - 10/09/22 : 1.0.25 > It's now possible to clean the unused API key used for Hue Essentials, add support for binary module, with the develco one, add "pulseconfiguration" as possible setting in the GUI, thx @Jemand .   
 - Correct an issue for thermostat with "mode" not updated.
 - 08/05/22 : 1.0.24 > This version contain various correctives for consumption/power sensors.   
