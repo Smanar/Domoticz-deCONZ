@@ -147,8 +147,8 @@ class BasePlugin:
                 if key not in Images:
                     Domoticz.Image(value).Create()
                     Domoticz.Status("Added icon: " + key + " from file " + value)
-             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
-             for image in Images:
+            Domoticz.Status("Number of icons loaded = " + str(len(Images)))
+            for image in Images:
                 Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
  
         #Read banned devices
