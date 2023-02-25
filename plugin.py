@@ -78,13 +78,6 @@ ENABLEBATTERYWIDGET = False #Create 1 more widget by battery devices
 
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
-#Custom icon files for battery level
-#https://github.com/999LV/BatteryLevel
-icons = {"batterylevelfull": "batterylevelfull icons.zip",
-         "batterylevelok": "batterylevelok icons.zip",
-         "batterylevellow": "batterylevellow icons.zip",
-         "batterylevelempty": "batterylevelempty icons.zip"}
-
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
@@ -141,16 +134,20 @@ class BasePlugin:
             Domoticz.Status("Enabling special setting ENABLEBATTERYWIDGET")
             global ENABLEBATTERYWIDGET
             ENABLEBATTERYWIDGET = True
-            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
-            self.batterylevelfull = 75  # Default values for Battery Levels
-            self.batterylevelok   = 50
-            self.batterylevellow  = 25
+
+            #Custom icon files for battery level
+            #https://github.com/999LV/BatteryLevel
+            icons = {"batterylevelfull": "icons/batterylevelfull_icons.zip",
+                     "batterylevelok": "icons/batterylevelok_icons.zip",
+                     "batterylevellow": "icons/batterylevellow_icons.zip",
+                     "batterylevelempty": "icons/batterylevelempty_icons.zip"}
+
             # load custom battery images
             for key, value in icons.items():
                 if key not in Images:
                     Domoticz.Image(value).Create()
-                    Domoticz.Debug("Added icon: " + key + " from file " + value)
-             Domoticz.Debug("Number of icons loaded = " + str(len(Images)))
+                    Domoticz.Status("Added icon: " + key + " from file " + value)
+             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
              for image in Images:
                  Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
  
@@ -1418,11 +1415,11 @@ def UpdateDeviceProc(kwarg,Unit):
             Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
             if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
                 levelBatt=kwarg['BatteryLevel']
-                if levelBatt >= self.batterylevelfull:
+                if levelBatt >= 75:
                     icon = "batterylevelfull"
-                elif levelBatt >= self.batterylevelok:
+                elif levelBatt >= 50:
                     icon = "batterylevelok"
-                elif levelBatt >= self.batterylevellow:
+                elif levelBatt >= 25:
                     icon = "batterylevellow"
                 else:
                     icon = "batterylevelempty"
