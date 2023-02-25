@@ -149,7 +149,7 @@ class BasePlugin:
                     Domoticz.Status("Added icon: " + key + " from file " + value)
              Domoticz.Status("Number of icons loaded = " + str(len(Images)))
              for image in Images:
-                 Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
+                Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
  
         #Read banned devices
         try:
