@@ -78,6 +78,13 @@ ENABLEBATTERYWIDGET = False #Create 1 more widget by battery devices
 
 FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock", "current", "voltage"]
 
+#Custom icon files for battery level
+#https://github.com/999LV/BatteryLevel
+icons = {"batterylevelfull": "batterylevelfull icons.zip",
+         "batterylevelok": "batterylevelok icons.zip",
+         "batterylevellow": "batterylevellow icons.zip",
+         "batterylevelempty": "batterylevelempty icons.zip"}
+
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
@@ -135,7 +142,18 @@ class BasePlugin:
             global ENABLEBATTERYWIDGET
             ENABLEBATTERYWIDGET = True
             self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
-
+            self.batterylevelfull = 75  # Default values for Battery Levels
+            self.batterylevelok   = 50
+            self.batterylevellow  = 25
+            # load custom battery images
+            for key, value in icons.items():
+                if key not in Images:
+                    Domoticz.Image(value).Create()
+                    Domoticz.Debug("Added icon: " + key + " from file " + value)
+             Domoticz.Debug("Number of icons loaded = " + str(len(Images)))
+             for image in Images:
+                 Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
+ 
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -1399,7 +1417,16 @@ def UpdateDeviceProc(kwarg,Unit):
             NewIEE = Devices[Unit].DeviceID.split("-")[0]
             Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
             if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
-                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"])}
+                levelBatt=kwarg['BatteryLevel']
+                if levelBatt >= self.batterylevelfull:
+                    icon = "batterylevelfull"
+                elif levelBatt >= self.batterylevelok:
+                    icon = "batterylevelok"
+                elif levelBatt >= self.batterylevellow:
+                    icon = "batterylevellow"
+                else:
+                    icon = "batterylevelempty"
+                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"]),"Image":Images[icon].ID}
                 Devices[Unit2].Update(**kwarg2)
                 Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
 
