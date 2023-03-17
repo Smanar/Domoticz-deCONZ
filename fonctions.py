@@ -436,6 +436,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
     if 'speed' in data:
         kwarg.update(ReturnUpdateValue( 'speed' , data['speed'], model ) )
+    if 'expectedrotation' in data:
+        kwarg.update(ReturnUpdateValue( 'expectedrotation' , data['expectedrotation'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -711,6 +713,14 @@ def ReturnUpdateValue(command, val ,option = None):
         buffercommand['power'] = val
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
+
+    if command == 'expectedrotation':
+        kwarg['nValue'] = int(val)
+
+        if kwarg['nValue'] == 0:
+            kwarg['sValue'] = 'Off'
+        else:
+            kwarg['sValue'] = str( kwarg['nValue'] )
 
 
     #switch
