@@ -255,6 +255,10 @@ def Createdatawidget(IEEE, _Name, _Type, opt):
         kwarg['TypeName'] = 'Custom'
         kwarg['Options'] = {"Custom": ("1;degree")}
 
+    elif _Type == 'ZHARelativeRotary':
+        kwarg['TypeName'] = 'Custom'
+        kwarg['Options'] = {"Custom": ("1;degree")}
+
     elif _Type == 'Thermostat_Mode':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
