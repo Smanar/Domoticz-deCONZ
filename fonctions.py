@@ -374,6 +374,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
         kwarg.update(ReturnUpdateValue('status', data['status']))
+    if 'pm2_5' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'on' in data:
         kwarg.update(ReturnUpdateValue('on', data['on'], model) )
     if 'x' in data:
@@ -422,8 +424,6 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
-    if 'pm2_5' in data:
-        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'bri' in data:
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
