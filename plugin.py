@@ -626,7 +626,28 @@ class BasePlugin:
                 #ignore ZHASwitch if vibration sensor
                 if 'sensitivity' in ConfigList:
                     return
-                if 'lumi.sensor_cube' in Model:
+                
+                #Used by Xiaomi Cube T1
+                if 'lumi.remote.cagl01' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCube_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCube_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                #Used by Xiaomi Cube Pro T1
+                elif 'lumi.remote.cagl02' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCube_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCube_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                elif 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
