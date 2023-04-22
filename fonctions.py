@@ -756,7 +756,7 @@ def ButtonconvertionXCUBE_R(val):
 
     return kwarg
 
-def ButtonconvertionXCUBEPROT1_R(val):
+def ButtonconvertionXCUBET1_R(val):
     kwarg = {}
 
     kwarg['nValue'] = int(val)
@@ -797,7 +797,7 @@ def ButtonconvertionXCUBE(val):
 
     return kwarg
 
-def ButtonconvertionXCUBEPROT1(val, gesture):
+def ButtonconvertionXCUBET1(val, gesture):
     kwarg = {}
     gest = int(gesture)
     face = str(val)
@@ -810,13 +810,13 @@ def ButtonconvertionXCUBEPROT1(val, gesture):
     elif gest == 2:           # Drop
         v = 30
     elif gest == 3:           # 90 flip 
-        v = 40 + int(face[0]) #add face up number
+        v = 40
     elif gest == 4:           # 180 flip
-        v = 50 + int(face[0]) #add face up number
+        v = 50
     elif gest == 5:           # push
-        v = 60 + int(face[0]) #add face up number
+        v = 60
     elif gest == 6:           # double tap
-        v = 70 + int(face[0]) #add face up number
+        v = 70
     else:                     # Unknown
         v = 0
 
