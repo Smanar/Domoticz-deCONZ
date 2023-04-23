@@ -756,6 +756,18 @@ def ButtonconvertionXCUBE_R(val):
 
     return kwarg
 
+def ButtonconvertionXCUBET1_R(val):
+    kwarg = {}
+
+    kwarg['nValue'] = int(val)
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
@@ -782,6 +794,38 @@ def ButtonconvertionXCUBE(val):
         kwarg['sValue'] = str( v )
 
     kwarg['nValue'] = int(val)
+
+    return kwarg
+
+def ButtonconvertionXCUBET1(val, gesture):
+    kwarg = {}
+    gest = int(gesture)
+    face = str(val)
+    v = 0
+
+    if gest == 0:             # wake
+        v = 20
+    elif gest == 1:           # shake
+        v = 10
+    elif gest == 2:           # Drop
+        v = 30
+    elif gest == 3:           # 90 flip 
+        v = 40
+    elif gest == 4:           # 180 flip
+        v = 50
+    elif gest == 5:           # push
+        v = 60
+    elif gest == 6:           # double tap
+        v = 70
+    else:                     # Unknown
+        v = 0
+
+    if v == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = v
 
     return kwarg
 

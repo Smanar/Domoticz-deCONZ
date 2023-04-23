@@ -64,6 +64,7 @@ except:
 from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonconvertionXCUBET1, ButtonconvertionXCUBET1_R
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 from widget import Createdatawidget
@@ -641,7 +642,27 @@ class BasePlugin:
                 #ignore ZHASwitch if vibration sensor
                 if 'sensitivity' in ConfigList:
                     return
-                if 'lumi.sensor_cube' in Model:
+                #Used by Xiaomi Cube T1
+                if 'lumi.remote.cagl01' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCubeT1_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCubeT1_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                #Used by Xiaomi Cube T1 Pro
+                elif 'lumi.remote.cagl02' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCubeT1_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCubeT1_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                elif 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
@@ -989,6 +1010,10 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
                 elif model == 'XCube_R':
                     kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
+                elif model == 'XCubeT1_C':
+                    kwarg.update(ButtonconvertionXCUBET1(state['buttonevent'], state['gesture']) )
+                elif model == 'XCubeT1_R':
+                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
