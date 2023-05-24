@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.27" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.28" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -64,6 +64,7 @@ except:
 from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonconvertionXCUBET1, ButtonconvertionXCUBET1_R
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 from widget import Createdatawidget
@@ -134,8 +135,23 @@ class BasePlugin:
             Domoticz.Status("Enabling special setting ENABLEBATTERYWIDGET")
             global ENABLEBATTERYWIDGET
             ENABLEBATTERYWIDGET = True
-            self.SpecialDeviceList = self.SpecialDeviceList + ["current", "voltage"]
 
+            #Custom icon files for battery level
+            #https://github.com/999LV/BatteryLevel
+            icons = {"batterylevelfull": "icons/batterylevelfull_icons.zip",
+                     "batterylevelok": "icons/batterylevelok_icons.zip",
+                     "batterylevellow": "icons/batterylevellow_icons.zip",
+                     "batterylevelempty": "icons/batterylevelempty_icons.zip"}
+
+            # load custom battery images
+            for key, value in icons.items():
+                if key not in Images:
+                    Domoticz.Image(value).Create()
+                    Domoticz.Status("Added icon: " + key + " from file " + value)
+            Domoticz.Status("Number of icons loaded = " + str(len(Images)))
+            for image in Images:
+                Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
+ 
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -626,7 +642,27 @@ class BasePlugin:
                 #ignore ZHASwitch if vibration sensor
                 if 'sensitivity' in ConfigList:
                     return
-                if 'lumi.sensor_cube' in Model:
+                #Used by Xiaomi Cube T1
+                if 'lumi.remote.cagl01' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCubeT1_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCubeT1_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                #Used by Xiaomi Cube T1 Pro
+                elif 'lumi.remote.cagl02' in Model:
+                    if IEEE.endswith('-03-000c'):
+                        Type = 'XCubeT1_R'
+                    elif IEEE.endswith('-02-0012'):
+                        Type = 'XCubeT1_C'
+                    else:
+                        # Useless device
+                        self.Devices[IEEE]['state'] = 'banned'
+                        return
+                elif 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
@@ -723,7 +759,7 @@ class BasePlugin:
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
             # power and consumption on the same endpoint
-            elif Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == '45856' or Model == 'E1C-NB7':
+            elif Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == 'OTH4000-ZB' or Model == '45856' or Model == 'E1C-NB7':
                 self.Devices[IEEE]['option'] = 1
                 self.CreateIfnotExist(IEEE,Type,Name,1)
             else:
@@ -974,6 +1010,10 @@ class BasePlugin:
                     kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
                 elif model == 'XCube_R':
                     kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
+                elif model == 'XCubeT1_C':
+                    kwarg.update(ButtonconvertionXCUBET1(state['buttonevent'], state['gesture']) )
+                elif model == 'XCubeT1_R':
+                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
@@ -1399,7 +1439,16 @@ def UpdateDeviceProc(kwarg,Unit):
             NewIEE = Devices[Unit].DeviceID.split("-")[0]
             Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
             if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
-                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"])}
+                levelBatt=kwarg['BatteryLevel']
+                if levelBatt >= 75:
+                    icon = "batterylevelfull"
+                elif levelBatt >= 50:
+                    icon = "batterylevelok"
+                elif levelBatt >= 25:
+                    icon = "batterylevellow"
+                else:
+                    icon = "batterylevelempty"
+                kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"]),"Image":Images[icon].ID}
                 Devices[Unit2].Update(**kwarg2)
                 Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
 

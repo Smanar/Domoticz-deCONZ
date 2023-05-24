@@ -374,6 +374,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
         kwarg.update(ReturnUpdateValue('status', data['status']))
+    if 'pm2_5' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'on' in data:
         kwarg.update(ReturnUpdateValue('on', data['on'], model) )
     if 'x' in data:
@@ -422,8 +424,6 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('lockstate', data['lockstate']))
     if 'airqualityppb' in data:
         kwarg.update(ReturnUpdateValue('airqualityppb', data['airqualityppb']))
-    if 'pm2_5' in data:
-        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'bri' in data:
         kwarg.update(ReturnUpdateValue('bri', data['bri'], model) )
     if 'lift' in data:
@@ -436,6 +436,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
     if 'speed' in data:
         kwarg.update(ReturnUpdateValue( 'speed' , data['speed'], model ) )
+    if 'expectedrotation' in data:
+        kwarg.update(ReturnUpdateValue( 'expectedrotation' , data['expectedrotation'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -712,6 +714,14 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
+    if command == 'expectedrotation':
+        kwarg['nValue'] = int(val)
+
+        if kwarg['nValue'] == 0:
+            kwarg['sValue'] = 'Off'
+        else:
+            kwarg['sValue'] = str( kwarg['nValue'] )
+
 
     #switch
     if command == 'buttonevent':
@@ -735,6 +745,18 @@ def ReturnUpdateValue(command, val ,option = None):
 
 #https://github.com/dresden-elektronik/deconz-rest-plugin/issues/138
 def ButtonconvertionXCUBE_R(val):
+    kwarg = {}
+
+    kwarg['nValue'] = int(val)
+
+    if kwarg['nValue'] == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( kwarg['nValue'] )
+
+    return kwarg
+
+def ButtonconvertionXCUBET1_R(val):
     kwarg = {}
 
     kwarg['nValue'] = int(val)
@@ -772,6 +794,38 @@ def ButtonconvertionXCUBE(val):
         kwarg['sValue'] = str( v )
 
     kwarg['nValue'] = int(val)
+
+    return kwarg
+
+def ButtonconvertionXCUBET1(val, gesture):
+    kwarg = {}
+    gest = int(gesture)
+    face = str(val)
+    v = 0
+
+    if gest == 0:             # wake
+        v = 20
+    elif gest == 1:           # shake
+        v = 10
+    elif gest == 2:           # Drop
+        v = 30
+    elif gest == 3:           # 90 flip 
+        v = 40
+    elif gest == 4:           # 180 flip
+        v = 50
+    elif gest == 5:           # push
+        v = 60
+    elif gest == 6:           # double tap
+        v = 70
+    else:                     # Unknown
+        v = 0
+
+    if v == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = v
 
     return kwarg
 
