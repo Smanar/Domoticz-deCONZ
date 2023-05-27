@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.28" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.29" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -96,6 +96,7 @@ class BasePlugin:
         self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
+        self.DeconzInfoUnit = False
 
         self.IDGateway = -1
 
@@ -125,6 +126,12 @@ class BasePlugin:
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
 
+        #Create info widget
+        self.DeconzInfoUnit = GetDomoDeviceInfo("DeconzInfo")
+        if not self.DeconzInfoUnit:
+            Domoticz.Log("Creation of Info Widget.")
+            Domoticz.Device(Name="Status", DeviceID="DeconzInfo", Unit=FreeUnit(), TypeName='Alert').Create()
+
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
@@ -151,7 +158,7 @@ class BasePlugin:
             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
             for image in Images:
                 Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
- 
+
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -564,6 +571,7 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
             for i in Devices:
@@ -1063,6 +1071,7 @@ class BasePlugin:
                 if tampered or lowbattery:
                     kwarg.update({'TimedOut':1})
                     Domoticz.Error("###### Device with hardware default: " + str(_Data))
+                    self.DisplayDeconzInfo("Device with hardware default: " + str(_Data),2)
 
         #MAJ config
         elif 'config' in _Data:
@@ -1171,6 +1180,12 @@ class BasePlugin:
             dummy,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
             url = '/api/' + Parameters["Mode2"] + '/lights/' + str(deCONZ_ID) + '/state'
             self.SendCommand(url,_json)
+
+    def DisplayDeconzInfo(self,text,level=0):
+        if not self.DeconzInfoUnit:
+            return
+        Devices[self.DeconzInfoUnit].Update(nValue=level, sValue=str(text))
+
 
 global _plugin
 _plugin = BasePlugin()
