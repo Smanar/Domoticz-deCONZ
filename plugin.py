@@ -1071,7 +1071,7 @@ class BasePlugin:
                 if tampered or lowbattery:
                     kwarg.update({'TimedOut':1})
                     Domoticz.Error("###### Device with hardware default: " + str(_Data))
-                    self.DisplayDeconzInfo("Device with hardware default: " + str(_Data),2)
+                    self.DisplayDeconzInfo("Device with hardware default: " + IEEE + " > " + str(state),4)
 
         #MAJ config
         elif 'config' in _Data:
