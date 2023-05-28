@@ -887,7 +887,8 @@ class BasePlugin:
             #Command Error
             if First_item == 'error':
                 Domoticz.Error("deCONZ error :" + str(_Data2))
-                if _Data2['error']['type'] == 3:
+                self.DisplayDeconzInfo("Error: " + _Data2['error']['address'] + " > " + _Data2['error']['description'],4)
+                if (_Data2['error']['type'] == 3) or (_Data2['error']['type'] == 202):
                     Domoticz.Log("Seems like disconnected type") + str(_type)
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
@@ -1090,6 +1091,7 @@ class BasePlugin:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
         if kwarg:
+            #small check
             UpdateDevice(_Data['id'], _Data['r'], kwarg, self.SpecialDeviceList)
 
     def DeleteDeviceFromdeCONZ(self,_id):
@@ -1244,6 +1246,10 @@ def DumpConfigToLog():
 def GetDeviceIEEE(id,type):
     global _plugin
     return _plugin.GetDeviceIEEE(id,type)
+
+def DisplayDeconzInfo(text,level=0):
+    global _plugin
+    return _plugin.DisplayDeconzInfo(text,level)
 
 #*****************************************************************************************************
 
