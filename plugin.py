@@ -889,7 +889,7 @@ class BasePlugin:
                 Domoticz.Error("deCONZ error :" + str(_Data2))
                 self.DisplayDeconzInfo("Error: " + _Data2['error']['address'] + " > " + _Data2['error']['description'],4)
                 if (_Data2['error']['type'] == 3) or (_Data2['error']['type'] == 202):
-                    Domoticz.Log("Seems like disconnected type") + str(_type)
+                    Domoticz.Log("Seems like disconnected")
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
                     _type = dev[1]
