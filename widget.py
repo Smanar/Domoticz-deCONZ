@@ -95,6 +95,9 @@ def Createdatawidget(IEEE, _Name, _Type, opt):
     elif _Type == 'ZHAHumidity' or _Type == 'CLIPHumidity':
         kwarg['TypeName'] = 'Humidity'
 
+    elif _Type == 'ZHAMoisture':
+        kwarg['TypeName'] = 'Soil Moisture'
+
     elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
 
