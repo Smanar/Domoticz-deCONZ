@@ -392,6 +392,8 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('pressure', data['pressure']))
     if 'humidity' in data:
         kwarg.update(ReturnUpdateValue('humidity', data['humidity']))
+    if 'moisture' in data:
+        kwarg.update(ReturnUpdateValue('moisture', data['moisture']))
     if 'open' in data:
         kwarg.update(ReturnUpdateValue('open', data['open']))
     if 'presence' in data:
@@ -671,6 +673,17 @@ def ReturnUpdateValue(command, val ,option = None):
             kwarg['sValue'] = '1'
         else:
             kwarg['sValue'] = '3'
+
+    if command == 'moisture':
+        val = int(float(val) / 100)
+        # Val is a value 0 to 100, need to be converted in 0 to 200
+        #00 - 09 = saturated
+        #10 - 19 = adequately wet
+        #20 - 59 = irrigation advice
+        #60 - 99 = irrigation
+        #100-200 = Dangerously dry
+
+        kwarg['nValue'] = val * 2
 
     if (command == 'lightlevel') or (command == 'lux'):
         kwarg['nValue'] = 0
