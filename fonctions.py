@@ -683,7 +683,7 @@ def ReturnUpdateValue(command, val ,option = None):
         #60 - 99 = irrigation
         #100-200 = Dangerously dry
 
-        kwarg['nValue'] = val * 2
+        kwarg['nValue'] = (100-val) * 2
 
     if (command == 'lightlevel') or (command == 'lux'):
         kwarg['nValue'] = 0
