@@ -766,10 +766,19 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
-            # power and consumption on the same endpoint
-            elif Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == 'OTH4000-ZB' or Model == '45856' or Model == 'E1C-NB7':
-                self.Devices[IEEE]['option'] = 1
-                self.CreateIfnotExist(IEEE,Type,Name,1)
+            if Type == 'ZHAConsumption':
+                # power and consumption on the same endpoint
+                if Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == 'OTH4000-ZB' or Model == '45856' or Model == 'E1C-NB7':
+                    self.Devices[IEEE]['option'] = 1
+                    self.CreateIfnotExist(IEEE,Type,Name,1)
+                # Support of consumption_2
+                elif 'consumption_2' in StateList:
+                    self.Devices[IEEE]['option'] = 2
+                    self.CreateIfnotExist(IEEE,Type,Name,3)
+                #Classic one
+                else:
+                    self.CreateIfnotExist(IEEE,Type,Name)
+            #defaut sensor
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -1091,7 +1100,6 @@ class BasePlugin:
             Domoticz.Error("Unknow MAJ: " + str(_Data) )
 
         if kwarg:
-            #small check
             UpdateDevice(_Data['id'], _Data['r'], kwarg, self.SpecialDeviceList)
 
     def DeleteDeviceFromdeCONZ(self,_id):
