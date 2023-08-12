@@ -707,6 +707,9 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['nValue'] = 0
         kwarg['sValue'] = str(val)
 
+    if command == 'consumption_2':
+        buffercommand['consumption_2'] = round(float(val) * 1, 3)
+
     if command == 'consumption':
         #Wh to Kwh
         kwh = round(float(val) * 1, 3)
@@ -718,9 +721,16 @@ def ReturnUpdateValue(command, val ,option = None):
                 kwarg['nValue'] = 0
                 kwarg['sValue'] = str(p) + ';' + str(kwh)
         #device with only consumption
-        else:
+        elif option == 0:
             kwarg['nValue'] = 0
             kwarg['sValue'] = str(kwh)
+        #Device with consumption_2
+        else:
+            if buffercommand.get('consumption_2'):
+                p = buffercommand['consumption_2']
+                buffercommand.clear()
+                kwarg['nValue'] = 0
+                kwarg['sValue'] = str(kwh) + ';' + str(p) + ';0;0;0;0'
 
     if command == 'power':
         buffercommand['power'] = val
@@ -822,7 +832,7 @@ def ButtonconvertionXCUBET1(val, gesture):
         v = 10
     elif gest == 2:           # Drop
         v = 30
-    elif gest == 3:           # 90 flip 
+    elif gest == 3:           # 90 flip
         v = 40
     elif gest == 4:           # 180 flip
         v = 50
