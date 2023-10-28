@@ -1319,7 +1319,7 @@ def GetDomoDeviceInfo(IEEE):
 
 def FreeUnit() :
     FreeUnit = ""
-    for x in range(1,256):
+    for x in range(1,255):
         if x not in Devices :
             FreeUnit=x
             return FreeUnit
