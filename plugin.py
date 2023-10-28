@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.28" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.29" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -96,6 +96,7 @@ class BasePlugin:
         self.WebsoketBuffer = ''
         self.Banned_Devices = []
         self.BufferReceive = ''
+        self.DeconzInfoUnit = False
 
         self.IDGateway = -1
 
@@ -125,6 +126,12 @@ class BasePlugin:
             Domoticz.Debugging(int(Parameters["Mode3"]))
             #DumpConfigToLog()
 
+        #Create info widget
+        self.DeconzInfoUnit = GetDomoDeviceInfo("DeconzInfo")
+        if not self.DeconzInfoUnit:
+            Domoticz.Log("Creation of Info Widget.")
+            Domoticz.Device(Name="Status", DeviceID="DeconzInfo", Unit=FreeUnit(), TypeName='Alert').Create()
+
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
             global ENABLEMORESENSOR
@@ -151,7 +158,7 @@ class BasePlugin:
             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
             for image in Images:
                 Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
- 
+
         #Read banned devices
         try:
             with open(Parameters["HomeFolder"]+"banned_devices.txt", 'r') as myPluginConfFile:
@@ -564,6 +571,7 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
             for i in Devices:
@@ -758,10 +766,19 @@ class BasePlugin:
                 self.CreateIfnotExist(IEEE + "_lock",'Door Lock',Name)
                 #Create the current device
                 self.CreateIfnotExist(IEEE,'ZHADoorLock',Name)
-            # power and consumption on the same endpoint
-            elif Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == 'OTH4000-ZB' or Model == '45856' or Model == 'E1C-NB7':
-                self.Devices[IEEE]['option'] = 1
-                self.CreateIfnotExist(IEEE,Type,Name,1)
+            if Type == 'ZHAConsumption':
+                # power and consumption on the same endpoint
+                if Model == 'ZHEMI101' or Model == 'TH1124ZB' or Model == 'OTH4000-ZB' or Model == '45856' or Model == 'E1C-NB7':
+                    self.Devices[IEEE]['option'] = 1
+                    self.CreateIfnotExist(IEEE,Type,Name,1)
+                # Support of consumption_2
+                elif 'consumption_2' in StateList:
+                    self.Devices[IEEE]['option'] = 2
+                    self.CreateIfnotExist(IEEE,Type,Name,3)
+                #Classic one
+                else:
+                    self.CreateIfnotExist(IEEE,Type,Name)
+            #defaut sensor
             else:
                 self.CreateIfnotExist(IEEE,Type,Name)
 
@@ -879,8 +896,9 @@ class BasePlugin:
             #Command Error
             if First_item == 'error':
                 Domoticz.Error("deCONZ error :" + str(_Data2))
-                if _Data2['error']['type'] == 3:
-                    Domoticz.Log("Seems like disconnected type") + str(_type)
+                self.DisplayDeconzInfo("Error: " + _Data2['error']['address'] + " > " + _Data2['error']['description'],4)
+                if (_Data2['error']['type'] == 3) or (_Data2['error']['type'] == 202):
+                    Domoticz.Log("Seems like disconnected")
                     dev = _Data2['error']['address'].split('/')
                     _id = dev[2]
                     _type = dev[1]
@@ -1063,6 +1081,7 @@ class BasePlugin:
                 if tampered or lowbattery:
                     kwarg.update({'TimedOut':1})
                     Domoticz.Error("###### Device with hardware default: " + str(_Data))
+                    self.DisplayDeconzInfo("Device with hardware default: " + IEEE + " > " + str(state),4)
 
         #MAJ config
         elif 'config' in _Data:
@@ -1172,6 +1191,12 @@ class BasePlugin:
             url = '/api/' + Parameters["Mode2"] + '/lights/' + str(deCONZ_ID) + '/state'
             self.SendCommand(url,_json)
 
+    def DisplayDeconzInfo(self,text,level=0):
+        if not self.DeconzInfoUnit:
+            return
+        Devices[self.DeconzInfoUnit].Update(nValue=level, sValue=str(text))
+
+
 global _plugin
 _plugin = BasePlugin()
 
@@ -1229,6 +1254,10 @@ def DumpConfigToLog():
 def GetDeviceIEEE(id,type):
     global _plugin
     return _plugin.GetDeviceIEEE(id,type)
+
+def DisplayDeconzInfo(text,level=0):
+    global _plugin
+    return _plugin.DisplayDeconzInfo(text,level)
 
 #*****************************************************************************************************
 
@@ -1290,7 +1319,7 @@ def GetDomoDeviceInfo(IEEE):
 
 def FreeUnit() :
     FreeUnit = ""
-    for x in range(1,256):
+    for x in range(1,255):
         if x not in Devices :
             FreeUnit=x
             return FreeUnit
