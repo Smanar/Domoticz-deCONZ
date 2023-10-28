@@ -117,6 +117,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 28/10/23 : 1.0.29 > Add support for moisture sensor, add support for double consumption, add an error widget about deconz status.   
 - 24/05/23 : 1.0.28 > Add support for New Xiaomi Cube T1/ T1 pro thx @Sumd84 , the widget created by the option "ENABLEBATTERYWIDGET" have now different icons according to batery level, thx @BabaIsYou , remove error about "capabilities".   
 - 17/02/23 : 1.0.27 > Add special support for the Ikea Starkvind thx @arjannv , add support for the Alarm System, and the support for keypad, see https://github.com/Smanar/Domoticz-deCONZ/wiki/How-to-add-keypad-to-domoticz thx @BabaIsYou , add new option ENABLEBATTERYWIDGET ,remove "capabilities" error message.   
 - 12/11/22 : 1.0.26 > Make the widget for covering work again, following the Domoticz update. Create a widget with consumption and power for some devices that are able to support it, (thx @BabaIsYou)
