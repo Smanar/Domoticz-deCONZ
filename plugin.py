@@ -585,7 +585,7 @@ class BasePlugin:
             # Compare devices bases
             for i in Devices:
                 if Devices[i].DeviceID not in self.Devices:
-                    if Devices[i].DeviceID != "Alarm_System_1":
+                    if Devices[i].DeviceID != "Alarm_System_1" and Devices[i].DeviceID != "DeconzInfo" and Devices[i].DeviceID != "GROUP_All":
                         Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
