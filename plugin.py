@@ -576,6 +576,10 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            try:
+                Domoticz.Status("### You can still create " + str(255-len(Devices.keys())) + " widgets in domoticz")
+            except:
+                pass
             self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
