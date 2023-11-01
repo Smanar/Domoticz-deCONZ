@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.29" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.30" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -46,7 +46,7 @@
 """
 
 # All imports
-import Domoticz
+import DomoticzEx as Domoticz
 
 import urllib, time
 
@@ -129,8 +129,8 @@ class BasePlugin:
         #Create info widget
         self.DeconzInfoUnit = GetDomoDeviceInfo("DeconzInfo")
         if not self.DeconzInfoUnit:
-            Domoticz.Log("Creation of Info Widget.")
-            Domoticz.Device(Name="Status", DeviceID="DeconzInfo", Unit=FreeUnit(), TypeName='Alert').Create()
+            Domoticz.Status("### Create Info Device")
+            Domoticz.Unit(Name="Status", DeviceID="DeconzInfo", Unit=FreeUnit("DeconzInfo"), TypeName='Alert').Create()
 
         if "ENABLEMORESENSOR" in Parameters["Mode4"]:
             Domoticz.Status("Enabling special setting ENABLEMORESENSOR")
@@ -270,32 +270,33 @@ class BasePlugin:
             Domoticz.Log("Data : " + str(Data))
             return
 
-    def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
+    def onCommand(self, DeviceID, Unit, Command, Level, Hue):
+        Domoticz.Log("onCommand called for DevideID: " + str(DeviceID) + " Unit:" + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
 
         if not self.Ready == True:
             Domoticz.Error("deCONZ not ready")
             return
 
-        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID)
+        IEEE = DeviceID
+        Device_Unit = Devices[DeviceID].Units[Unit]
+
+        _type,deCONZ_ID = self.GetDevicedeCONZ(IEEE)
 
         if not deCONZ_ID:
             # Not in deconz but Alarm System ?
-            if Devices[Unit].DeviceID == 'Alarm_System_1':
-                if Devices[Unit].Description:
+            if DeviceID == 'Alarm_System_1':
+                if Device_Unit.Description:
                     url = '/api/' + Parameters["Mode2"] + '/alarmsystems/1/' + ['disarm','arm_away','arm_stay','arm_night'][int(Level/10)]
-                    self.SendCommand(url,{'code0':str(Devices[Unit].Description)})
+                    self.SendCommand(url,{'code0':str(Device_Unit.Description)})
                 else:
                     Domoticz.Error("Missing code0 in alarm system widget description")
             else:
-                Domoticz.Error("Device not ready : " + str(Unit) )
+                Domoticz.Error("Device not ready : " + str(DeviceID) + "-" + str(Unit) )
             return
 
         if _type == 'sensors':
             Domoticz.Error("This device doesn't support action")
             return
-
-        IEEE = Devices[Unit].DeviceID
 
         #Get device type
         device_type = self.Devices[IEEE].get('model','Unknow')
@@ -307,7 +308,7 @@ class BasePlugin:
             if device_type == 'Warning device':
                 _json['alert'] = 'lselect'
                 #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, Unit)
+                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, IEEE, Unit)
             elif device_type.startswith('Window covering'):
                 _json['open'] = False
             else:
@@ -315,21 +316,21 @@ class BasePlugin:
                 if Level:
                     _json['bri'] = round(Level*254/100)
                 if _type == 'config':
-                    if Devices[Unit].DeviceID.endswith('_lock'):
+                    if DeviceID.endswith('_lock'):
                         _json = {'lock':True}
         elif Command == 'Off':
             if device_type == 'Warning device':
                 _json['alert'] = 'none'
                 #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, Unit)
+                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, IEEE, Unit)
             elif device_type.startswith('Window covering'):
                 _json['open'] = True
             else:
                 _json['on'] = False
                 if _type == 'config':
-                    if Devices[Unit].DeviceID.endswith('_mode'):
+                    if DeviceID.endswith('_mode'):
                         _json = {'mode':'off'}
-                    elif Devices[Unit].DeviceID.endswith('_lock'):
+                    elif DeviceID.endswith('_lock'):
                         _json = {'lock':False}
 
         #level
@@ -350,15 +351,15 @@ class BasePlugin:
                         v = ["off","auto","speed_1","speed_2","speed_3","speed_4","speed_5"][int(Level/10)]
                         _json['mode'] = v
                     #Thermostat
-                    elif Devices[Unit].DeviceID.endswith('_heatsetpoint'):
+                    elif DeviceID.endswith('_heatsetpoint'):
                         _json['heatsetpoint'] = int(Level * 100)
-                        dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace('_heatsetpoint','_mode'))
-                        if deCONZ_ID_2 and ("auto" in Devices[Unit].Options.get('LevelNames','')):
+                        dummy,deCONZ_ID_2 = self.GetDevicedeCONZ(DeviceID.replace('_heatsetpoint','_mode'))
+                        if deCONZ_ID_2 and ("auto" in Device_Unit.Options.get('LevelNames','')):
                             _json['mode'] = "auto"
-                    elif Devices[Unit].DeviceID.endswith('_preset'):
+                    elif DeviceID.endswith('_preset'):
                         v = ["off","holiday","auto","manual","comfort","eco","boost","complex","program"][int(Level/10)]
                         _json['preset'] = v
-                    elif Devices[Unit].DeviceID.endswith('_mode'):
+                    elif DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
                             if Level == 10:
@@ -366,19 +367,19 @@ class BasePlugin:
                             if Level == 20:
                                 _json['mode'] = "auto"
                                 #retreive previous value from domoticz
-                                IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                                Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                                IEEE2 = DeviceID.replace('_mode','_heatsetpoint')
+                                Hp = int(100*float(Devices[IEEE].Units[GetDomoDeviceInfo(IEEE2)].sValue))
                                 _json['heatsetpoint'] = Hp
                     #Chritsmas tree
-                    elif Devices[Unit].DeviceID.endswith('_effect'):
+                    elif DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
                         _json['effect'] = v
 
-                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE, Unit)
 
                         #Set special options
                         try :
-                            for o in Devices[Unit].Description.split("\n"):
+                            for o in Device_Unit.Description.split("\n"):
                                 o2 = o.split("=")
                                 if o2[0] == 'effectSpeed':
                                     _json['effectSpeed'] = int(o2[1])
@@ -389,11 +390,11 @@ class BasePlugin:
                             Domoticz.Log("No special effect options")
 
                         # Get light device
-                        _type,deCONZ_ID = self.GetDevicedeCONZ(Devices[Unit].DeviceID.replace("_effect",""))
+                        _type,deCONZ_ID = self.GetDevicedeCONZ(DeviceID.replace("_effect",""))
 
-                #Special code to force devive update for group
+                #Special code to force device update for group because there is no return used.
                 elif _type == 'groups':
-                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, Unit)
+                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, IEEE, Unit)
 
                 #Special devices
                 if device_type == 'Warning device':
@@ -409,10 +410,10 @@ class BasePlugin:
                         _json['alert'] = "none"
 
                     #Force Update using domoticz, because some device don't have return
-                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, Unit)
+                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE, Unit)
 
         #Pach for special device
-        if 'NO DIMMER' in Devices[Unit].Description and 'bri' in _json:
+        if 'NO DIMMER' in Device_Unit.Description and 'bri' in _json:
             _json.pop('bri')
             _json['transitiontime'] = 0
 
@@ -508,9 +509,6 @@ class BasePlugin:
         else:
             url = url + '/action'
 
-        #if 'Thermostat' in self.Devices[IEEE]['model']:
-        #    Domoticz.Status("Thermostat debug : " + url + ' with ' + str(_json))
-
         self.SendCommand(url,_json)
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
@@ -571,13 +569,18 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            try:
+                Domoticz.Status("### You can still create " + str(255-len(Devices.keys())) + " widgets in domoticz")
+            except:
+                pass
             self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
             for i in Devices:
-                if Devices[i].DeviceID not in self.Devices:
-                    if Devices[i].DeviceID != "Alarm_System_1":
-                        Domoticz.Status('### Device ' + Devices[i].DeviceID + '(' + Devices[i].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+                if i not in self.Devices:
+                    if i != "Alarm_System_1":
+                        Unit = getDeviceUnit(i)
+                        Domoticz.Status('### Device ' + str(Devices[i].Units[Unit].ID) + '(' + Devices[i].Units[Unit].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
 
             return
 
@@ -1063,7 +1066,7 @@ class BasePlugin:
                     Unit = GetDomoDeviceInfo(IEEE)
                     #Jump following action if Unit content is not valid
                     if Unit != False:
-                        LUpdate = Devices[Unit].LastUpdate
+                        LUpdate = Devices[IEEE].Units[Unit].LastUpdate
                         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
                         current = time.time()
 
@@ -1194,7 +1197,7 @@ class BasePlugin:
     def DisplayDeconzInfo(self,text,level=0):
         if not self.DeconzInfoUnit:
             return
-        Devices[self.DeconzInfoUnit].Update(nValue=level, sValue=str(text))
+        #Devices[self.DeconzInfoUnit].Update(nValue=level, sValue=str(text))
 
 
 global _plugin
@@ -1216,9 +1219,9 @@ def onMessage(Connection, Data):
     global _plugin
     _plugin.onMessage(Connection, Data)
 
-def onCommand(Unit, Command, Level, Hue):
+def onCommand(DeviceID, Unit, Command, Level, Hue):
     global _plugin
-    _plugin.onCommand(Unit, Command, Level, Hue)
+    _plugin.onCommand(DeviceID, Unit, Command, Level, Hue)
 
 def onNotification(Name, Subject, Text, Status, Priority, Sound, ImageFile):
     global _plugin
@@ -1232,6 +1235,10 @@ def onHeartbeat():
     global _plugin
     _plugin.onHeartbeat()
 
+#def onDeviceModified(DeviceId, Unit):
+#    global _plugin
+#    _plugin.onDeviceModified(DeviceId, Unit)
+
 def onDeviceRemoved(unit):
     global _plugin
     _plugin.onDeviceRemoved(unit)
@@ -1242,13 +1249,19 @@ def DumpConfigToLog():
         if Parameters[x] != "":
             Domoticz.Debug( "'" + x + "':'" + str(Parameters[x]) + "'")
     Domoticz.Debug("Device count: " + str(len(Devices)))
-    for x in Devices:
-        Domoticz.Debug("Device:           " + str(x) + " - " + str(Devices[x]))
-        Domoticz.Debug("Device ID:       '" + str(Devices[x].ID) + "'")
-        Domoticz.Debug("Device Name:     '" + Devices[x].Name + "'")
-        Domoticz.Debug("Device nValue:    " + str(Devices[x].nValue))
-        Domoticz.Debug("Device sValue:   '" + Devices[x].sValue + "'")
-        Domoticz.Debug("Device LastLevel: " + str(Devices[x].LastLevel))
+    for DeviceName in Devices:
+        Device = Devices[DeviceName]
+        Domoticz.Debug("Device ID:       '" + str(Device.DeviceID) + "'")
+        Domoticz.Debug("--->Unit Count:      '" + str(len(Device.Units)) + "'")
+        for UnitNo in Device.Units:
+            Unit = Device.Units[UnitNo]
+            Domoticz.Debug("--->Unit:           " + str(UnitNo))
+            Domoticz.Debug("--->Unit ID:        " + str(Unit.ID))
+            Domoticz.Debug("--->Unit Name:     '" + Unit.Name + "'")
+            Domoticz.Debug("--->Unit nValue:    " + str(Unit.nValue))
+            Domoticz.Debug("--->Unit sValue:   '" + Unit.sValue + "'")
+            Domoticz.Debug("--->Unit Parent:   '" + Unit.Parent + "'")
+            Domoticz.Debug("--->Unit LastLevel: " + str(Unit.LastLevel))
     return
 
 def GetDeviceIEEE(id,type):
@@ -1312,20 +1325,24 @@ def get_ip():
     return IP
 
 def GetDomoDeviceInfo(IEEE):
-    for x in Devices:
-        if Devices[x].DeviceID == str(IEEE) :
-            return x
+    if IEEE in Devices:
+        return getDeviceUnit(IEEE)
     return False
 
-def FreeUnit() :
-    FreeUnit = ""
+def FreeUnit(_Device) :
+
+    if _Device not in Devices:
+        return 1
+    Device = Devices[_Device]
+
     for x in range(1,255):
-        if x not in Devices :
-            FreeUnit=x
-            return FreeUnit
-    if FreeUnit == "" :
-        FreeUnit=len(Devices)+1
-    return FreeUnit
+        if x not in Device.Units :
+            return x
+
+    return None
+
+def getDeviceUnit(device):
+    return list(Devices[device].Units)[0]
 
 def GetDomoUnit(_id,_type):
     try:
@@ -1374,11 +1391,12 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         return
 
     #Update it
-    UpdateDeviceProc(kwarg2,Unit2)
+    UpdateDeviceProc(kwarg2,IEEE, Unit2)
 
 def UpdateDevice(_id, _type, kwarg, SpecList):
 
     Unit = GetDomoUnit(_id,_type)
+    IEEE,dummy = GetDeviceIEEE(_id,_type)
 
     if not Unit or not kwarg:
         Domoticz.Error("Can't Update Unit > " + str(_id) + ' (' + str(_type) + ') : ' + str(kwarg) )
@@ -1390,9 +1408,9 @@ def UpdateDevice(_id, _type, kwarg, SpecList):
             UpdateDevice_Special(_id, _type, kwarg, d)
 
     #Update the device
-    UpdateDeviceProc(kwarg,Unit)
+    UpdateDeviceProc(kwarg, IEEE, Unit)
 
-def UpdateDeviceProc(kwarg,Unit):
+def UpdateDeviceProc(kwarg, Dev, Unit):
     #Do we need to update the sensor ?
     NeedUpdate = False
     IsUpdate = False
@@ -1404,19 +1422,22 @@ def UpdateDeviceProc(kwarg,Unit):
         if d in kwarg:
             kwarg.pop(d)
 
+    device = Devices[Dev]    
+    Unit = getDeviceUnit(Dev)
+    
     for a in kwarg:
-        if kwarg[a] != getattr(Devices[Unit], a ):
+        if kwarg[a] != getattr(device.Units[Unit], a , ""):
             NeedUpdate = True
             break
 
     #Force update even there is no change, for exemple in case the user press a switch too fast, to not miss an event
     # Only for switch > 'LevelNames' in Devices[Unit].Options
     # Only sensors >  _type == 'sensors'
-    if IsUpdate and ('LevelNames' in Devices[Unit].Options) and (kwarg['nValue'] != 0):
+    if IsUpdate and ('LevelNames' in device.Units[Unit].Options) and (kwarg['nValue'] != 0):
         NeedUpdate = True
 
     #hack to make graph more realistic, we loose the first value, but have at least a good value every hour.
-    if (Devices[Unit].Type == 113) or (Devices[Unit].Type == 248):
+    if (device.Units[Unit].Type == 113) or (device.Units[Unit].Type == 248):
         if NeedUpdate:
             pass
             #LUpdate = Devices[Unit].LastUpdate
@@ -1428,7 +1449,7 @@ def UpdateDeviceProc(kwarg,Unit):
             #    Domoticz.Status("### debug 2 ("+Devices[Unit].Name+") : " + str(kwarg))
         else:
            # Code to autorise update at least 1 time by hour if you have same data.
-           LUpdate = Devices[Unit].LastUpdate
+           LUpdate = device.Units[Unit].LastUpdate
            LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
            current = time.time()
            if (current-LUpdate) > 3600:
@@ -1445,29 +1466,29 @@ def UpdateDeviceProc(kwarg,Unit):
 
     #force update, at least 1 every 24h
     if (not NeedUpdate) and IsUpdate:
-        LUpdate = Devices[Unit].LastUpdate
+        LUpdate = device.Units[Unit].LastUpdate
         LUpdate=time.mktime(time.strptime(LUpdate,"%Y-%m-%d %H:%M:%S"))
         current = time.time()
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
     #Device not reacheable
-    if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
+    if device.TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
         NeedUpdate = True
         kwarg['TimedOut'] = 0
 
     #Theses value are needed for Domoticz
     if 'nValue' not in kwarg:
-        kwarg['nValue'] = Devices[Unit].nValue
+        kwarg['nValue'] = device.Units[Unit].nValue
     if 'sValue' not in kwarg:
-        kwarg['sValue'] = Devices[Unit].sValue
+        kwarg['sValue'] = device.Units[Unit].sValue
 
     #Do we need to update the special battery sensor ?
     if ENABLEBATTERYWIDGET:
         if 'BatteryLevel' in kwarg and kwarg['BatteryLevel'] != 255:
-            NewIEE = Devices[Unit].DeviceID.split("-")[0]
+            NewIEE = device.Units[Unit].DeviceID.split("-")[0]
             Unit2 = GetDomoDeviceInfo(NewIEE + '_battery')
-            if Unit2 and getattr(Devices[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
+            if Unit2 and getattr(Devices[NewIEE].Units[Unit2],'BatteryLevel') != kwarg['BatteryLevel']:
                 levelBatt=kwarg['BatteryLevel']
                 if levelBatt >= 75:
                     icon = "batterylevelfull"
@@ -1478,23 +1499,33 @@ def UpdateDeviceProc(kwarg,Unit):
                 else:
                     icon = "batterylevelempty"
                 kwarg2 = {"nValue":0, "sValue":str(kwarg["BatteryLevel"]),"Image":Images[icon].ID}
-                Devices[Unit2].Update(**kwarg2)
+                
+                for a in kwarg2:
+                    setattr(Devices[NewIEE].Units[Unit2], a, kwarg2[a])
+                Devices[NewIEE].Units[Unit2].Update(Log=True)
+        
                 Domoticz.Debug("### Update special device ("+NewIEE+") : " + str(kwarg))
 
     if NeedUpdate or not LIGHTLOG:
-        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg))
+        Domoticz.Debug("### Update device ("+device.Units[Unit].Name+") : " + str(kwarg))
 
         #Disable offline light ?
-        if (Devices[Unit].Type == 241) or ((Devices[Unit].Type == 244) and (Devices[Unit].SubType == 73) and (Devices[Unit].SwitchType == 7)):
-           if (kwarg.get('TimedOut',0) != 0) and (Devices[Unit].nValue != 0) :
+        if (device.Units[Unit].Type == 241) or ((device.Units[Unit].Type == 244) and (device.Units[Unit].SubType == 73) and (device.Units[Unit].SwitchType == 7)):
+           if (kwarg.get('TimedOut',0) != 0) and (device.Units[Unit].nValue != 0) :
                Domoticz.Debug("Will handle Timeout like off args: " + str(kwarg))
                kwarg['nValue'] = 0
                kwarg['sValue'] = 'Off'
-
-        Devices[Unit].Update(**kwarg)
+        
+        if 'TimedOut' in kwarg:
+            device.TimedOut = kwarg["TimedOut"]
+            kwarg.pop("TimedOut")
+        
+        for a in kwarg:
+            setattr(device.Units[Unit], a, kwarg[a])
+        device.Units[Unit].Update(Log=True)
 
     else:
-        Domoticz.Debug("### Update device ("+Devices[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
+        Domoticz.Debug("### Update device ("+device.Units[Unit].Name+") : " + str(kwarg) + ", IGNORED , no changes !")
 
 def UpdatelarmSystemControl(etat):
     Unit = GetDomoDeviceInfo('Alarm_System_1')
@@ -1503,7 +1534,7 @@ def UpdatelarmSystemControl(etat):
 
     try:
         v = 10 * ['disarmed','armed_away','armed_stay','armed_night'].index(etat)
-        UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, Unit)
+        UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, "Alarm_System_1", Unit)
     except:
         pass
 
@@ -1514,7 +1545,7 @@ def CreateAlarmSystemControl():
         return
 
     kwarg = {}
-    Unit = FreeUnit()
+    Unit = FreeUnit("Alarm_System_1")
     TypeName = ''
 
     kwarg['Type'] = 244
@@ -1526,13 +1557,13 @@ def CreateAlarmSystemControl():
     kwarg['DeviceID'] = 'Alarm_System_1'
     kwarg['Name'] = 'Alarm System'
     kwarg['Unit'] = Unit
-    Domoticz.Device(**kwarg).Create()
+    Domoticz.Unit(**kwarg).Create()
 
     Domoticz.Status("### Create Alarm System Device as Unit " + str(Unit) )
 
 def CreateDevice(IEEE, _Name, _Type, opt = 0):
     kwarg = Createdatawidget(IEEE, _Name, _Type, opt)
-    Unit = FreeUnit()
+    Unit = FreeUnit(IEEE)
     TypeName = ''
 
     if not kwarg:
@@ -1542,6 +1573,6 @@ def CreateDevice(IEEE, _Name, _Type, opt = 0):
     kwarg['DeviceID'] = IEEE
     kwarg['Name'] = _Name
     kwarg['Unit'] = Unit
-    Domoticz.Device(**kwarg).Create()
+    Domoticz.Unit(**kwarg).Create()
 
-    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) ) #Devices[Unit].ID
+    Domoticz.Status("### Create Device " + IEEE + " > " + _Name + ' (' + _Type +') as Unit ' + str(Unit) )
