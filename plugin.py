@@ -578,9 +578,12 @@ class BasePlugin:
             # Compare devices bases
             for i in Devices:
                 if i not in self.Devices:
-                    if i != "Alarm_System_1":
-                        Unit = getDeviceUnit(i)
-                        Domoticz.Status('### Device ' + str(Devices[i].Units[Unit].ID) + '(' + Devices[i].Units[Unit].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+                    if i != "Alarm_System_1" and i != "DeconzInfo" and i != "GROUP_All":
+                        try:
+                            Unit = getDeviceUnit(i)
+                            Domoticz.Status('### Device ' + str(Devices[i].Units[Unit].ID) + '(' + Devices[i].Units[Unit].Name + ') Not in deCONZ ATM, the device is deleted or not ready.')
+                        except:
+                            Domoticz.Error('### Device ' + str(i) + " don't have Units > " + str(Devices[i]))
 
             return
 
