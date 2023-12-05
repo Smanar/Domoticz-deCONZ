@@ -5,7 +5,6 @@ from struct import unpack
 import json
 
 import DomoticzEx as Domoticz
-
 buffercommand = {}
 
 BOOLEAN_SENSOR = ['flag', 'water', 'fire', 'presence', 'carbonmonoxide', 'daylight', 'alarm', 'lock']
@@ -375,12 +374,10 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
         kwarg.update(ReturnUpdateValue('status', data['status']))
-    if 'measured_value' in data:
-        kwarg.update(ReturnUpdateValue('airqualityppb', data['measured_value'], option))
     if 'pm2_5' in data:
-        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5'], option))
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue('on', data['on'], model))
+        kwarg.update(ReturnUpdateValue('on', data['on'], model) )
     if 'x' in data:
         kwarg.update(ReturnUpdateValue('x', data['x']))
     if 'y' in data:

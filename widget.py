@@ -101,7 +101,7 @@ def Createdatawidget(IEEE, _Name, _Type, opt):
     elif _Type == 'ZHAPressure'or _Type == 'CLIPPressure':
         kwarg['TypeName'] = 'Barometer'
 
-    elif _Type == 'ZHAAirQuality' or _Type == 'ZHAParticulateMatter':
+    elif _Type == 'ZHAAirQuality':
         #kwarg['TypeName'] = 'Air Quality'
         kwarg['TypeName'] = 'Custom'
         if opt == 1:
