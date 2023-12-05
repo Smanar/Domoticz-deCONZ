@@ -4,8 +4,8 @@
 from struct import unpack
 import json
 
-import DomoticzEx as Domoticz
-
+#import DomoticzEx as Domoticz
+import Domoticz
 buffercommand = {}
 
 BOOLEAN_SENSOR = ['flag', 'water', 'fire', 'presence', 'carbonmonoxide', 'daylight', 'alarm', 'lock']
