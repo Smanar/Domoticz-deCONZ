@@ -276,7 +276,7 @@ class BasePlugin:
             return
 
     def onCommand(self, DeviceID, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for DevideID: " + str(DeviceID) + " Unit:" + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
+        Domoticz.Log("onCommand called for DeviceID: " + str(DeviceID) + " Unit:" + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level) + ", Hue: " + str(Hue))
 
         if not self.Ready == True:
             Domoticz.Error("deCONZ not ready")
@@ -313,7 +313,7 @@ class BasePlugin:
             if device_type == 'Warning device':
                 _json['alert'] = 'lselect'
                 #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, IEEE, Unit)
+                UpdateDeviceProc({'nValue': 1, 'sValue': 'On'}, IEEE)
             elif device_type.startswith('Window covering'):
                 _json['open'] = False
             else:
@@ -327,7 +327,7 @@ class BasePlugin:
             if device_type == 'Warning device':
                 _json['alert'] = 'none'
                 #Force Update using domoticz, because some device don't have return
-                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, IEEE, Unit)
+                UpdateDeviceProc({'nValue': 0, 'sValue': 'Off'}, IEEE)
             elif device_type.startswith('Window covering'):
                 _json['open'] = True
             else:
@@ -380,7 +380,7 @@ class BasePlugin:
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
                         _json['effect'] = v
 
-                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE, Unit)
+                        UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE)
 
                         #Set special options
                         try :
@@ -399,7 +399,7 @@ class BasePlugin:
 
                 #Special code to force device update for group because there is no return used.
                 elif _type == 'groups':
-                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, IEEE, Unit)
+                    UpdateDeviceProc({'nValue': 1, 'sValue': str(Level)}, IEEE)
 
                 #Special devices
                 if device_type == 'Warning device':
@@ -415,7 +415,7 @@ class BasePlugin:
                         _json['alert'] = "none"
 
                     #Force Update using domoticz, because some device don't have return
-                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE, Unit)
+                    UpdateDeviceProc({'nValue': Level, 'sValue': str(Level)}, IEEE)
 
         #Pach for special device
         if 'NO DIMMER' in Device_Unit.Description and 'bri' in _json:
@@ -1400,7 +1400,7 @@ def UpdateDevice_Special(_id,_type,kwarg, field):
         return
 
     #Update it
-    UpdateDeviceProc(kwarg2,IEEE, Unit2)
+    UpdateDeviceProc(kwarg2,IEEE + '_' + field)
 
 def UpdateDevice(_id, _type, kwarg, SpecList):
 
@@ -1417,9 +1417,9 @@ def UpdateDevice(_id, _type, kwarg, SpecList):
             UpdateDevice_Special(_id, _type, kwarg, d)
 
     #Update the device
-    UpdateDeviceProc(kwarg, IEEE, Unit)
+    UpdateDeviceProc(kwarg, IEEE)
 
-def UpdateDeviceProc(kwarg, Dev, Unit):
+def UpdateDeviceProc(kwarg, Dev):
     #Do we need to update the sensor ?
     NeedUpdate = False
     IsUpdate = False
@@ -1543,7 +1543,7 @@ def UpdatelarmSystemControl(etat):
 
     try:
         v = 10 * ['disarmed','armed_away','armed_stay','armed_night'].index(etat)
-        UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, "Alarm_System_1", Unit)
+        UpdateDeviceProc({'nValue': v, 'sValue': str(v)}, "Alarm_System_1")
     except:
         pass
 
