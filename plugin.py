@@ -367,14 +367,14 @@ class BasePlugin:
                     elif DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                            if Level == 10:
-                                _json['mode'] = "heat"
-                            if Level == 20:
-                                _json['mode'] = "auto"
-                                #retreive previous value from domoticz
-                                IEEE2 = DeviceID.replace('_mode','_heatsetpoint')
-                                Hp = int(100*float(Devices[IEEE].Units[GetDomoDeviceInfo(IEEE2)].sValue))
-                                _json['heatsetpoint'] = Hp
+                        if Level == 10:
+                            _json['mode'] = "heat"
+                        if Level == 20:
+                            _json['mode'] = "auto"
+                            #retreive previous value from domoticz
+                            IEEE2 = DeviceID.replace('_mode','_heatsetpoint')
+                            Hp = int(100*float(Devices[IEEE].Units[GetDomoDeviceInfo(IEEE2)].sValue))
+                            _json['heatsetpoint'] = Hp
                     #Chritsmas tree
                     elif DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
