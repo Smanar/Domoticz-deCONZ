@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.29" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.30" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -82,12 +82,17 @@ FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
+# option list
+#1 = Power+Consumption
+#2 = Consumption_2
+#3 = pm2_5
+
 class BasePlugin:
 
     #enabled = False
 
     def __init__(self):
-        self.Devices = {} # id, type, state (banned/missing/working) , model, option (1 = Power+Consumption)
+        self.Devices = {} # id, type, state (banned/missing/working) , model, option
         self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
@@ -361,14 +366,14 @@ class BasePlugin:
                     elif Devices[Unit].DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                            if Level == 10:
-                                _json['mode'] = "heat"
-                            if Level == 20:
-                                _json['mode'] = "auto"
-                                #retreive previous value from domoticz
-                                IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                                Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                                _json['heatsetpoint'] = Hp
+                        if Level == 10:
+                            _json['mode'] = "heat"
+                        if Level == 20:
+                            _json['mode'] = "auto"
+                            #retreive previous value from domoticz
+                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                            _json['heatsetpoint'] = Hp
                     #Chritsmas tree
                     elif Devices[Unit].DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
@@ -571,6 +576,10 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            try:
+                Domoticz.Status("### You can still create " + str(255-len(Devices.keys())) + " widgets in domoticz")
+            except:
+                pass
             self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
@@ -749,7 +758,8 @@ class BasePlugin:
                     self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
                 #Create fan speed
                 self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
-            elif Type == 'ZHAAirQuality':
+            elif Type == 'ZHAAirQuality' or Type == 'ZHAParticulateMatter':
+                self.Devices[IEEE]['option'] = 3
                 if 'pm2_5' in StateList:
                     self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name,1)
                 else:
