@@ -699,7 +699,7 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['current'] = int(val)
 
     if command == 'airqualityppb':
-        kwarg['nValue'] = int(val)
+        kwarg['nValue'] = float(val)
         kwarg['sValue'] = str(val)
 
     if command == 'action':
