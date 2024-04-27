@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.30" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.31" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -162,7 +162,7 @@ class BasePlugin:
                     Domoticz.Status("Added icon: " + key + " from file " + value)
             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
             for image in Images:
-                Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
+                Domoticz.Log("Icon Used by the plugin : " + str(Images[image].ID) + ">" + Images[image].Name)
 
         #Read banned devices
         try:
@@ -625,6 +625,8 @@ class BasePlugin:
                 if self.IDGateway == -1:
                     self.IDGateway = key
                 return
+            if Type == 'CLIPDaylightOffset':
+                self.Banned_Devices.append(str(IEEE))
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 

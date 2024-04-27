@@ -699,7 +699,7 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['current'] = int(val)
 
     if command == 'airqualityppb':
-        kwarg['nValue'] = int(val)
+        kwarg['nValue'] = float(val)
         kwarg['sValue'] = str(val)
 
     if command == 'action':
@@ -1020,7 +1020,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = [ str(val_a), int (val_t) ]
+        kwarg['orientation'] = [ str(val_a), int (val_t  or 0) ]
 
     return kwarg
 
