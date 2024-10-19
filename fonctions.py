@@ -1030,24 +1030,23 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
 #**************************************************************************************************
 
 # Code templated from https://github.com/stas-demydiuk/domoticz-zigbee2mqtt-plugin
-def installFE():
+def installFE(source_path,templates_path):
 
     import os
     from shutil import copy2
 
-    source_path = os.path.dirname(os.path.abspath(__file__)) + '/frontend'
-    templates_path = os.path.abspath(source_path + '/../../../www/templates')
-    #dst_plugin_path = templates_path + '/deCONZ'
+    source_path += 'frontend'
+    templates_path += 'www/templates'
+
+    Domoticz.Status('Source path : ' + str(source_path))
+    Domoticz.Status('Template path : ' + str(templates_path))
+
     fs = False
 
     try:
         fs = os.path.getsize(templates_path + '/deCONZ.html')
     except:
         pass
-
-    #Special part for dockers
-    if not os.path.exists(templates_path):
-        templates_path = templates_path.replace("userdata/","")
 
     #Domoticz.Status('File size : ' + str(fs))
 
@@ -1072,7 +1071,7 @@ def installFE():
         Domoticz.Error('Error during the installation of plugin custom page')
         Domoticz.Error(repr(e))
 
-def uninstallFE(self):
+def uninstallFE():
     Domoticz.Status('Uninstalling plugin custom page...')
 
     from shutil import rmtree
