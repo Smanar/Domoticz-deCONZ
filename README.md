@@ -117,6 +117,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 20/10/24 : 1.0.31 > Solve issue during installation for dockers users, solve issue for air quality sensor.   
 - 27/04/24 : 1.0.31 > Solve issue about "invalid literal", solve issue about CLIPDaylightOffset, solve issue if you use ENABLEBATTERYWIDGET.   
 - 10/02/24 : 1.0.30 > Solve issue with "mode" widget for thermostat, improve air quality sensor support.   
 - 28/10/23 : 1.0.29 > Add support for moisture sensor, add support for double consumption, add an error widget about deconz status.   
