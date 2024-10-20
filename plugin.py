@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.31" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.32" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -180,7 +180,7 @@ class BasePlugin:
         myPluginConfFile.close()
 
         #check and load Front end
-        installFE()
+        installFE(Parameters['HomeFolder'], Parameters['StartupFolder'])
 
         #Read and Set config
         #json = '{"websocketnotifyall":true}'
@@ -1463,7 +1463,7 @@ def UpdateDeviceProc(kwarg,Unit):
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
-    #Device not reacheable
+    #Need to remove the warning/defaut flag on widget ?
     if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
         NeedUpdate = True
         kwarg['TimedOut'] = 0
