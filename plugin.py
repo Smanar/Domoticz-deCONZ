@@ -65,6 +65,7 @@ from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
 from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
 from fonctions import ButtonconvertionXCUBET1, ButtonconvertionXCUBET1_R
+from fonctions import ButtonconvertionXCUBEPROT1
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 from widget import Createdatawidget
@@ -674,9 +675,9 @@ class BasePlugin:
                 #Used by Xiaomi Cube T1 Pro
                 elif 'lumi.remote.cagl02' in Model:
                     if IEEE.endswith('-03-000c'):
-                        Type = 'XCubeT1_R'
+                        Type = 'XCubeProT1_R'
                     elif IEEE.endswith('-02-0012'):
-                        Type = 'XCubeT1_C'
+                        Type = 'XCubeProT1_C'
                     else:
                         # Useless device
                         self.Devices[IEEE]['state'] = 'banned'
@@ -1043,6 +1044,10 @@ class BasePlugin:
                 elif model == 'XCubeT1_C':
                     kwarg.update(ButtonconvertionXCUBET1(state['buttonevent'], state['gesture']) )
                 elif model == 'XCubeT1_R':
+                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
+                elif model == 'XCubeProT1_C':
+                    kwarg.update(ButtonconvertionXCUBEPROT1(state['buttonevent'], state['gesture']) )
+                elif model == 'XCubeProT1_R':
                     kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
