@@ -782,18 +782,6 @@ def ButtonconvertionXCUBE_R(val):
 
     return kwarg
 
-def ButtonconvertionXCUBET1_R(val):
-    kwarg = {}
-
-    kwarg['nValue'] = int(val)
-
-    if kwarg['nValue'] == 0:
-        kwarg['sValue'] = 'Off'
-    else:
-        kwarg['sValue'] = str( kwarg['nValue'] )
-
-    return kwarg
-
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
