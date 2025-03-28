@@ -855,6 +855,38 @@ def ButtonconvertionXCUBET1(val, gesture):
 
     return kwarg
 
+def ButtonconvertionXCUBEPROT1(val, gesture):
+    kwarg = {}
+    gest = int(gesture)
+    face = str(val)
+    v = 0
+
+    if gest == 0:             # wake
+        v = 70
+    elif gest == 1:           # shake
+        v = 80
+    elif gest == 2:           # Free Fall
+        v = 110
+    elif gest == 3:           # 90 flip
+        v = int(face[0]) * 10 #add face up number
+    elif gest == 4:           # 180 flip
+        v = int(face[0]) * 10 #add face up number
+    elif gest == 5:           # push
+        v = 90
+    elif gest == 6:           # double tap
+        v = 100
+    else:# Unknown
+        v = 0
+
+    if v == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = v
+
+    return kwarg
+
 # <=4002 >=5002 +=2002 -=3002 4001/5001/2001/3001
 def ButtonconvertionTradfriRemote(val):
     kwarg = {}
