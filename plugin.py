@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.33" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.34" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -63,9 +63,9 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
-from fonctions import ButtonconvertionXCUBET1, ButtonconvertionXCUBET1_R
-from fonctions import ButtonconvertionXCUBEPROT1
+from fonctions import ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBET1, ButtonconvertionXCUBEPROT1
+from fonctions import ButtonconvertionXCUBE_R
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 from widget import Createdatawidget
@@ -665,7 +665,7 @@ class BasePlugin:
                 #Used by Xiaomi Cube T1
                 if 'lumi.remote.cagl01' in Model:
                     if IEEE.endswith('-03-000c'):
-                        Type = 'XCubeT1_R'
+                        Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
                         Type = 'XCubeT1_C'
                     else:
@@ -675,13 +675,14 @@ class BasePlugin:
                 #Used by Xiaomi Cube T1 Pro
                 elif 'lumi.remote.cagl02' in Model:
                     if IEEE.endswith('-03-000c'):
-                        Type = 'XCubeProT1_R'
+                        Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
                         Type = 'XCubeProT1_C'
                     else:
                         # Useless device
                         self.Devices[IEEE]['state'] = 'banned'
                         return
+                #Used by olders cube version
                 elif 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
@@ -1039,16 +1040,12 @@ class BasePlugin:
             if 'buttonevent' in state:
                 if model == 'XCube_C':
                     kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
-                elif model == 'XCube_R':
-                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'XCubeT1_C':
                     kwarg.update(ButtonconvertionXCUBET1(state['buttonevent'], state['gesture']) )
-                elif model == 'XCubeT1_R':
-                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
                 elif model == 'XCubeProT1_C':
                     kwarg.update(ButtonconvertionXCUBEPROT1(state['buttonevent'], state['gesture']) )
-                elif model == 'XCubeProT1_R':
-                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
+                elif model == 'XCube_R':
+                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
