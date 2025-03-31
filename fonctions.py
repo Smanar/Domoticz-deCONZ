@@ -1070,7 +1070,7 @@ def installFE(source_path,templates_path):
 
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 12381:
+    if fs == 12382:
         Domoticz.Status('Plugin custom pages in date')
         return
 
