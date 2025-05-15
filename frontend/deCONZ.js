@@ -383,7 +383,8 @@ function(app) {
         function init() {
 
             return domoticzApi.sendRequest({
-                type: 'hardware',
+                type: 'command',
+                param: 'gethardware',
                 displayhidden: 1,
                 filter: 'all',
                 used: 'all'
