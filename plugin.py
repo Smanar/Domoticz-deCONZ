@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.34" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.35" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -298,7 +298,7 @@ class BasePlugin:
             return
 
         if _type == 'sensors':
-            Domoticz.Error("This device doesn't support action")
+            Domoticz.Error("The Domoticz unit " + str(Unit) + " doesn't support action (sensors)")
             return
 
         IEEE = Devices[Unit].DeviceID
