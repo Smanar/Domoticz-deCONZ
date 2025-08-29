@@ -298,7 +298,7 @@ class BasePlugin:
             return
 
         if _type == 'sensors':
-            Domoticz.Error("The Domoticz unit " + str(Unit) + " doesn't support action (sensors)")
+            Domoticz.Error("The Domoticz unit " + str(Unit) + "(" + str(Devices[Unit].Name) + "/" + str(Devices[Unit].ID) +") doesn't support action (sensors)")
             return
 
         IEEE = Devices[Unit].DeviceID
