@@ -3,7 +3,7 @@
 # Author: Smanar
 #
 """
-<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.29" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
+<plugin key="deCONZ" name="deCONZ plugin" author="Smanar" version="1.0.34" wikilink="https://github.com/Smanar/Domoticz-deCONZ" externallink="https://phoscon.de/en/conbee2">
     <description>
         <br/><br/>
         <h2>deCONZ Bridge</h2><br/>
@@ -63,8 +63,9 @@ except:
 
 from fonctions import rgb_to_xy, rgb_to_hsv, xy_to_rgb
 from fonctions import Count_Type, ProcessAllState, ProcessAllConfig, First_Json, JSON_Repair, get_JSON_payload
-from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBE_R, ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
-from fonctions import ButtonconvertionXCUBET1, ButtonconvertionXCUBET1_R
+from fonctions import ButtonconvertionTradfriRemote, ButtonconvertionTradfriSwitch
+from fonctions import ButtonconvertionXCUBE, ButtonconvertionXCUBET1, ButtonconvertionXCUBEPROT1
+from fonctions import ButtonconvertionXCUBE_R
 from fonctions import ButtonConvertion, VibrationSensorConvertion
 from fonctions import installFE, uninstallFE
 from widget import Createdatawidget
@@ -82,12 +83,17 @@ FullSpecialDeviceList = ["orientation", "heatsetpoint", "mode", "preset", "lock"
 #https://github.com/febalci/DomoticzEarthquake/blob/master/plugin.py
 #https://stackoverflow.com/questions/32436864/raw-post-request-with-json-in-body
 
+# option list
+#1 = Power+Consumption
+#2 = Consumption_2
+#3 = pm2_5
+
 class BasePlugin:
 
     #enabled = False
 
     def __init__(self):
-        self.Devices = {} # id, type, state (banned/missing/working) , model, option (1 = Power+Consumption)
+        self.Devices = {} # id, type, state (banned/missing/working) , model, option
         self.NeedToReset = []
         self.Ready = False
         self.Buffer_Command = []
@@ -157,7 +163,7 @@ class BasePlugin:
                     Domoticz.Status("Added icon: " + key + " from file " + value)
             Domoticz.Status("Number of icons loaded = " + str(len(Images)))
             for image in Images:
-                Domoticz.Log("Icon " + str(Images[image].ID) + " " + Images[image].Name)
+                Domoticz.Log("Icon Used by the plugin : " + str(Images[image].ID) + ">" + Images[image].Name)
 
         #Read banned devices
         try:
@@ -175,7 +181,7 @@ class BasePlugin:
         myPluginConfFile.close()
 
         #check and load Front end
-        installFE()
+        installFE(Parameters['HomeFolder'], Parameters['StartupFolder'])
 
         #Read and Set config
         #json = '{"websocketnotifyall":true}'
@@ -361,14 +367,14 @@ class BasePlugin:
                     elif Devices[Unit].DeviceID.endswith('_mode'):
                         if Level == 0:
                             _json['mode'] = "off"
-                            if Level == 10:
-                                _json['mode'] = "heat"
-                            if Level == 20:
-                                _json['mode'] = "auto"
-                                #retreive previous value from domoticz
-                                IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
-                                Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
-                                _json['heatsetpoint'] = Hp
+                        if Level == 10:
+                            _json['mode'] = "heat"
+                        if Level == 20:
+                            _json['mode'] = "auto"
+                            #retreive previous value from domoticz
+                            IEEE2 = Devices[Unit].DeviceID.replace('_mode','_heatsetpoint')
+                            Hp = int(100*float(Devices[GetDomoDeviceInfo(IEEE2)].sValue))
+                            _json['heatsetpoint'] = Hp
                     #Chritsmas tree
                     elif Devices[Unit].DeviceID.endswith('_effect'):
                         v = ["none","steady","snow","rainbow","snake","twinkle","fireworks","flag","waves","updown","vintage","fading","collide","strobe","sparkles","carnival","glow"][int(Level/10) - 1]
@@ -571,6 +577,10 @@ class BasePlugin:
             Domoticz.Status("### deCONZ ready")
             l,s,g,b,o,c = Count_Type(self.Devices)
             Domoticz.Status("### Found " + str(l) + " Operators, " + str(s) + " Sensors, " + str(g) + " Groups, " + str(c) + " Scenes and " + str(o) + " others, with " + str(b) + " Ignored")
+            try:
+                Domoticz.Status("### You can still create " + str(255-len(Devices.keys())) + " widgets in domoticz")
+            except:
+                pass
             self.DisplayDeconzInfo("Deconz ready !",1)
 
             # Compare devices bases
@@ -616,6 +626,8 @@ class BasePlugin:
                 if self.IDGateway == -1:
                     self.IDGateway = key
                 return
+            if Type == 'CLIPDaylightOffset':
+                self.Banned_Devices.append(str(IEEE))
 
             self.Devices[IEEE] = {'id' : key , 'type' : Type_device , 'model' : Type , 'state' : 'working'}
 
@@ -653,7 +665,7 @@ class BasePlugin:
                 #Used by Xiaomi Cube T1
                 if 'lumi.remote.cagl01' in Model:
                     if IEEE.endswith('-03-000c'):
-                        Type = 'XCubeT1_R'
+                        Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
                         Type = 'XCubeT1_C'
                     else:
@@ -663,13 +675,14 @@ class BasePlugin:
                 #Used by Xiaomi Cube T1 Pro
                 elif 'lumi.remote.cagl02' in Model:
                     if IEEE.endswith('-03-000c'):
-                        Type = 'XCubeT1_R'
+                        Type = 'XCube_R'
                     elif IEEE.endswith('-02-0012'):
-                        Type = 'XCubeT1_C'
+                        Type = 'XCubeProT1_C'
                     else:
                         # Useless device
                         self.Devices[IEEE]['state'] = 'banned'
                         return
+                #Used by olders cube version
                 elif 'lumi.sensor_cube' in Model:
                     if IEEE.endswith('-03-000c'):
                         Type = 'XCube_R'
@@ -749,7 +762,8 @@ class BasePlugin:
                     self.CreateIfnotExist(IEEE + "_mode",'Purifier_Mode',Name)
                 #Create fan speed
                 self.CreateIfnotExist(IEEE,'ZHAAirPurifier',Name)
-            elif Type == 'ZHAAirQuality':
+            elif Type == 'ZHAAirQuality' or Type == 'ZHAParticulateMatter':
+                self.Devices[IEEE]['option'] = 3
                 if 'pm2_5' in StateList:
                     self.CreateIfnotExist(IEEE,'ZHAAirQuality',Name,1)
                 else:
@@ -1026,12 +1040,12 @@ class BasePlugin:
             if 'buttonevent' in state:
                 if model == 'XCube_C':
                     kwarg.update(ButtonconvertionXCUBE(state['buttonevent']) )
-                elif model == 'XCube_R':
-                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'XCubeT1_C':
                     kwarg.update(ButtonconvertionXCUBET1(state['buttonevent'], state['gesture']) )
-                elif model == 'XCubeT1_R':
-                    kwarg.update(ButtonconvertionXCUBET1_R(state['buttonevent']) )
+                elif model == 'XCubeProT1_C':
+                    kwarg.update(ButtonconvertionXCUBEPROT1(state['buttonevent'], state['gesture']) )
+                elif model == 'XCube_R':
+                    kwarg.update(ButtonconvertionXCUBE_R(state['buttonevent']) )
                 elif model == 'Tradfri_remote':
                     kwarg.update(ButtonconvertionTradfriRemote(state['buttonevent']) )
                 elif model == 'Tradfri_on/off_switch':
@@ -1451,7 +1465,7 @@ def UpdateDeviceProc(kwarg,Unit):
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
-    #Device not reacheable
+    #Need to remove the warning/defaut flag on widget ?
     if Devices[Unit].TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
         NeedUpdate = True
         kwarg['TimedOut'] = 0

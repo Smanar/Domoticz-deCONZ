@@ -117,6 +117,11 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 15/05/25 : 1.0.34 > Make custom page working again, improve Aqara Cube Pro T1 support, thx @Sumd84 .    
+- 17/03/25 : 1.0.33 > Solve issue for air quality sensor again.   
+- 20/10/24 : 1.0.32 > Solve issue during installation for dockers users (thx to @RneeJ), solve issue for air quality sensor.   
+- 27/04/24 : 1.0.31 > Solve issue about "invalid literal", solve issue about CLIPDaylightOffset, solve issue if you use ENABLEBATTERYWIDGET.   
+- 10/02/24 : 1.0.30 > Solve issue with "mode" widget for thermostat, improve air quality sensor support.   
 - 28/10/23 : 1.0.29 > Add support for moisture sensor, add support for double consumption, add an error widget about deconz status.   
 - 24/05/23 : 1.0.28 > Add support for New Xiaomi Cube T1/ T1 pro thx @Sumd84 , the widget created by the option "ENABLEBATTERYWIDGET" have now different icons according to batery level, thx @BabaIsYou , remove error about "capabilities".   
 - 17/02/23 : 1.0.27 > Add special support for the Ikea Starkvind thx @arjannv , add support for the Alarm System, and the support for keypad, see https://github.com/Smanar/Domoticz-deCONZ/wiki/How-to-add-keypad-to-domoticz thx @BabaIsYou , add new option ENABLEBATTERYWIDGET ,remove "capabilities" error message.   

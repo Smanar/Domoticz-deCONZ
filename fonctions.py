@@ -4,6 +4,7 @@
 from struct import unpack
 import json
 
+#import DomoticzEx as Domoticz
 import Domoticz
 buffercommand = {}
 
@@ -374,10 +375,12 @@ def ProcessAllState(data,model,option):
         kwarg.update(ReturnUpdateValue('alert', data['alert'], model))
     if 'status' in data:
         kwarg.update(ReturnUpdateValue('status', data['status']))
+    if 'measured_value' in data:
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['measured_value'], option))
     if 'pm2_5' in data:
-        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5']))
+        kwarg.update(ReturnUpdateValue('airqualityppb', data['pm2_5'], option))
     if 'on' in data:
-        kwarg.update(ReturnUpdateValue('on', data['on'], model) )
+        kwarg.update(ReturnUpdateValue('on', data['on'], model))
     if 'x' in data:
         kwarg.update(ReturnUpdateValue('x', data['x']))
     if 'y' in data:
@@ -696,8 +699,8 @@ def ReturnUpdateValue(command, val ,option = None):
         kwarg['current'] = int(val)
 
     if command == 'airqualityppb':
-        kwarg['nValue'] = int(val)
-        kwarg['sValue'] = str(val)
+        kwarg['sValue'] = str(float(val))
+        kwarg['nValue'] = int(float(val))
 
     if command == 'action':
         kwarg['nValue'] = 0
@@ -779,18 +782,6 @@ def ButtonconvertionXCUBE_R(val):
 
     return kwarg
 
-def ButtonconvertionXCUBET1_R(val):
-    kwarg = {}
-
-    kwarg['nValue'] = int(val)
-
-    if kwarg['nValue'] == 0:
-        kwarg['sValue'] = 'Off'
-    else:
-        kwarg['sValue'] = str( kwarg['nValue'] )
-
-    return kwarg
-
 def ButtonconvertionXCUBE(val):
     kwarg = {}
     val = str(val)
@@ -841,6 +832,38 @@ def ButtonconvertionXCUBET1(val, gesture):
     elif gest == 6:           # double tap
         v = 70
     else:                     # Unknown
+        v = 0
+
+    if v == 0:
+        kwarg['sValue'] = 'Off'
+    else:
+        kwarg['sValue'] = str( v )
+
+    kwarg['nValue'] = v
+
+    return kwarg
+
+def ButtonconvertionXCUBEPROT1(val, gesture):
+    kwarg = {}
+    gest = int(gesture)
+    face = str(val)
+    v = 0
+
+    if gest == 0:             # wake
+        v = 70
+    elif gest == 1:           # shake
+        v = 80
+    elif gest == 2:           # Free Fall
+        v = 110
+    elif gest == 3:           # 90 flip
+        v = int(face[0]) * 10 #add face up number
+    elif gest == 4:           # 180 flip
+        v = int(face[0]) * 10 #add face up number
+    elif gest == 5:           # push
+        v = 90
+    elif gest == 6:           # double tap
+        v = 100
+    else:# Unknown
         v = 0
 
     if v == 0:
@@ -1017,7 +1040,7 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
         kwarg['sValue'] = str( kwarg['nValue'] )
 
     if val_a:
-        kwarg['orientation'] = [ str(val_a), int (val_t) ]
+        kwarg['orientation'] = [ str(val_a), int (val_t  or 0) ]
 
     return kwarg
 
@@ -1027,14 +1050,17 @@ def VibrationSensorConvertion(val_v,val_t, val_a):
 #**************************************************************************************************
 
 # Code templated from https://github.com/stas-demydiuk/domoticz-zigbee2mqtt-plugin
-def installFE():
+def installFE(source_path,templates_path):
 
     import os
     from shutil import copy2
 
-    source_path = os.path.dirname(os.path.abspath(__file__)) + '/frontend'
-    templates_path = os.path.abspath(source_path + '/../../../www/templates')
-    #dst_plugin_path = templates_path + '/deCONZ'
+    source_path += 'frontend'
+    templates_path += 'www/templates'
+
+    Domoticz.Status('Source path : ' + str(source_path))
+    Domoticz.Status('Template path : ' + str(templates_path))
+
     fs = False
 
     try:
@@ -1042,13 +1068,9 @@ def installFE():
     except:
         pass
 
-    #Special part for dockers
-    if not os.path.exists(templates_path):
-        templates_path = templates_path.replace("userdata/","")
-
     #Domoticz.Status('File size : ' + str(fs))
 
-    if fs == 12381:
+    if fs == 12382:
         Domoticz.Status('Plugin custom pages in date')
         return
 
@@ -1069,7 +1091,7 @@ def installFE():
         Domoticz.Error('Error during the installation of plugin custom page')
         Domoticz.Error(repr(e))
 
-def uninstallFE(self):
+def uninstallFE():
     Domoticz.Status('Uninstalling plugin custom page...')
 
     from shutil import rmtree
