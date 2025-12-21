@@ -180,7 +180,7 @@ class BasePlugin:
         myPluginConfFile.close()
 
         #check and load Front end
-        installFE()
+        installFE(Parameters['HomeFolder'], Parameters['StartupFolder'])
 
         #Read and Set config
         #json = '{"websocketnotifyall":true}'
@@ -1484,7 +1484,7 @@ def UpdateDeviceProc(kwarg, Dev):
         if (current-LUpdate) > 86400:
             NeedUpdate = True
 
-    #Device not reacheable
+    #Need to remove the warning/defaut flag on widget ?
     if device.TimedOut != 0 and (kwarg.get('TimedOut',0) == 0) and IsUpdate:
         NeedUpdate = True
         kwarg['TimedOut'] = 0
