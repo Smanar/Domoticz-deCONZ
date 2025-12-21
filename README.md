@@ -117,6 +117,7 @@ To restart plugin : Tab "Hardware" > select the hardware "deCONZ" then click "Up
 - If your system doesn't support python "Request" lib, you can try older version < 1.0.9.    
 
 ## Changelog.
+- 21/12/25 : 1.0.35 > Correct a brightness calculation error and create a more explicit error message, thx @fjongma .   
 - 15/05/25 : 1.0.34 > Make custom page working again, improve Aqara Cube Pro T1 support, thx @Sumd84 .    
 - 17/03/25 : 1.0.33 > Solve issue for air quality sensor again.   
 - 20/10/24 : 1.0.32 > Solve issue during installation for dockers users (thx to @RneeJ), solve issue for air quality sensor.   
