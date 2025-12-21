@@ -513,7 +513,7 @@ def ReturnUpdateValue(command, val ,option = None):
 
     if command == 'bri':
         #kwarg['nValue'] = 1
-        val = int(float(val) * 100 / 255 )
+        val = round(int(val) * 100 / 254)
         if option == 'Window covering device':
             if val < 2:
                 kwarg['sValue'] = '0'
