@@ -434,15 +434,17 @@ def ProcessAllState(data,model,option):
     if 'lift' in data:
         kwarg.update(ReturnUpdateValue('lift', data['lift'], model) )
     if 'voltage' in data:
-        kwarg.update(ReturnUpdateValue( 'voltage' , data['voltage'], model) )
+        kwarg.update(ReturnUpdateValue('voltage' , data['voltage'], model) )
     if 'current' in data:
-        kwarg.update(ReturnUpdateValue( 'current' , data['current'], model ) )
+        kwarg.update(ReturnUpdateValue('current' , data['current'], model ) )
     if 'action' in data:
-        kwarg.update(ReturnUpdateValue( 'action' , data['action'], model ) )
+        kwarg.update(ReturnUpdateValue('action' , data['action'], model ) )
+    if 'test' in data: #need to be after alarm sensors
+        kwarg.update(ReturnUpdateValue('test' , data['test'], model ) )
     if 'speed' in data:
-        kwarg.update(ReturnUpdateValue( 'speed' , data['speed'], model ) )
+        kwarg.update(ReturnUpdateValue('speed' , data['speed'], model ) )
     if 'expectedrotation' in data:
-        kwarg.update(ReturnUpdateValue( 'expectedrotation' , data['expectedrotation'], model ) )
+        kwarg.update(ReturnUpdateValue('expectedrotation' , data['expectedrotation'], model ) )
     #if 'lastupdated' in data:
     #    kwarg.update(ReturnUpdateValue('lastupdated', data['lastupdated']))
 
@@ -589,6 +591,12 @@ def ReturnUpdateValue(command, val ,option = None):
         else:
             kwarg['nValue'] = 0
             kwarg['sValue'] = 'Off'
+
+    if command == 'test':
+        if val == 'True':
+            kwarg['nValue'] = 1
+            kwarg['sValue'] = 'On'
+        # Do nothing on false
 
     if command == 'temperature':
         kwarg['nValue'] = 0
