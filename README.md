@@ -36,6 +36,11 @@ sudo -H pip3 install requests
 sudo -H pip install requests
 ```
 
+If you have problem with the externally-managed-environment just add to the request
+```
+--break-system-packages
+```
+
 ## Installation.
 - With command line, go to your plugins directory (domoticz/plugins).   
 - Run:   
