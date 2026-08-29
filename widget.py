@@ -251,12 +251,19 @@ def Createdatawidget(IEEE, _Name, _Type, opt):
         kwarg['Switchtype'] = 18
         kwarg['Options'] = {"LevelActions": "|||||", "LevelNames": "Off|B1C|B1L|B2C|B2L", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
-    elif _Type == 'XCube_C':
+    elif _Type == 'XCube_C' or _Type == 'XCubeT1_C':
         kwarg['Type'] = 244
         kwarg['Subtype'] = 62
         kwarg['Switchtype'] = 18
         kwarg['Image'] = 9
         kwarg['Options'] = {"LevelActions": "||||||||", "LevelNames": "Off|Shak|Wake|Drop|90°|180°|Push|Tap", "LevelOffHidden": "true", "SelectorStyle": "0"}
+
+    elif _Type == 'XCubeProT1_C':
+        kwarg['Type'] = 244
+        kwarg['Subtype'] = 62
+        kwarg['Switchtype'] = 18
+        kwarg['Image'] = 9
+        kwarg['Options'] = {"LevelActions": "||||||||||||", "LevelNames": "Off|F1|F2|F3|F4|F5|F6|Wake|Shake|Push|Tap|Drop", "LevelOffHidden": "true", "SelectorStyle": "0"}
 
     elif _Type == 'XCube_R':
         kwarg['TypeName'] = 'Custom'
